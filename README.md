@@ -43,7 +43,7 @@ npx skills add lousy-agents/skills -g
 
 Skills follow the open [Agent Skills specification](https://agentskills.io/) and are compatible with any agent that supports it, including:
 
-| Agent | `--agent` flag | Project Path |
+| Agent | `--agent` / `-a` | Project Path |
 | --- | --- | --- |
 | GitHub Copilot | `github-copilot` | `.agents/skills/` |
 | Gemini CLI | `gemini-cli` | `.agents/skills/` |
