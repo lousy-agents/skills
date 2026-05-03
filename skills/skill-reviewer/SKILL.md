@@ -1,6 +1,6 @@
 ---
 name: skill-reviewer
-description: 'Rigorously review, validate, and lint GitHub Copilot and Claude SKILL.md files. Use when auditing, reviewing, checking, validating, debugging, fixing, or improving agent skills. Checks frontmatter, description quality, progressive loading, body structure, anti-patterns, and discoverability.'
+description: 'Rigorously review, validate, and lint Agent Skills SKILL.md files (GitHub Copilot, Claude, Gemini CLI, Cursor, Codex, and any Agent Skills-compatible agent). Use when auditing, reviewing, checking, validating, debugging, fixing, or improving agent skills. Checks frontmatter, description quality, progressive loading, body structure, anti-patterns, and discoverability.'
 argument-hint: 'Path to the skill folder or SKILL.md to review'
 ---
 
@@ -16,7 +16,7 @@ Performs a rigorous, structured review of agent skill definitions to ensure they
 - Improving a skill that isn't being discovered or invoked by agents
 
 Do NOT use when:
-- The user wants to create a new skill from scratch — use `agent-customization` instead
+- The user wants to create a new skill from scratch — help them author a new SKILL.md instead
 - The user wants help writing .instructions.md or .prompt.md files — those are not SKILL.md
 - The user wants to review non-skill agent configuration (copilot-instructions.md, AGENTS.md)
 
@@ -25,7 +25,7 @@ Do NOT use when:
 ### 1. Locate the Skill
 
 - If given a path, read the `SKILL.md` at that location
-- If given a skill name, search for it under `.github/skills/`, `.agents/skills/`, or `.claude/skills/`
+- If given a skill name, search for it under `skills/`, `.agents/skills/`, `.github/skills/`, or `.claude/skills/`
 - Confirm the folder exists and contains a `SKILL.md`
 
 ### 2. Validate Frontmatter
