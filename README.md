@@ -1,6 +1,73 @@
 # skills
 
-A collection of reusable coding agent skills for AI assistants. Skills follow the [Agent Skills](https://agentskills.io/) specification and work with **GitHub Copilot**, **Gemini CLI**, and [50+ other coding agents](#supported-agents).
+Skills that make your coding agent more effective — for testing, code review, and agent tooling workflows. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec.
+
+## Available Skills
+
+| Skill | Description |
+| --- | --- |
+| [`rugged-evil-tester`](#rugged-evil-tester) | Generates adversarial, security, and chaos tests for TypeScript code |
+| [`mutation-hunter`](#mutation-hunter) | Finds test coverage gaps by running mutation testing on TypeScript source |
+| [`triaging-pr-reviews`](#triaging-pr-reviews) | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
+| [`skill-reviewer`](#skill-reviewer) | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
+
+---
+
+### `rugged-evil-tester`
+
+**Install:** `npx skills add lousy-agents/skills --skill rugged-evil-tester`
+
+Generates adversarial tests that prove your defenses actually work. Instead of happy-path coverage, this skill targets security weaknesses, boundary conditions, and chaos scenarios.
+
+**Use when you want to:**
+- Test whether input validation rejects SQL injection, XSS, prototype pollution, and similar payloads
+- Verify that failures in external dependencies (auth services, databases, caches) cause the system to fail closed
+- Add security regression tests to CI that prove defensive layers can't be bypassed
+
+**TypeScript-focused.** Uses Vitest and MSW. Places test files as `<target>.evil.test.ts` alongside source files.
+
+---
+
+### `mutation-hunter`
+
+**Install:** `npx skills add lousy-agents/skills --skill mutation-hunter`
+
+Applies semantic mutations to TypeScript source code — swapping operators, removing null guards, inverting conditions — and identifies mutations that survive without causing any tests to fail. Each surviving mutation is a concrete test gap with actionable advice on how to close it.
+
+**Use when you want to:**
+- Audit whether your test suite would catch real behavioral regressions
+- Get a coverage grade (A–F) based on mutation survival rate
+- Identify exactly which boundary conditions, operator assumptions, and null-handling paths are untested
+
+**Outputs a JSON report** with killed/survived mutations, coverage grade, and per-gap advice. Reverts all mutations before finishing — the codebase is always left clean.
+
+---
+
+### `triaging-pr-reviews`
+
+**Install:** `npx skills add lousy-agents/skills --skill triaging-pr-reviews`
+
+Processes PR review comments — from humans or automated reviewers like GitHub Copilot — by verifying each claim against the actual code before acting on it. Automated reviewers frequently cite the wrong lines, describe behavior that can't occur, or suggest fixes that introduce the vulnerability they claim to prevent.
+
+**Use when you want to:**
+- Work through a batch of Copilot or CodeRabbit suggestions without blindly implementing them
+- Classify comments by root concern (security, correctness, style) and prioritize fixes
+- Automatically reply to review threads and resolve them after fixes land
+
+**Requires** `gh` CLI and `jq`.
+
+---
+
+### `skill-reviewer`
+
+**Install:** `npx skills add lousy-agents/skills --skill skill-reviewer`
+
+Audits `SKILL.md` files for correctness, discoverability, and structure. Checks frontmatter validity, description quality (the primary discovery surface), body structure, progressive loading budget, and common anti-patterns.
+
+**Use when you want to:**
+- Validate a new or updated skill before merging
+- Debug why an agent isn't discovering or invoking a skill
+- Ensure a skill follows the Agent Skills spec and will work across supported agents
 
 ## Install
 
@@ -33,12 +100,6 @@ Install globally (available across all your projects):
 npx skills add lousy-agents/skills -g
 ```
 
-## Available Skills
-
-<!-- Skills will be listed here as they are added -->
-
-> Skills are coming soon. Check back or watch this repo for updates.
-
 ## Supported Agents
 
 Skills follow the open [Agent Skills specification](https://agentskills.io/) and are compatible with any agent that supports it, including:
@@ -53,57 +114,10 @@ Skills follow the open [Agent Skills specification](https://agentskills.io/) and
 
 For the full list of supported agents, see [vercel-labs/skills](https://github.com/vercel-labs/skills#supported-agents).
 
-## Skill Structure
-
-Each skill lives in its own directory under `skills/` and contains a `SKILL.md` file:
-
-```
-skills/
-└── my-skill/
-    ├── SKILL.md        # Required: metadata + agent instructions
-    ├── scripts/        # Optional: helper scripts
-    └── references/     # Optional: reference documentation
-```
-
-### SKILL.md Format
-
-```markdown
----
-name: my-skill
-description: Brief description of what this skill does and when to use it.
-metadata:
-  author: lousy-agents
-  version: "1.0"
----
-
-# My Skill
-
-Instructions for the agent to follow when this skill is activated.
-
-## When to Use
-
-- Situation 1
-- Situation 2
-
-## Steps
-
-1. First, do this
-2. Then, do that
-```
-
-## Contributing
-
-1. Fork this repository
-2. Create a new directory under `skills/` named after your skill (lowercase, hyphens only)
-3. Add a `SKILL.md` file following the format above
-4. Open a pull request
-
-### Skill Naming Conventions
-
-- Use lowercase letters, numbers, and hyphens only
-- Be descriptive but concise (e.g., `git-conventional-commits`, `pr-review-checklist`)
-- The `name` field in `SKILL.md` must match the directory name
-
 ## License
 
 [BSD 2-Clause](LICENSE)
+
+## Contributing
+
+Want to add a skill? Open a pull request — see the [Agent Skills spec](https://agentskills.io/) for the `SKILL.md` format.
