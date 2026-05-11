@@ -9,6 +9,7 @@ Skills that make your coding agent more effective — for testing, code review, 
 | [`rugged-evil-tester`](#rugged-evil-tester) | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Finds test coverage gaps by running mutation testing on TypeScript source |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
+| [`plan-to-graph`](#plan-to-graph) | Converts specs and master plans into Beads dependency graphs of epics and tasks |
 | [`skill-reviewer`](#skill-reviewer) | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
 
 ---
@@ -55,6 +56,21 @@ Processes PR review comments — from humans or automated reviewers like GitHub 
 - Automatically reply to review threads and resolve them after fixes land
 
 **Requires** `gh` CLI and `jq`.
+
+---
+
+### `plan-to-graph`
+
+**Install:** `npx skills add lousy-agents/skills --skill plan-to-graph`
+
+Converts Lousy Agents specs, master plans, and roadmaps into Beads (`bd`) epics and tasks with explicit dependencies and verification notes. It drafts the graph for confirmation before populating the Beads database.
+
+**Use when you want to:**
+- Convert a `*.spec.md` file or master plan into Beads issues
+- Break user stories, phases, or roadmap items into epics and tasks with dependencies
+- Preserve acceptance criteria and verification steps as issue comments
+
+**Requires** the Beads `bd` CLI installed and initialized.
 
 ---
 
