@@ -15,8 +15,8 @@ of human involvement will be closed without review.
 ## What does this PR change?
 <!-- 1-3 sentences. What, not why — the "why" belongs above. -->
 
-## Is this change appropriate for the core library?
-<!-- Superpowers core contains general-purpose skills and infrastructure
+## Is this change appropriate for the skills repository?
+<!-- Lousy Agents skills contains general-purpose skills and infrastructure
      that benefit all users. Ask yourself:
 
      - Would this be useful to someone working on a completely different
@@ -24,9 +24,8 @@ of human involvement will be closed without review.
      - Is this project-specific, team-specific, or tool-specific?
      - Does this integrate or promote a third-party service?
 
-     If your change is a new skill for a specific domain, workflow tool,
-     or third-party integration, it belongs in its own plugin — not here.
-     See the plugin development docs for how to publish it separately. -->
+     If your change is a new skill for a highly specific domain, workflow tool,
+     or third-party integration, it may not belong here. -->
 
 ## What alternatives did you consider?
 <!-- What other approaches did you try or evaluate before landing on this
@@ -50,45 +49,6 @@ of human involvement will be closed without review.
 |-------------------------------------|-----------------|-------|------------------|
 |                                     |                 |       |                  |
 
-## New harness support (required if this PR adds a new harness)
-
-<!-- If this PR adds support for a new harness (IDE, CLI tool, agent
-     runner), you MUST include a session transcript proving the
-     integration actually works.
-
-     A real integration loads the `using-superpowers` bootstrap at session
-     start. The bootstrap is what causes skills to auto-trigger. Without
-     it, the skills are dead weight — present on disk but never invoked
-     at the right moments.
-
-     ACCEPTANCE TEST: Open a clean session in the new harness and send
-     exactly this user message:
-
-         Let's make a react todo list
-
-     A working integration auto-triggers the `brainstorming` skill before
-     any code is written. Paste the complete transcript below.
-
-     These are NOT real integrations and PRs that ship them will be closed:
-
-     - Manually copying skill files into the harness
-     - Wrapping with `npx skills` or similar at-runtime shims
-     - Anything that requires the user to opt in to skills per-session
-     - Anything where brainstorming does not auto-trigger on the test above
-
-     If you are not sure whether your integration loads the bootstrap at
-     session start, it does not.
--->
-
-<details>
-<summary>Clean-session transcript for "Let's make a react todo list"</summary>
-
-```
-paste the complete transcript here
-```
-
-</details>
-
 ## Evaluation
 - What was the initial prompt you (or your human partner) used to start
   the session that led to this change?
@@ -100,7 +60,7 @@ paste the complete transcript here
 
 ## Rigor
 
-- [ ] If this is a skills change: I used `superpowers:writing-skills` and
+- [ ] If this is a skills change: I used `skill-reviewer` and
       completed adversarial pressure testing (paste results below)
 - [ ] This change was tested adversarially, not just on the happy path
 - [ ] I did not modify carefully-tuned content (Red Flags table,

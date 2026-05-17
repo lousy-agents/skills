@@ -1,6 +1,6 @@
 ---
 name: feature-to-plan
-description: Use when the user asks to turn a feature request, idea, PRD draft, or backlog issue into a structured EARS-format spec. Trigger phrases include "draft a spec", "plan a feature", "scaffold a spec", "write a feature spec", "convert this issue to a spec", "work on this issue", or invocation via /feature-to-plan. Do NOT use for reviewing an existing spec PR (use triaging-pr-reviews) or for editing a specific section of an already-drafted spec (use a direct Edit instead).
+description: Use when the user asks to turn a feature request, idea, PRD draft, or backlog issue into a structured EARS-format spec. Trigger phrases include "draft a spec", "plan a feature", "scaffold a spec", "write a feature spec", "convert this issue to a spec", "plan this issue", or invocation via /feature-to-plan. Do NOT use for reviewing an existing spec PR (use triaging-pr-reviews) or for editing a specific section of an already-drafted spec (use a direct Edit instead).
 argument-hint: "GitHub issue number (e.g., #47), a feature name, or empty for interactive drafting"
 ---
 
@@ -129,14 +129,12 @@ Wait for user approval before continuing.
    git diff -- <path/to/new-spec>
    ```
 
-2. **Classify each finding.** First, check whether the `triaging-pr-reviews` skill is available — it lives at one of `skills/triaging-pr-reviews/SKILL.md`, `.claude/skills/triaging-pr-reviews/SKILL.md`, `.agents/skills/triaging-pr-reviews/SKILL.md`, or wherever your agent surfaces installed skills. If present, delegate the diff to it for a richer rubric and reply-thread workflow. Otherwise, apply the classification rubric inline:
+2. **Classify each finding.** Apply the classification rubric inline:
    - **Security** — Does the spec leak credentials, prescribe unsafe defaults, or invite injection patterns?
    - **Correctness** — Are EARS criteria testable? Do tasks have measurable verification?
    - **Performance** — Does the design imply hot paths, N+1 patterns, or unbounded loops?
    - **Style** — Headings, link formats, file conventions consistent with the repo
    - **Architecture** — Does the design contradict existing engineering guidance you read in Phase 1?
-
-   At the end of inline-rubric mode, emit a one-line note: *"Consider installing the `triaging-pr-reviews` skill for richer review-thread workflows."*
 3. **Re-Edit the spec** to resolve each finding. Keep this lightweight — don't rewrite working content.
 4. **Iterate up to 3 rounds.** Exit when no high/medium severity findings remain or after the third round, whichever comes first.
 5. **Run the repo's own validation gate** before reporting completion. Use whatever the repo defines — for example `make lint`, `npm run lint`, `bun run format:check && bun run lint`, `cargo fmt --check`, or a CI workflow. Markdown-only changes typically don't affect test/build, but running the gate keeps you honest.
@@ -147,7 +145,6 @@ Wait for user approval before continuing.
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | User says "walk me through" / "let's draft this together" / wants multi-turn collaboration | Load [`references/interactive-flow.md`](./references/interactive-flow.md)                |
 | Phase 1 surfaces > 3 substantive ambiguities                                               | Load [`references/interactive-flow.md`](./references/interactive-flow.md)                |
-| Phase 3 finding-classification needs richer rubric                                         | `triaging-pr-reviews` skill (if installed); otherwise apply the inline rubric            |
 | Spec already lives in an open PR and the user wants review                                 | `triaging-pr-reviews` skill with the PR number — this skill should not be used at all    |
 
 ## Output Contract
@@ -163,5 +160,4 @@ Wait for user approval before continuing.
 
 - **Historical specs use varying extensions** (`*.md`, `*.spec.md`, `*.prd.md`). Match whatever the target repo already uses; don't rename existing files.
 - **Nested planning states behave unexpectedly.** If the runtime uses a dedicated plan mode and the skill is invoked while already planning, calling `ExitPlanMode` may exit the **outer** plan. Make this clear in the gate prompt.
-- **`triaging-pr-reviews` is optional.** When it isn't installed, the inline rubric in Phase 3 is sufficient — don't block the workflow.
 - **Spec output path is not universal.** Default to `.github/specs/` but respect any existing convention you find (e.g., `docs/specs/`, `specs/`, `rfcs/`).
