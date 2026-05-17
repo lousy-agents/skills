@@ -1,6 +1,8 @@
 # skills
 
-Skills that make your coding agent more effective — for testing, code review, and agent tooling workflows. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec.
+Professional-grade skills tailored for **agentic software engineers** to make coding agents more autonomous and effective. Elevate your workflows across spec drafting, rigorous testing, code review, and agent tooling. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec.
+
+[![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
 
 ## Available Skills
 
@@ -9,6 +11,7 @@ Skills that make your coding agent more effective — for testing, code review, 
 | [`rugged-evil-tester`](#rugged-evil-tester) | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Finds test coverage gaps by running mutation testing on TypeScript source |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
+| [`feature-to-plan`](#feature-to-plan) | Converts feature requests and issues into structured EARS-format specs |
 | [`plan-to-graph`](#plan-to-graph) | Converts specs and master plans into Beads dependency graphs of epics and tasks |
 | [`skill-reviewer`](#skill-reviewer) | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
 
@@ -56,6 +59,21 @@ Processes PR review comments — from humans or automated reviewers like GitHub 
 - Automatically reply to review threads and resolve them after fixes land
 
 **Requires** `gh` CLI and `jq`.
+
+---
+
+### `feature-to-plan`
+
+**Install:** `npx skills add lousy-agents/skills --skill feature-to-plan`
+
+Converts feature requests — either freeform or seeded from a GitHub issue — into structured EARS-format specs. It supports both single-shot generation and interactive, multi-turn drafting.
+
+**Use when you want to:**
+- Turn a freeform idea or a GitHub issue into a rigorous spec before writing code
+- Break down feature requirements into specific Personas, User Stories, and Tasks
+- Automatically generate Mermaid diagrams (data-flow, sequence) for your proposed architecture
+
+**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context.
 
 ---
 
