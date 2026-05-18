@@ -3,6 +3,7 @@
 Professional-grade skills tailored for **agentic software engineers** to make coding agents more autonomous and effective. Elevate your workflows across spec drafting, rigorous testing, code review, and agent tooling. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec.
 
 [![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
+[![CI](https://github.com/lousy-agents/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/lousy-agents/skills/actions/workflows/ci.yml)
 
 ## Available Skills
 
@@ -154,4 +155,16 @@ For the full list of supported agents, see [vercel-labs/skills](https://github.c
 
 ## Contributing
 
-Want to add a skill? Open a pull request — see the [Agent Skills spec](https://agentskills.io/) for the `SKILL.md` format.
+Skills live in `.github/skills/<name>/SKILL.md`. To scaffold a new skill:
+
+```bash
+npx -y @lousy-agents/cli new skill <name>
+```
+
+Before submitting a pull request, run the full lint suite — the same check the CI job runs:
+
+```bash
+npx -y @lousy-agents/cli lint
+```
+
+For the complete contributor checklist (validation gates, mandatory steps, before-commit workflow), see [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
