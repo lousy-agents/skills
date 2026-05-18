@@ -2,6 +2,7 @@
 name: skill-reviewer
 description: 'Rigorously review, validate, and lint Agent Skills SKILL.md files (GitHub Copilot, Claude, Gemini CLI, Cursor, Codex, and any Agent Skills-compatible agent). Use when auditing, reviewing, checking, validating, debugging, fixing, or improving agent skills. Checks frontmatter, description quality, progressive loading, body structure, anti-patterns, and discoverability.'
 argument-hint: 'Path to the skill folder or SKILL.md to review'
+allowed-tools: Read, Grep, Glob
 ---
 
 # Skill Reviewer
