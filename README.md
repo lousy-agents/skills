@@ -7,14 +7,127 @@ Professional-grade skills tailored for **agentic software engineers** to make co
 
 ## Available Skills
 
-| Skill | Description |
+| Skill | Phase | Description |
+| --- | --- | --- |
+| [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into structured EARS-format specs |
+| [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs and master plans into Beads dependency graphs of epics and tasks |
+| [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
+| [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
+| [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
+| [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
+
+---
+
+## Workflows
+
+Skills are designed to be composed. The sections below show two common patterns: a planning workflow that takes a raw feature idea all the way to an actionable issue graph, and a map of where each skill belongs across the broader delivery lifecycle.
+
+### Hi-Fi Planning
+
+**Hi-fi planning** is the practice of converting a fuzzy idea into a precise, executable plan before a single line of code is written. Two skills make this possible end-to-end:
+
+```
+feature idea or GitHub issue
+        │
+        ▼
+  feature-to-plan          ← structured EARS-format spec
+        │
+        ▼
+  plan-to-graph            ← Beads dependency graph (epics + tasks)
+        │
+        ▼
+  executable work items    ← agents or engineers can now implement
+```
+
+**Step 1 — Draft the spec with `feature-to-plan`**
+
+Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). It produces a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist — everything an agent needs to implement the feature faithfully.
+
+```bash
+npx skills add lousy-agents/skills --skill feature-to-plan
+```
+
+Invoke it in your agent:
+
+> *"Draft a spec for adding OAuth login to the API"*
+> *"Use feature-to-plan on issue #47"*
+
+**Step 2 — Convert the spec to a dependency graph with `plan-to-graph`**
+
+Feed the spec file to `plan-to-graph`. It parses user stories and tasks, drafts a summary table for your review, then populates your [Beads](https://beads.sh) (`bd`) database with epics, tasks, explicit dependencies, and verification notes copied from the spec.
+
+```bash
+npx skills add lousy-agents/skills --skill plan-to-graph
+```
+
+Invoke it in your agent:
+
+> *"Convert .github/specs/oauth-login.spec.md to Beads"*
+> *"plan-to-graph on the new spec"*
+
+**Install both planning skills at once:**
+
+```bash
+npx skills add lousy-agents/skills --skill feature-to-plan --skill plan-to-graph
+```
+
+> **Prerequisite:** `plan-to-graph` requires the Beads `bd` CLI installed and initialized in the repository. See [beads.sh](https://beads.sh) for setup.
+
+---
+
+### Regular SDLC
+
+The full set of skills spans the software delivery lifecycle. The table below shows the natural entry point for each skill as features move from idea to production.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Planning          │  Implementation  │  Testing     │  Review  │
+├─────────────────────────────────────────────────────────────────┤
+│  feature-to-plan   │  (your agent or  │  rugged-     │  triaging│
+│  plan-to-graph     │   engineers)     │  evil-tester │  -pr-    │
+│                    │                  │  mutation-   │  reviews │
+│                    │                  │  hunter      │          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Skill | When in the lifecycle |
 | --- | --- |
-| [`rugged-evil-tester`](#rugged-evil-tester) | Generates adversarial, security, and chaos tests for TypeScript code |
-| [`mutation-hunter`](#mutation-hunter) | Finds test coverage gaps by running mutation testing on TypeScript source |
-| [`triaging-pr-reviews`](#triaging-pr-reviews) | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
-| [`feature-to-plan`](#feature-to-plan) | Converts feature requests and issues into structured EARS-format specs |
-| [`plan-to-graph`](#plan-to-graph) | Converts specs and master plans into Beads dependency graphs of epics and tasks |
-| [`skill-reviewer`](#skill-reviewer) | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
+| `feature-to-plan` | Before implementation begins — when you have an idea or issue but no spec |
+| `plan-to-graph` | After the spec is approved — to turn tasks into tracked work items |
+| `rugged-evil-tester` | During or after implementation — to harden new code against adversarial inputs |
+| `mutation-hunter` | During or after implementation — to audit whether your test suite would catch real regressions |
+| `triaging-pr-reviews` | At review time — to process Copilot or human review comments without blindly applying them |
+| `skill-reviewer` | When authoring or updating a `SKILL.md` — a contributor/meta tool, not part of the delivery flow |
+
+---
+
+### `feature-to-plan`
+
+**Install:** `npx skills add lousy-agents/skills --skill feature-to-plan`
+
+Converts feature requests — either freeform or seeded from a GitHub issue — into structured EARS-format specs. It supports both single-shot generation and interactive, multi-turn drafting.
+
+**Use when you want to:**
+- Turn a freeform idea or a GitHub issue into a rigorous spec before writing code
+- Break down feature requirements into specific Personas, User Stories, and Tasks
+- Automatically generate Mermaid diagrams (data-flow, sequence) for your proposed architecture
+
+**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context.
+
+---
+
+### `plan-to-graph`
+
+**Install:** `npx skills add lousy-agents/skills --skill plan-to-graph`
+
+Converts Lousy Agents specs, master plans, and roadmaps into Beads (`bd`) epics and tasks with explicit dependencies and verification notes. It drafts the graph for confirmation before populating the Beads database.
+
+**Use when you want to:**
+- Convert a `*.spec.md` file or master plan into Beads issues
+- Break user stories, phases, or roadmap items into epics and tasks with dependencies
+- Preserve acceptance criteria and verification steps as issue comments
+
+**Requires** the Beads `bd` CLI installed and initialized.
 
 ---
 
@@ -60,36 +173,6 @@ Processes PR review comments — from humans or automated reviewers like GitHub 
 - Automatically reply to review threads and resolve them after fixes land
 
 **Requires** `gh` CLI and `jq`.
-
----
-
-### `feature-to-plan`
-
-**Install:** `npx skills add lousy-agents/skills --skill feature-to-plan`
-
-Converts feature requests — either freeform or seeded from a GitHub issue — into structured EARS-format specs. It supports both single-shot generation and interactive, multi-turn drafting.
-
-**Use when you want to:**
-- Turn a freeform idea or a GitHub issue into a rigorous spec before writing code
-- Break down feature requirements into specific Personas, User Stories, and Tasks
-- Automatically generate Mermaid diagrams (data-flow, sequence) for your proposed architecture
-
-**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context.
-
----
-
-### `plan-to-graph`
-
-**Install:** `npx skills add lousy-agents/skills --skill plan-to-graph`
-
-Converts Lousy Agents specs, master plans, and roadmaps into Beads (`bd`) epics and tasks with explicit dependencies and verification notes. It drafts the graph for confirmation before populating the Beads database.
-
-**Use when you want to:**
-- Convert a `*.spec.md` file or master plan into Beads issues
-- Break user stories, phases, or roadmap items into epics and tasks with dependencies
-- Preserve acceptance criteria and verification steps as issue comments
-
-**Requires** the Beads `bd` CLI installed and initialized.
 
 ---
 
