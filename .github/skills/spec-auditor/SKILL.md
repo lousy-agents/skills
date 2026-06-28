@@ -1,6 +1,6 @@
 ---
 name: spec-auditor
-description: adversarially review feature specifications, implementation plans, GitHub issues, PRDs, or EARS-format specs before coding. use when the user asks to audit, critique, stress-test, validate, review for ambiguity, find contradictions, identify gaps, harden acceptance criteria, prepare a spec for Codex, GitHub Copilot, Claude, or another coding agent, or produce a structured flaw list for a spec-improvement loop.
+description: Adversarially review feature specifications, implementation plans, GitHub issues, PRDs, or EARS-format specs before coding. Use when the user asks to audit, critique, stress-test, validate, review for ambiguity, find contradictions, identify gaps, harden acceptance criteria, prepare a spec for Codex, GitHub Copilot, Claude, or another coding agent, or produce a structured flaw list for a spec-improvement loop.
 argument-hint: "Path to a spec, PRD, GitHub issue, or plan to audit (or paste the spec text); optionally request JSON output"
 allowed-tools: Read, Grep, Glob, Bash
 ---
@@ -31,7 +31,7 @@ Do NOT use when:
 ## Quick Start
 
 1. Locate the spec or planning artifact to audit. Accept markdown specs, PRDs, GitHub issues, task plans, or pasted text.
-2. Read nearby context before judging if repository access exists: `AGENTS.md`, `README.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.github/instructions/`, `CONTRIBUTING.md`, and relevant files referenced by the spec.
+2. If repository access is available, read nearby context: `AGENTS.md`, `README.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.github/instructions/`, `CONTRIBUTING.md`, and relevant files referenced by the spec.
 3. If shell access and Python are available, optionally run `python3 .github/skills/spec-auditor/scripts/spec_audit_lint.py <spec-file> --format markdown` for structural findings. Treat script output as a supplement, not the complete audit.
 4. Load `./references/audit-rubric.md` for the adversarial review passes.
 5. Load `./references/output-contract.md` before writing the final report.

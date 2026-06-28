@@ -68,7 +68,7 @@ def read_lines(path: Path) -> List[str]:
     try:
         return path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError:
-        return path.read_text(errors="replace").splitlines()
+        return path.read_text(encoding="utf-8", errors="replace").splitlines()
 
 
 def headings(lines: List[str]) -> List[tuple[int, int, str]]:
@@ -189,7 +189,7 @@ def lint_acceptance_criteria(lines: List[str], findings: List[Finding]) -> None:
             all_ac_bullets += 1
             bullets.append((idx, line.strip()))
             text = re.sub(r"^\s*[-*]\s+", "", line).strip().lower()
-            if text.startswith(EARS_STARTS) and " shall " in f" {text} ":
+            if text.startswith(EARS_STARTS) and re.search(r"\bshall\b", text):
                 ears_like += 1
             else:
                 add(
