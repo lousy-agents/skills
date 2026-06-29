@@ -167,7 +167,7 @@ def lint_acceptance_criteria(lines: List[str], findings: List[Finding]) -> None:
     for idx, line in enumerate(lines, start=1):
         heading = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
         if heading:
-            title = heading.group(2).strip().lower()
+            title = heading.group(2).strip().rstrip(":").strip().lower()
             if title == "acceptance criteria":
                 in_ac = True
                 ac_start = idx
