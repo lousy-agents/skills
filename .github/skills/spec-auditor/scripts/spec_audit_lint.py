@@ -76,7 +76,7 @@ def headings(lines: List[str]) -> List[tuple[int, int, str]]:
     for idx, line in enumerate(lines, start=1):
         match = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
         if match:
-            found.append((idx, len(match.group(1)), match.group(2).strip()))
+            found.append((idx, len(match.group(1)), match.group(2).strip().rstrip(":").strip()))
     return found
 
 
@@ -188,7 +188,7 @@ def lint_acceptance_criteria(lines: List[str], findings: List[Finding]) -> None:
         if in_ac and re.match(r"^\s*[-*]\s+", line):
             all_ac_bullets += 1
             bullets.append((idx, line.strip()))
-            text = re.sub(r"^\s*[-*]\s+", "", line).strip().lower()
+            text = re.sub(r"^\s*[-*]\s+(\[.\]\s+)?", "", line).strip().lower()
             if text.startswith(EARS_STARTS) and re.search(r"\bshall\b", text):
                 ears_like += 1
             else:
