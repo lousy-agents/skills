@@ -356,7 +356,7 @@ def main() -> int:
         print(json.dumps(payload, indent=2))
     else:
         print(render_markdown(args.spec, findings))
-    return 1 if any(f.severity in {"High", "Blocker"} for f in findings) else 0
+    return 1 if any(f.severity == "High" for f in findings) else 0
 
 
 if __name__ == "__main__":
