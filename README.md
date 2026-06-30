@@ -220,13 +220,13 @@ npx skills add lousy-agents/skills -g
 
 ### Claude Code Plugin Marketplace
 
-Claude Code users can browse and install skills individually through the native plugin system:
+Claude Code users can install skills individually through the native plugin system:
 
 ```
 /plugin marketplace add lousy-agents/skills
 ```
 
-Then install any skill by name:
+Install any skill by name:
 
 ```
 /plugin install feature-to-plan@lousy-agents
