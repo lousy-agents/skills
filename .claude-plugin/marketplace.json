@@ -1,5 +1,5 @@
 {
-  "$schema": "https://claude.code/schemas/marketplace.json",
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "lousy-agents",
   "description": "Secure, resilient, rugged engineering skills — adversarial testing, structured planning, and production-grade software workflows.",
   "owner": {

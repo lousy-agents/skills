@@ -1,6 +1,6 @@
 # skills
 
-Professional-grade skills tailored for **agentic software engineers** to make coding agents more autonomous and effective. Elevate your workflows across spec drafting, rigorous testing, code review, and agent tooling. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec.
+Professional-grade skills tailored for **agentic software engineers** to make coding agents more autonomous and effective. Elevate your workflows across spec drafting, rigorous testing, code review, and agent tooling. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
 
 [![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
 [![CI](https://github.com/lousy-agents/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/lousy-agents/skills/actions/workflows/ci.yml)
@@ -216,6 +216,26 @@ Install globally (available across all your projects):
 
 ```bash
 npx skills add lousy-agents/skills -g
+```
+
+### Claude Code Plugin Marketplace
+
+Claude Code users can browse and install skills individually through the native plugin system:
+
+```
+/plugin marketplace add lousy-agents/skills
+```
+
+Then install any skill by name:
+
+```
+/plugin install feature-to-plan@lousy-agents
+/plugin install plan-to-graph@lousy-agents
+/plugin install rugged-evil-tester@lousy-agents
+/plugin install mutation-hunter@lousy-agents
+/plugin install spec-auditor@lousy-agents
+/plugin install triaging-pr-reviews@lousy-agents
+/plugin install skill-reviewer@lousy-agents
 ```
 
 ## Supported Agents
