@@ -41,7 +41,7 @@ feature idea or GitHub issue
   feature-to-plan          ← structured EARS-format spec
         │
         ▼
-   spec-auditor            ← adversarial findings + targeted spec patches
+  spec-auditor             ← adversarial findings + targeted spec patches
         │
         ▼
   plan-to-graph            ← Beads dependency graph (epics + tasks)
@@ -147,12 +147,19 @@ Converts feature requests — either freeform or seeded from a GitHub issue — 
 
 Adversarially reviews feature specifications, implementation plans, GitHub issues, PRDs, and EARS-format specs before coding starts. It looks for the gaps that make coding agents fail: contradictions, vague acceptance criteria, missing edge cases, unclear ownership, unverifiable outcomes, and scope that spans multiple unrelated changes.
 
+When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and other instruction files to anchor findings in real project constraints rather than generic advice.
+
 **Use when you want to:**
 - Stress-test a spec before handing it to Codex, GitHub Copilot, Claude, or another coding agent
 - Find ambiguity, missing critical paths, and untestable requirements while they are still cheap to fix
-- Produce structured findings that can feed a spec-improvement loop or downstream agent handoff
+- Produce structured findings (SA-001, SA-002, …) with stable IDs that can feed a spec-improvement loop or downstream agent handoff
 
-**Outputs an audit report** with severity, confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
+**Do NOT use when:**
+- You want to draft a spec from a feature idea or issue — use `feature-to-plan` instead
+- You want to convert an approved spec into Beads epics and tasks — use `plan-to-graph` instead
+- You want to triage PR review comments or Copilot feedback — use `triaging-pr-reviews` instead
+
+**Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object — useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
 
 ---
 
