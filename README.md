@@ -14,7 +14,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs and master plans into Beads dependency graphs of epics and tasks |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
-| [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
+| [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
 
 ---
@@ -50,9 +50,9 @@ feature idea or GitHub issue
   executable work items    ← agents or engineers can now implement
 ```
 
-**Step 1 — Draft the spec with `feature-to-plan`**
+**Step 1: Draft the spec with `feature-to-plan`**
 
-Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). It produces a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist — everything an agent needs to implement the feature faithfully.
+Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). It produces a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist. This includes everything an agent needs to implement the feature faithfully.
 
 ```bash
 npx skills add lousy-agents/skills --skill feature-to-plan
@@ -63,7 +63,7 @@ Invoke it in your agent:
 > *"Draft a spec for adding OAuth login to the API"*
 > *"Use feature-to-plan on issue #47"*
 
-**Step 2 — Audit the spec with `spec-auditor`**
+**Step 2: Audit the spec with `spec-auditor`**
 
 Before implementation, run the draft through an adversarial review. `spec-auditor` finds contradictions, missing edge cases, untestable acceptance criteria, ambiguous ownership, and handoff risks that cause coding agents to build the wrong thing or falsely report completion. It returns structured findings with severity, evidence, Socratic questions, suggested spec patches, verification implications, and downstream agent instructions.
 
@@ -76,7 +76,7 @@ Invoke it in your agent:
 > *"Audit .github/specs/oauth-login.spec.md for coding-agent failure risks"*
 > *"Use spec-auditor on issue #47 before implementation"*
 
-**Step 3 — Convert the approved spec to a dependency graph with `plan-to-graph`**
+**Step 3: Convert the approved spec to a dependency graph with `plan-to-graph`**
 
 Feed the spec file to `plan-to-graph`. It parses user stories and tasks, drafts a summary table for your review, then populates your [Beads](https://beads.sh) (`bd`) database with epics, tasks, explicit dependencies, and verification notes copied from the spec.
 
@@ -116,13 +116,13 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 
 | Skill | When in the lifecycle |
 | --- | --- |
-| `feature-to-plan` | Before implementation begins — when you have an idea or issue but no spec |
-| `spec-auditor` | Before implementation begins — after a draft spec exists, before an agent receives it |
-| `plan-to-graph` | After the spec is approved — to turn tasks into tracked work items |
-| `rugged-evil-tester` | During or after implementation — to harden new code against adversarial inputs |
-| `mutation-hunter` | During or after implementation — to audit whether your test suite would catch real regressions |
-| `triaging-pr-reviews` | At review time — to process Copilot or human review comments without blindly applying them |
-| `skill-reviewer` | When authoring or updating a `SKILL.md` — a contributor/meta tool, not part of the delivery flow |
+| `feature-to-plan` | Before implementation begins: when you have an idea or issue but no spec |
+| `spec-auditor` | Before implementation begins: after a draft spec exists, before an agent receives it |
+| `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
+| `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
+| `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
+| `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
+| `skill-reviewer` | When authoring or updating a `SKILL.md`: a contributor/meta tool, not part of the delivery flow |
 
 ---
 
@@ -155,11 +155,11 @@ When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and 
 - Produce structured findings (SA-001, SA-002, …) with stable IDs that can feed a spec-improvement loop or downstream agent handoff
 
 **Do NOT use when:**
-- You want to draft a spec from a feature idea or issue — use `feature-to-plan` instead
-- You want to convert an approved spec into Beads epics and tasks — use `plan-to-graph` instead
-- You want to triage PR review comments or Copilot feedback — use `triaging-pr-reviews` instead
+- You want to draft a spec from a feature idea or issue. Use `feature-to-plan` instead.
+- You want to convert an approved spec into Beads epics and tasks. Use `plan-to-graph` instead.
+- You want to triage PR review comments or Copilot feedback. Use `triaging-pr-reviews` instead.
 
-**Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object — useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
+**Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object, useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
 
 ---
 
