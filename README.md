@@ -1,6 +1,6 @@
 # skills
 
-Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into executable specs, audit those specs before an agent writes code, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec.
+Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into executable specs, audit those specs before an agent writes code, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
 
 [![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
 [![CI](https://github.com/lousy-agents/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/lousy-agents/skills/actions/workflows/ci.yml)
@@ -263,6 +263,26 @@ Install globally (available across all your projects):
 
 ```bash
 npx skills add lousy-agents/skills -g
+```
+
+### Claude Code Plugin Marketplace
+
+Claude Code users can install skills individually through the native plugin system:
+
+```
+/plugin marketplace add lousy-agents/skills
+```
+
+Install any skill by name:
+
+```
+/plugin install feature-to-plan@lousy-agents
+/plugin install plan-to-graph@lousy-agents
+/plugin install rugged-evil-tester@lousy-agents
+/plugin install mutation-hunter@lousy-agents
+/plugin install spec-auditor@lousy-agents
+/plugin install triaging-pr-reviews@lousy-agents
+/plugin install skill-reviewer@lousy-agents
 ```
 
 ## Supported Agents

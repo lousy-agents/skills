@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "lousy-agents",
+  "description": "Secure, resilient, rugged engineering skills — adversarial testing, structured planning, and production-grade software workflows.",
+  "owner": {
+    "name": "lousy-agents",
+    "email": "pratt.zach@gmail.com"
+  },
+  "metadata": {
+    "pluginRoot": ".github/skills"
+  },
+  "plugins": [
+    {
+      "name": "feature-to-plan",
+      "displayName": "Feature to Plan",
+      "description": "Turn feature requests, PRDs, and backlog issues into structured EARS-format specs",
+      "source": "./feature-to-plan",
+      "category": "planning",
+      "keywords": ["planning", "spec", "EARS", "requirements"]
+    },
+    {
+      "name": "mutation-hunter",
+      "displayName": "Mutation Hunter",
+      "description": "Uncover test coverage gaps by applying semantic mutations to production TypeScript code",
+      "source": "./mutation-hunter",
+      "category": "testing",
+      "keywords": ["testing", "mutation", "coverage", "TypeScript"]
+    },
+    {
+      "name": "plan-to-graph",
+      "displayName": "Plan to Graph",
+      "description": "Convert specs or master plans into structured Beads dependency graphs of epics and tasks",
+      "source": "./plan-to-graph",
+      "category": "planning",
+      "keywords": ["planning", "graph", "beads", "epics", "tasks"]
+    },
+    {
+      "name": "rugged-evil-tester",
+      "displayName": "Rugged Evil Tester",
+      "description": "Generate adversarial, negative, and chaos tests for TypeScript code — boundary conditions, fuzzing, injection scenarios",
+      "source": "./rugged-evil-tester",
+      "category": "testing",
+      "keywords": ["testing", "adversarial", "security", "chaos", "fuzzing", "TypeScript"]
+    },
+    {
+      "name": "skill-reviewer",
+      "displayName": "Skill Reviewer",
+      "description": "Rigorously review, validate, and lint Agent Skills SKILL.md files for any agent platform",
+      "source": "./skill-reviewer",
+      "category": "tooling",
+      "keywords": ["skill", "review", "lint", "validation", "agent"]
+    },
+    {
+      "name": "spec-auditor",
+      "displayName": "Spec Auditor",
+      "description": "Adversarially review feature specifications and implementation plans — expose gaps, contradictions, ambiguity before coding",
+      "source": "./spec-auditor",
+      "category": "planning",
+      "keywords": ["spec", "audit", "review", "requirements", "planning"]
+    },
+    {
+      "name": "triaging-pr-reviews",
+      "displayName": "Triaging PR Reviews",
+      "description": "Triage and analyze PR review comments — classify concerns, verify claims against actual code, evaluate trade-offs",
+      "source": "./triaging-pr-reviews",
+      "category": "code-review",
+      "keywords": ["PR", "review", "triage", "code-review", "Copilot"]
+    }
+  ]
+}
