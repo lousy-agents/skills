@@ -1,6 +1,6 @@
 # skills
 
-Professional-grade skills tailored for **agentic software engineers** to make coding agents more autonomous and effective. Elevate your workflows across spec drafting, rigorous testing, code review, and agent tooling. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
+Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into executable specs, audit those specs before an agent writes code, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
 
 [![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
 [![CI](https://github.com/lousy-agents/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/lousy-agents/skills/actions/workflows/ci.yml)
@@ -10,10 +10,11 @@ Professional-grade skills tailored for **agentic software engineers** to make co
 | Skill | Phase | Description |
 | --- | --- | --- |
 | [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into structured EARS-format specs |
+| [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs and master plans into Beads dependency graphs of epics and tasks |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
-| [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments — verifies claims, classifies concerns, and decides what to act on |
+| [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
 
 ---
@@ -22,9 +23,16 @@ Professional-grade skills tailored for **agentic software engineers** to make co
 
 Skills are designed to be composed. The sections below show two common patterns: a planning workflow that takes a raw feature idea all the way to an actionable issue graph, and a map of where each skill belongs across the broader delivery lifecycle.
 
+For agentic software engineers, the value is not simply "more prompts." Each skill gives your agent a specific harness-engineering role with explicit standards, evidence requirements, and failure modes:
+
+- **Before coding:** convert intent into a spec, then adversarially audit the spec so agents do not guess through ambiguity.
+- **Before scheduling:** turn approved work into dependency-aware issues that preserve verification context.
+- **Before merge:** generate hostile tests, find mutation survivors, and triage review comments by verifying claims against code.
+- **Before publishing skills:** review skill instructions themselves so the agent behavior stays discoverable, portable, and robust.
+
 ### Hi-Fi Planning
 
-**Hi-fi planning** is the practice of converting a fuzzy idea into a precise, executable plan before a single line of code is written. Two skills make this possible end-to-end:
+**Hi-fi planning** is the practice of converting a fuzzy idea into a precise, executable plan before a single line of code is written. Three skills make this possible end-to-end:
 
 ```
 feature idea or GitHub issue
@@ -33,15 +41,18 @@ feature idea or GitHub issue
   feature-to-plan          ← structured EARS-format spec
         │
         ▼
+  spec-auditor             ← adversarial findings + targeted spec patches
+        │
+        ▼
   plan-to-graph            ← Beads dependency graph (epics + tasks)
         │
         ▼
   executable work items    ← agents or engineers can now implement
 ```
 
-**Step 1 — Draft the spec with `feature-to-plan`**
+**Step 1: Draft the spec with `feature-to-plan`**
 
-Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). It produces a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist — everything an agent needs to implement the feature faithfully.
+Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). It produces a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist. This includes everything an agent needs to implement the feature faithfully.
 
 ```bash
 npx skills add lousy-agents/skills --skill feature-to-plan
@@ -52,7 +63,20 @@ Invoke it in your agent:
 > *"Draft a spec for adding OAuth login to the API"*
 > *"Use feature-to-plan on issue #47"*
 
-**Step 2 — Convert the spec to a dependency graph with `plan-to-graph`**
+**Step 2: Audit the spec with `spec-auditor`**
+
+Before implementation, run the draft through an adversarial review. `spec-auditor` finds contradictions, missing edge cases, untestable acceptance criteria, ambiguous ownership, and handoff risks that cause coding agents to build the wrong thing or falsely report completion. It returns structured findings with severity, evidence, Socratic questions, suggested spec patches, verification implications, and downstream agent instructions.
+
+```bash
+npx skills add lousy-agents/skills --skill spec-auditor
+```
+
+Invoke it in your agent:
+
+> *"Audit .github/specs/oauth-login.spec.md for coding-agent failure risks"*
+> *"Use spec-auditor on issue #47 before implementation"*
+
+**Step 3: Convert the approved spec to a dependency graph with `plan-to-graph`**
 
 Feed the spec file to `plan-to-graph`. It parses user stories and tasks, drafts a summary table for your review, then populates your [Beads](https://beads.sh) (`bd`) database with epics, tasks, explicit dependencies, and verification notes copied from the spec.
 
@@ -65,10 +89,10 @@ Invoke it in your agent:
 > *"Convert .github/specs/oauth-login.spec.md to Beads"*
 > *"plan-to-graph on the new spec"*
 
-**Install both planning skills at once:**
+**Install all three planning skills at once:**
 
 ```bash
-npx skills add lousy-agents/skills --skill feature-to-plan --skill plan-to-graph
+npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor --skill plan-to-graph
 ```
 
 > **Prerequisite:** `plan-to-graph` requires the Beads `bd` CLI installed and initialized in the repository. See [beads.sh](https://beads.sh) for setup.
@@ -84,20 +108,21 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 │  Planning          │  Implementation  │  Testing     │  Review  │
 ├─────────────────────────────────────────────────────────────────┤
 │  feature-to-plan   │  (your agent or  │  rugged-     │  triaging│
-│  plan-to-graph     │   engineers)     │  evil-tester │  -pr-    │
-│                    │                  │  mutation-   │  reviews │
+│  spec-auditor      │   engineers)     │  evil-tester │  -pr-    │
+│  plan-to-graph     │                  │  mutation-   │  reviews │
 │                    │                  │  hunter      │          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 | Skill | When in the lifecycle |
 | --- | --- |
-| `feature-to-plan` | Before implementation begins — when you have an idea or issue but no spec |
-| `plan-to-graph` | After the spec is approved — to turn tasks into tracked work items |
-| `rugged-evil-tester` | During or after implementation — to harden new code against adversarial inputs |
-| `mutation-hunter` | During or after implementation — to audit whether your test suite would catch real regressions |
-| `triaging-pr-reviews` | At review time — to process Copilot or human review comments without blindly applying them |
-| `skill-reviewer` | When authoring or updating a `SKILL.md` — a contributor/meta tool, not part of the delivery flow |
+| `feature-to-plan` | Before implementation begins: when you have an idea or issue but no spec |
+| `spec-auditor` | Before implementation begins: after a draft spec exists, before an agent receives it |
+| `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
+| `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
+| `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
+| `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
+| `skill-reviewer` | When authoring or updating a `SKILL.md`: a contributor/meta tool, not part of the delivery flow |
 
 ---
 
@@ -113,6 +138,28 @@ Converts feature requests — either freeform or seeded from a GitHub issue — 
 - Automatically generate Mermaid diagrams (data-flow, sequence) for your proposed architecture
 
 **Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context.
+
+---
+
+### `spec-auditor`
+
+**Install:** `npx skills add lousy-agents/skills --skill spec-auditor`
+
+Adversarially reviews feature specifications, implementation plans, GitHub issues, PRDs, and EARS-format specs before coding starts. It looks for the gaps that make coding agents fail: contradictions, vague acceptance criteria, missing edge cases, unclear ownership, unverifiable outcomes, and scope that spans multiple unrelated changes.
+
+When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and other instruction files to anchor findings in real project constraints rather than generic advice.
+
+**Use when you want to:**
+- Stress-test a spec before handing it to Codex, GitHub Copilot, Claude, or another coding agent
+- Find ambiguity, missing critical paths, and untestable requirements while they are still cheap to fix
+- Produce structured findings (SA-001, SA-002, …) with stable IDs that can feed a spec-improvement loop or downstream agent handoff
+
+**Do NOT use when:**
+- You want to draft a spec from a feature idea or issue. Use `feature-to-plan` instead.
+- You want to convert an approved spec into Beads epics and tasks. Use `plan-to-graph` instead.
+- You want to triage PR review comments or Copilot feedback. Use `triaging-pr-reviews` instead.
+
+**Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object, useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
 
 ---
 
