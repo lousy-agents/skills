@@ -9,7 +9,7 @@ Use these patterns for small language concepts and pure behavior.
 - `hello-world/`: evolves from `main()` printing text to a pure `Hello` function, defaults, language branching, named subtests, and `assertCorrectMessage`.
 - `integers/`: keeps production tiny and adds `ExampleAdd` as executable documentation.
 - `for/`: demonstrates loops, constants, `strings.Builder`, and benchmarks.
-- `arrays/`: moves from arrays to slices, `range`, variadic inputs, empty-slice edge cases, `slices.Equal`, and later `Reduce`/`Find`.
+- `arrays/`: moves from arrays to slices, `range`, variadic inputs, empty-slice edge cases, and `slices.Equal` (Go 1.21+), with later `Reduce`/`Find`.
 - `structs/`: moves from free functions to methods, then interfaces and table tests for shapes.
 - `pointers/`: uses pointer receivers for mutation, sentinel errors, and helpers like `assertBalance`, `assertNoError`, and `assertError`.
 - `maps/`: grows from lookup to add/update/delete, using sentinel/custom errors and subtests for known, unknown, existing, and missing keys.

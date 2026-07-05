@@ -1,6 +1,6 @@
 ---
 name: go-tdd-guide
-description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, or red-green-refactor, reviewing Go code for testability, or explaining Go test patterns. Guides unit tests, table tests, subtests, helpers with t.Helper, dependency injection, httptest, io/fs boundaries, context cancellation, concurrency tests, property tests, and standard-library-first design from learn-go-with-tests patterns."
+description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, or red-green-refactor, reviewing Go code for testability, or explaining Go test patterns. Guides unit tests, table tests, subtests, helpers with t.Helper(), dependency injection, httptest, io/fs boundaries, context cancellation, concurrency tests, property tests, and standard-library-first design from learn-go-with-tests patterns."
 argument-hint: "Optional: package, file path, bug, feature, or chapter-style topic to work on"
 allowed-tools: "Read, Write, Edit, Bash, Grep, Glob, read_file, edit_file, create_file, run_in_terminal, list_directory_contents"
 ---
