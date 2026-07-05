@@ -318,3 +318,4 @@ npx -y @lousy-agents/cli lint
 ```
 
 For the complete contributor checklist (validation gates, mandatory steps, before-commit workflow), see [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
+Codex and Copilot CLI users should start from [`AGENTS.md`](AGENTS.md), and Gemini CLI/Antigravity users from [`GEMINI.md`](GEMINI.md) — both route back to the same canonical checklist without duplicating it.

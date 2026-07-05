@@ -3,6 +3,9 @@
 ## Core Philosophy
 This repository builds skills focused on creating **secure, resilient, rugged, and production-ready software**. Every change must be evaluated through this lens: *Does this improve defense, expose vulnerabilities, enable rigorous analysis, or accelerate structured, high-quality engineering workflows (like planning or agent tooling)?*
 
+## Instruction Architecture
+This file is the canonical source of truth for shared contribution policy across GitHub Copilot code review, Copilot CLI, Codex, Claude Code, and Antigravity/Gemini. Harness-specific files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`) must stay thin: they may route agents to this file and document harness-specific tool surfaces, but they must not duplicate project-wide policy, validation gates, or pull request requirements.
+
 ## Pull Request Requirements
 Before opening a PR against this repo, you MUST:
 1. **Internalize the Core Philosophy.**
