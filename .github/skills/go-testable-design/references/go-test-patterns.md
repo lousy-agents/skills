@@ -98,7 +98,7 @@ line-by-line to reconstruct the rule:
 
 ```go
 // AC-1.8: FetchFile must re-check ctx.Err() after decoding and before
-// returning, so a context cancelled mid-decode is still honored.
+// returning, so a context canceled mid-decode is still honored.
 func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
     ctx := &cancelAfterNCallsContext{Context: context.Background(), n: 1}
     client := newTestClient(t, canned200Response)
@@ -128,7 +128,7 @@ func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
 
 // givenContextCancelledAfter returns a context that reports nil from Err()
 // for the first n calls, then context.Canceled, isolating exactly the check
-// under test (labelled by where) from any earlier cancellation checks.
+// under test (labeled by where) from any earlier cancellation checks.
 func givenContextCancelledAfter(n int, where string) context.Context { /* ... */ }
 
 func givenClientReturning(t *testing.T, respond responseFunc) *FileClient {
@@ -153,8 +153,10 @@ Guidance for applying this:
 - Reach for this pattern when a comment is doing work that naming and
   structure should do instead — typically when the comment restates a rule
   that the test body doesn't otherwise make obvious.
-- Keep `given`/`when`/`then` helpers small and single-purpose; mark them
-  `t.Helper()` so failures point at the calling test, not the helper.
+- Keep `given`/`when`/`then` helpers small and single-purpose. For helpers
+  that accept `*testing.T`/`testing.TB` — typically `then`/`assert`
+  helpers — call `t.Helper()` so failures point at the calling test, not the
+  helper; pure `given`/`when` builders that don't take `t` don't need it.
 - A short traceability comment (an acceptance-criteria ID, issue link) above
   the test is still fine — it should stop being the *only* place the
   behavior is explained.
