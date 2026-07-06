@@ -33,7 +33,7 @@ Do not use this skill for non-Go projects, generic CI setup, or broad architectu
 - Write the smallest failing test that names the behavior.
 - Make the smallest production change that passes.
 - Refactor only after behavior is covered.
-- Keep test helpers small and mark them with `t.Helper()`.
+- Keep test helpers small; mark helpers that accept `*testing.T`/`testing.TB` with `t.Helper()`.
 - Prefer constructor injection for dependencies that touch external state.
 - Use interfaces at boundaries, not everywhere.
 - Keep production APIs zero-value friendly where practical.

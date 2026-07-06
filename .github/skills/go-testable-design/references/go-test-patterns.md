@@ -118,7 +118,7 @@ explanation:
 ```go
 // AC-1.8
 func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
-    ctx := givenContextCancelledAfter(1, "the decode step")
+    ctx := givenContextCanceledAfter(1, "the decode step")
     client := givenClientReturning(t, canned200Response)
 
     _, _, err := whenFetchFile(ctx, client, someRef)
@@ -126,10 +126,10 @@ func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
     thenErrorIs(t, err, context.Canceled, "FetchFile must honor cancellation observed after decoding")
 }
 
-// givenContextCancelledAfter returns a context that reports nil from Err()
+// givenContextCanceledAfter returns a context that reports nil from Err()
 // for the first n calls, then context.Canceled, isolating exactly the check
 // under test (labeled by where) from any earlier cancellation checks.
-func givenContextCancelledAfter(n int, where string) context.Context { /* ... */ }
+func givenContextCanceledAfter(n int, where string) context.Context { /* ... */ }
 
 func givenClientReturning(t *testing.T, respond responseFunc) *FileClient {
     t.Helper()
