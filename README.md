@@ -12,6 +12,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into structured EARS-format specs |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs and master plans into Beads dependency graphs of epics and tasks |
+| [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small behavior first, executable examples, clear boundaries |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
@@ -107,10 +108,10 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 ┌─────────────────────────────────────────────────────────────────┐
 │  Planning          │  Implementation  │  Testing     │  Review  │
 ├─────────────────────────────────────────────────────────────────┤
-│  feature-to-plan   │  (your agent or  │  rugged-     │  triaging│
-│  spec-auditor      │   engineers)     │  evil-tester │  -pr-    │
-│  plan-to-graph     │                  │  mutation-   │  reviews │
-│                    │                  │  hunter      │          │
+│  feature-to-plan   │  go-testable-    │  rugged-     │  triaging│
+│  spec-auditor      │  design          │  evil-tester │  -pr-    │
+│  plan-to-graph     │  (your agent or  │  mutation-   │  reviews │
+│                    │   engineers)     │  hunter      │          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -119,6 +120,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `feature-to-plan` | Before implementation begins: when you have an idea or issue but no spec |
 | `spec-auditor` | Before implementation begins: after a draft spec exists, before an agent receives it |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
+| `go-testable-design` | During implementation: to write Go code test-first and design testable boundaries |
 | `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
 | `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
 | `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
@@ -175,6 +177,21 @@ Converts Lousy Agents specs, master plans, and roadmaps into Beads (`bd`) epics 
 - Preserve acceptance criteria and verification steps as issue comments
 
 **Requires** the Beads `bd` CLI installed and initialized.
+
+---
+
+### `go-testable-design`
+
+**Install:** `npx skills add lousy-agents/skills --skill go-testable-design`
+
+Guides Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring. Informed by patterns from [`learn-go-with-tests`](https://github.com/quii/learn-go-with-tests).
+
+**Use when you want to:**
+- Build or change Go code using TDD, tests-first, or red-green-refactor
+- Design testable boundaries around interfaces, `io.Reader`/`io.Writer`, `fs.FS`, `http.Handler`, `context.Context`, goroutines, or channels
+- Refactor Go code while preserving behavior, or review Go code for testability gaps
+
+**Standard-library-first.** Covers table tests, subtests, `t.Helper()`, constructor injection, `httptest`, goroutine/concurrency tests, and property tests.
 
 ---
 
@@ -278,6 +295,7 @@ Install any skill by name:
 ```
 /plugin install feature-to-plan@lousy-agents
 /plugin install plan-to-graph@lousy-agents
+/plugin install go-testable-design@lousy-agents
 /plugin install rugged-evil-tester@lousy-agents
 /plugin install mutation-hunter@lousy-agents
 /plugin install spec-auditor@lousy-agents

@@ -19,6 +19,14 @@
       "keywords": ["planning", "spec", "EARS", "requirements"]
     },
     {
+      "name": "go-testable-design",
+      "displayName": "Go Testable Design",
+      "description": "Guide Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring",
+      "source": "./go-testable-design",
+      "category": "testing",
+      "keywords": ["Go", "TDD", "testing", "refactoring", "test-first"]
+    },
+    {
       "name": "mutation-hunter",
       "displayName": "Mutation Hunter",
       "description": "Uncover test coverage gaps by applying semantic mutations to production TypeScript code",
