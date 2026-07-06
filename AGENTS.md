@@ -11,8 +11,7 @@ When updating project conventions, pull request requirements, validation gates, 
 ## Codex and Copilot CLI Workflow Instructions
 - Use the available Agent Skills when their descriptions match the task.
 - Use the configured MCP servers in `.mcp.json` when you need current documentation, lousy-agents analysis, or structured reasoning.
-- Keep shared policy DRY: do not duplicate validation, PR, or commit rules here.
-- Present the complete `git diff` and obtain explicit human approval before any `git commit` or PR creation, as required by the canonical instructions.
+- Keep shared policy DRY: do not duplicate validation, PR, or commit rules here. Follow the "Before Commit" and "Mandatory" sections of `.github/copilot-instructions.md`, which require presenting the complete `git diff` and obtaining explicit human approval before `git commit` or PR creation.
 
 ## Commands
 Use the commands documented in the canonical `.github/copilot-instructions.md` Commands section.

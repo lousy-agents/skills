@@ -1,7 +1,7 @@
 # Go Test Patterns
 
 Concrete, topic-organized Go testing patterns. Informed by patterns observed
-in `learn-go-with-tests`, plus pragmatic conventions for existing codebases
+in [`learn-go-with-tests`](https://github.com/quii/learn-go-with-tests), a community-maintained guide to TDD in Go, plus pragmatic conventions for existing codebases
 with established handwritten test styles. Use whichever subsection matches
 the task at hand; none of these require reproducing any particular book or
 tutorial structure.
@@ -152,6 +152,7 @@ data race.
    resultChannel := make(chan result)
 
    for _, url := range urls {
+       url := url // shadow: avoid capturing the shared loop variable (Go < 1.22)
        go func() {
            resultChannel <- result{url, wc(url)}
        }()

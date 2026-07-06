@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 
 # Go Testable Design
 
-Guide Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring. Informed by patterns from `learn-go-with-tests`.
+Guide Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring. Informed by patterns from [`learn-go-with-tests`](https://github.com/quii/learn-go-with-tests), a community-maintained guide to TDD in Go.
 
 ## When to Use
 
