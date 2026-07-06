@@ -1,13 +1,13 @@
 ---
-name: go-tdd-guide
-description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, or red-green-refactor, reviewing Go code for testability, or explaining Go test patterns. Guides unit tests, table tests, subtests, helpers with t.Helper(), dependency injection, httptest, io/fs boundaries, context cancellation, concurrency tests, property tests, and standard-library-first design from learn-go-with-tests patterns."
-argument-hint: "Optional: package, file path, bug, feature, or chapter-style topic to work on"
-allowed-tools: "Read, Write, Edit, Bash, Grep, Glob, read_file, edit_file, create_file, run_in_terminal, list_directory_contents"
+name: go-testable-design
+description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, or red-green-refactor, reviewing Go code for testability, or explaining Go test patterns. Guides unit tests, table tests, subtests, helpers with t.Helper(), constructor injection for dependencies, CLI/process/filesystem boundaries, business logic, httptest, io/fs boundaries, context cancellation, goroutine and concurrency tests (channels, sync.WaitGroup, race detector), property tests, and standard-library-first design."
+argument-hint: "Optional: package, file path, bug, feature, or testing topic to work on"
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
-# Go TDD Guide
+# Go Testable Design
 
-Guide Go development with tests in the style of `learn-go-with-tests`: small behavior first, executable examples, clear boundaries, and incremental refactoring.
+Guide Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring. Informed by patterns from `learn-go-with-tests`.
 
 ## When to Use
 
@@ -25,11 +25,13 @@ Do not use this skill for non-Go projects, generic CI setup, or broad architectu
 ## Core Rules
 
 - Prefer the standard library unless the repository already uses a focused dependency.
+- Match nearby test style; keep new tests succinct, direct, and behavior-focused.
 - Start from externally visible behavior: exported function, method, handler, CLI, file reader, or concurrent contract.
 - Write the smallest failing test that names the behavior.
 - Make the smallest production change that passes.
 - Refactor only after behavior is covered.
 - Keep test helpers small and mark them with `t.Helper()`.
+- Prefer constructor injection for dependencies that touch external state.
 - Use interfaces at boundaries, not everywhere.
 - Keep production APIs zero-value friendly where practical.
 - Do not hide meaningful errors from tests; assert them.
@@ -49,10 +51,11 @@ Do not use this skill for non-Go projects, generic CI setup, or broad architectu
 2. **Choose the Test Shape**
    - Pure functions: use direct assertions, then table tests once cases multiply.
    - Methods with mutation: assert state before and after, and cover error paths.
-   - HTTP handlers: use `net/http/httptest`; assert status, headers, body, and store interactions.
-   - CLI or printing code: inject `io.Reader` and `io.Writer`; assert output and side effects.
+   - Business logic with collaborators: inject dependencies through constructors and test with small local fakes.
+   - HTTP handlers: use `net/http/httptest`; assert status, headers, body, and collaborator calls.
+   - CLI/process/filesystem code: inject readers, writers, env lookup, filesystem access, and command execution.
    - File parsing or rendering: prefer `fs.FS`, `strings.Reader`, `bytes.Buffer`, temp files, and approval-style fixtures when useful.
-   - Concurrency: test the contract with channels, `sync.WaitGroup`, `context.Context`, and timeouts that fail fast.
+   - Goroutines/concurrency: benchmark before optimizing, run with `go test -race`, coordinate results with channels or `sync.WaitGroup` instead of shared mutable state, and add `select`/`context.Context` timeouts so tests fail fast instead of hanging.
    - Properties or reversible transformations: add `testing/quick` after concrete examples establish the expected behavior.
 
 3. **Write the First Failing Test**
@@ -121,14 +124,15 @@ func (s *SpyStore) RecordWin(name string) {
 }
 ```
 
-## Chapter Pattern Reference
+## Test Pattern Reference
 
-For more specific guidance from the explored repository, read [`references/chapter-patterns.md`](./references/chapter-patterns.md) when the task involves:
+Read [`references/go-test-patterns.md`](./references/go-test-patterns.md) when the task involves:
 
-- Recreating a `learn-go-with-tests` style chapter progression.
-- Choosing between test styles for a particular Go topic.
-- Working on HTTP, JSON, file IO, CLI, time, websocket, context, concurrency, reflection, generics, Roman numeral, rendering, or Q&A-style examples.
-- Explaining why a Go design is testable in the style of this repo.
+- Choosing between test styles for a particular Go topic: pure functions, HTTP/JSON handlers, file/rendering/CLI boundaries, time-based orchestration, websockets, dependency injection/mocking, reflection/generics/property tests, or business logic with collaborators.
+- Testing goroutines and concurrent code: benchmarking before optimizing, avoiding shared-state data races, using the race detector (`go test -race`), coordinating with channels or `sync.WaitGroup`, and adding `select`/timeout guards so tests fail fast.
+- Existing Go projects with established handwritten test conventions.
+- Constructor injection for testable business logic, handlers, CLIs, process execution, filesystem access, or other external boundaries.
+- Preserving simple local test style while improving isolation and test hygiene.
 
 ## Output Expectations
 
