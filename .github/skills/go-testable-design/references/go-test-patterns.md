@@ -11,16 +11,111 @@ tutorial structure.
 - Read nearby `*_test.go` files before choosing a pattern.
 - Keep tests straight-line: arrange inputs and fakes, call the unit, inspect
   outputs or side effects.
+- Make each test read as executable documentation for the behavior. A reader
+  should understand the rule, important example, and expected outcome without
+  reverse-engineering production internals.
+- Prefer behavior names over implementation names in subtests: `rejects
+  expired tokens`, `writes the invoice to the store`, or `returns 404 for
+  missing players`, not `calls validateToken` or `handles branch 3`.
 - Use local dummy types, spies, stubs, and small helpers before shared test
   utility packages.
 - Use direct `if got != want { t.Fatalf(...) }` assertions when they match
   local style.
 - Keep expected values visible in tests unless helper extraction clearly
   improves readability.
+- Make assertion failures explain the contract: include the behavior,
+  relevant input/state, and `got`/`want` or actual error details.
 - Add table tests or subtests only when multiple cases share the same shape
   or failure names matter.
 - Avoid adding assertion libraries or mocking frameworks unless the repo
   already uses them.
+
+## Executable Documentation and Diagnostic Assertions
+
+Tests should document the behavior a caller relies on, not the mechanism the
+production code currently uses. A useful test failure should let a human or
+agent infer the intended production behavior from the failure output.
+
+Use this shape:
+
+```go
+func TestWithdraw(t *testing.T) {
+    t.Run("rejects withdrawals that would overdraw the account", func(t *testing.T) {
+        account := NewAccount(Money(20))
+
+        err := account.Withdraw(Money(25))
+
+        if !errors.Is(err, ErrInsufficientFunds) {
+            t.Fatalf("overdraft withdrawal should fail with ErrInsufficientFunds: got %v", err)
+        }
+        if got, want := account.Balance(), Money(20); got != want {
+            t.Fatalf("failed overdraft should leave balance unchanged: got %v, want %v", got, want)
+        }
+    })
+}
+```
+
+For tables, make case names read like the spec and include the case in
+failure output:
+
+```go
+tests := []struct {
+    name string
+    role Role
+    want []Permission
+}{
+    {"admin can manage users", Admin, []Permission{ManageUsers}},
+    {"viewer can only read reports", Viewer, []Permission{ReadReports}},
+}
+
+for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {
+        got := PermissionsFor(tt.role)
+
+        if !slices.Equal(got, tt.want) {
+            t.Fatalf("permissions for role %s: got %v, want %v", tt.role, got, tt.want)
+        }
+    })
+}
+```
+
+When comparing large structured values, prefer parsed representations or an
+existing local diff helper. If the standard library is enough, compare
+specific fields and make each failure name the contract being checked. If
+the repository already uses a diff package, include the diff in the failure
+message with behavior context.
+
+## Implementation-Coupling Anti-Patterns
+
+Avoid tests that cement current production structure instead of behavior:
+
+- Testing unexported helper functions only because the exported behavior
+  currently delegates to them. Test the exported behavior unless the helper
+  is itself a stable package contract.
+- Verifying every mock call, call order, or intermediate collaborator when
+  the caller only cares about final output, persisted effects, emitted
+  events, or external requests.
+- Rebuilding the production algorithm in the test to compute `want`; this
+  lets the same bug exist in both places. Use concrete examples,
+  independently known fixtures, or properties instead.
+- Asserting exact SQL strings, JSON field order, map iteration order,
+  timestamps, generated IDs, log wording, or full rendered documents unless
+  that exact representation is the documented contract.
+- Asserting private struct fields when a public method, returned value,
+  stored record, emitted event, or fake boundary can express the behavior.
+- Adding broad snapshot or golden-file tests without focused assertions for
+  the behavior that matters. Fixtures should clarify expected output, not
+  hide a large opaque blob.
+- Mirroring production branching in the test (`if input.X { want = ... }`)
+  instead of naming separate examples.
+- Making tests pass by exposing production internals only for tests. Prefer
+  testing through public behavior or extracting a real boundary.
+
+Interaction assertions are valid when the interaction is the behavior: a CLI
+must invoke a command with specific arguments, a service must write a record,
+a handler must call a dependency with the authenticated user, or a goroutine
+must cancel work. Keep those assertions at the boundary contract, not at
+incidental helper calls.
 
 ## Pure Functions and Foundational Progression
 
