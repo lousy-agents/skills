@@ -1,0 +1,32 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Testing & Robustness",
+      "description": "Skills focused on mutation hunting, testing architectures, and chaos engineering.",
+      "skills": [
+        "mutation-hunter",
+        "rugged-evil-tester",
+        "go-testable-design"
+      ]
+    },
+    {
+      "title": "Planning & Workflows",
+      "description": "Graph mappings and translation of features into actionable execution plans.",
+      "skills": [
+        "plan-to-graph",
+        "feature-to-plan",
+        "spec-auditor"
+      ]
+    },
+    {
+      "title": "Code Review & Integrity",
+      "description": "Automated pull request triaging and code quality gatekeeping.",
+      "skills": [
+        "triaging-pr-reviews",
+        "skill-reviewer"
+      ]
+    }
+  ]
+}
