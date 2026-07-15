@@ -1,117 +1,124 @@
 ---
 name: plan-to-graph
-description: "Converts a Lousy Agents spec or master plan into a structured Beads (bd) dependency graph of epics and tasks. Use when asked to 'convert plan to issues', 'create beads from spec', 'populate beads', 'plan to graph', or 'break down spec into tasks'."
-argument-hint: "Path to a spec or master plan file to convert into Beads epics/tasks"
+description: "Converts an approved local spec, master plan, or GitHub epic issue into a GitHub Issue dependency graph with native sub-issues and blocking relationships. Use when asked to 'convert plan to issues', 'create GitHub sub-issues', 'populate issues from a spec', 'plan to graph', or 'break down a GitHub epic into tasks'."
+argument-hint: "GitHub epic issue URL/number, or path to a local spec or master plan; include a target repository for local files"
 effort: medium
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Plan to Graph
 
-You are the Plan-to-Graph converter. Your job is to read a Lousy Agents spec or master plan and translate it into a structured Beads dependency graph. You do not implement any code. You only populate the Beads database.
+Translate an approved plan into GitHub Issues. Do not implement code or modify the source plan. GitHub Issues are the only durable work-item store: use native sub-issues for hierarchy and native blocking relationships for dependencies.
 
 ## When to Use
 
-- Converting a Lousy Agents spec into Beads epics and tasks
-- Breaking a master plan or roadmap into a dependency graph
-- Populating Beads from a `*.spec.md` file or similar planning document
-- Turning a feature plan into issues with explicit dependencies and verification notes
+- Convert an approved `*.spec.md`, master plan, or roadmap into GitHub Issues.
+- Turn a GitHub epic's `## Tasks` section into native GitHub sub-issues.
+- Preserve task requirements and verification as issue bodies while representing explicit dependencies as blocking edges.
 
-Do NOT use when:
-- The user wants code implemented from the plan
-- The user wants general issue triage, PR review, or project management unrelated to converting a concrete plan into Beads
+Do not use this skill to implement a plan, triage unrelated issues, or create speculative project-management work.
 
-## Prerequisites
+## Prerequisites and Input
 
-- **`bd` CLI (Beads)** must be installed and initialized in the repository.
-- The input spec or plan file must exist and be readable.
-
-Before starting, verify Beads is available and initialized:
+Require authenticated GitHub CLI access. Resolve the target repository before drafting:
 
 ```bash
-bd list
+gh auth status
+gh repo view <OWNER/REPO> --json nameWithOwner,url
 ```
 
-If `bd` is not found or not initialized, stop and tell the user to install and initialize Beads first.
+- For a GitHub epic URL, derive `<OWNER/REPO>` from the URL, then verify it with `gh repo view`.
+- For a GitHub epic number or a local file, require the user to provide `<OWNER/REPO>`; do not infer it from the current checkout.
 
-## Input
-
-The user provides a path to a spec file (typically `*.spec.md`) or a master plan document. Read the entire file before proceeding.
-
-## Conversion Rules
-
-### 1. Identify Epics
-
-Each major phase, feature area, or user story heading becomes an epic:
+Before drafting, confirm that the installed GitHub CLI supports the required native-relationship flags and returns every required issue JSON field. These checks are read-only:
 
 ```bash
-bd create "<Epic Title>" --type epic
+gh issue create --help | grep -F -e '--parent'
+gh issue edit --help | grep -F -e '--add-blocked-by'
+gh issue view --help | grep -F -e 'blockedBy'
+gh issue view --help | grep -F -e 'blocking'
+gh issue view --help | grep -F -e 'subIssues'
 ```
 
-Map these from the spec structure:
-- Each `### Story N: <Title>` heading under `## User Stories` becomes an epic
-- If the plan uses numbered phases or milestones, each phase becomes an epic
-- If the plan has no clear grouping, create a single epic matching the feature name
-- For specs with a single story, the feature title itself becomes the epic
-
-### 2. Identify Tasks
-
-Each task listed in the spec's `## Tasks` section becomes a Beads task. Pass `--parent` to assign it to its epic at creation time — this is the only way to establish the task-to-epic relationship:
+Confirm the `create` help includes `--parent`, the `edit` help includes `--add-blocked-by`, and the `view` help lists `blockedBy`, `blocking`, and `subIssues`. For a GitHub-epic source, also confirm the complete read succeeds:
 
 ```bash
-bd create "<Task Title>" --type task --parent <epic_id>
+gh issue view <EPIC> --repo <OWNER/REPO> --json number,title,body,labels,url,subIssues,blockedBy,blocking
 ```
 
-This produces a task ID of the form `<epic_id>.N` (e.g., `my-epic.1`). Use the task title verbatim from the spec. If the spec title is terse (e.g., "Task 3"), keep it as-is and capture the full objective from the spec's **Objective** field in a follow-up `bd comment` on that task.
+If any check fails, stop before drafting or mutating and report the installed `gh` version plus the missing capability. Ask the user to upgrade to a GitHub CLI version that supports native sub-issues and blocking relationships; do not emulate either relationship with labels, body checklists, comments, or an external tracker.
 
-### 3. Wire Task-to-Task Dependencies
+Accept exactly one source:
 
-The epic-task hierarchy is established via `--parent` at creation time (see §2). Use `bd dep add` only for explicit task-to-task dependencies from the spec:
+- A GitHub epic issue URL or number. Derive the target repository from a URL; require a supplied target repository for a number.
+- A readable local spec or master-plan file. The user must also provide a target repository; derive one epic title from the plan title.
+
+If authentication, repository resolution, source access, or the epic issue cannot be verified, stop and report the exact blocker. Never substitute labels, body checklists, or an external tracker for native relationships.
+
+For a GitHub epic, read its complete title, body, labels, URL, and existing hierarchy before parsing:
 
 ```bash
-bd dep add <blocked_task_id> <blocking_task_id>
+gh issue view <EPIC> --repo <OWNER/REPO> --json number,title,body,labels,url,subIssues,blockedBy,blocking
 ```
 
-- When a spec task says **"Depends on: Task N"**, add the corresponding dependency between the two task IDs
-- When tasks within the same epic have no explicit dependencies, they can be treated as parallel (no `bd dep add` needed)
+Treat every task entry under `## Tasks` as a proposed direct child. Existing metadata is context only; do not copy it into a child unless that task explicitly includes it.
 
-### 4. Handle Verification Steps
+## Procedure: Parse and Map
 
-After creating each task, add a comment capturing its verification steps / acceptance criteria from the spec's checklist:
+1. Read the complete source before mapping any issue. Identify the epic title, every task heading, each explicit `Depends on` statement, and the complete structured task content.
+2. Preserve every task title exactly. Preserve each task body verbatim from its heading through the line before the next task, including **Objective**, **Context**, **Affected files**, **Requirements**, **Verification**, and **Done when**. Put that content in the child issue body; do not split it into comments.
+3. For a GitHub epic, use that issue as the parent. For a local source, propose one new epic issue using the source title, then make every task a direct child of it.
+4. Map only explicit dependencies. `Task B` with `Depends on: Task A` means B is blocked by A. If a task title, dependency target, scope, or local-plan epic title cannot be mapped unambiguously, stop and ask for clarification. Do not invent tasks, dependencies, labels, or metadata.
 
-```bash
-bd comment <task_id> "Verification: <paste verification checklist from spec>"
-```
+## Mandatory Draft Gate
 
-This preserves traceability between the spec and the issue graph.
+Before any `gh issue create` or `gh issue edit` mutation, present a draft containing:
 
-### 5. Error Handling
+| Source task | Proposed issue title | Parent epic | Blocked by | Body retained |
+| --- | --- | --- | --- | --- |
+| Task N | exact title | issue URL/number or proposed epic | explicit task IDs | Objective, Context, Affected files, Requirements, Verification, Done when |
 
-- If any `bd` command fails, stop and report the exact error to the user. Do not continue creating subsequent items until the error is resolved.
-- If the spec is ambiguous about grouping or dependencies, note the ambiguity in the draft summary and ask the user to clarify before proceeding.
+Also show the dependency edges in `blocked ← blocker` form and list every unmapped or ambiguous source section. Ask for explicit confirmation. A draft is read-only; do not create issues until the user confirms it.
 
-## Procedure
+## Create and Wire the Confirmed Graph
 
-1. **Validate input and tools** — Confirm the user provided a path, read the entire spec or plan file, and run `bd list` to verify Beads is installed and initialized. If the path is missing, the file cannot be read, or `bd list` fails, stop and report the exact blocker.
-2. **Parse the plan** — Identify the feature title, epics, tasks, explicit dependencies, and verification or acceptance criteria. Preserve the spec's original titles and wording.
-3. **Draft the graph** — Before running any mutating `bd` commands, output a summary table mapping spec sections to planned epics and tasks with dependencies and verification notes. Ask the user to confirm.
-4. **Create epics** — For each confirmed epic, run `bd create "<Epic Title>" --type epic`. Record the ID printed by `bd create`; if the output does not contain a clear ID, run `bd list` and match by exact title. If the ID is still ambiguous, stop and ask the user before proceeding.
-5. **Create tasks** — For each confirmed task, run `bd create "<Task Title>" --type task --parent <epic_id>`. Record the returned ID (format: `<epic_id>.N`) using the same ID-capture rule as epics.
-6. **Wire task-to-task dependencies** — For each explicit "Depends on" relationship in the spec, run `bd dep add <blocked_task_id> <blocking_task_id>`. Skip this step if the spec has no explicit inter-task dependencies.
-7. **Add verification comments** — For each task with verification steps, run `bd comment <task_id> "Verification: <verification checklist>"`. If the task title was terse and the spec includes an Objective field, add a separate `bd comment <task_id> "Objective: <objective text>"`.
-8. **Print the final graph** — Run `bd list`, then display the captured ID map and dependency edges from this session so the user can review the populated graph.
+After confirmation, make one mutation at a time and record every returned issue URL and number.
 
-## Output
+1. For a local source, create the confirmed epic first and record its URL/number:
 
-When finished, display:
-- A summary of created epics and tasks with their Beads IDs
-- The dependency graph showing what blocks what
-- Any spec sections that were skipped or could not be mapped (with reasons)
+   ```bash
+   gh issue create --repo <OWNER/REPO> --title "<Epic Title>" --body "<Epic body>"
+   ```
 
-## Constraints
+2. Create each confirmed child with its full, verbatim structured task content in the body. Every child-creation command must explicitly include the resolved `--repo <OWNER/REPO>`:
 
-- **Do not implement any code.** Your only goal is to populate the Beads database.
-- **Do not modify the spec file.** The spec is read-only input.
-- **Do not invent tasks.** Only create issues that map directly to content in the spec.
-- **Preserve spec language.** Use the spec's own wording for titles and descriptions to maintain traceability.
-- **Ask before proceeding.** Always show the draft graph and get user confirmation before creating any Beads issues.
+   ```bash
+   gh issue create --repo <OWNER/REPO> --parent <EPIC> --title "<Task Title>" --body-file <TASK_BODY_FILE>
+   ```
+
+   Use a temporary body file or standard input when needed to preserve Markdown exactly. Do not add task content through issue comments.
+
+3. Translate every confirmed dependency only after all child URLs/numbers are known:
+
+   ```bash
+   gh issue edit <CHILD> --repo <OWNER/REPO> --add-blocked-by <BLOCKER>
+   ```
+
+4. If any GitHub mutation fails, stop immediately. Report the exact command/error and the issue URLs already created; do not continue or guess at recovery.
+
+5. Verify the resulting hierarchy and graph:
+
+   ```bash
+   gh issue view <EPIC> --repo <OWNER/REPO> --json subIssues,blockedBy,blocking
+   gh issue view <CHILD> --repo <OWNER/REPO> --json subIssues,blockedBy,blocking
+   ```
+
+   Confirm every child is a direct sub-issue of the epic and every explicit edge appears in the relevant `blockedBy`/`blocking` data. Stop and report any mismatch.
+
+## Dependency Mapping Example
+
+If a source task says `Task B` **Depends on** `Task A`, draft `B ← A` and create the corresponding native blocking relationship. Always derive every edge from the current source; never reuse an example graph, issue number, repository, or task mapping from a prior run.
+
+## Completion Output
+
+Report the epic URL, each created child URL/number, the verified `blocked ← blocker` edges, and any source sections deliberately not mapped. Do not claim completion until the GitHub verification output confirms the hierarchy and dependency graph.
