@@ -96,7 +96,7 @@ Invoke it in your agent:
 npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor --skill plan-to-graph
 ```
 
-> **Prerequisite:** `plan-to-graph` requires authenticated [`gh`](https://cli.github.com/) access and a resolvable target repository.
+> **Prerequisite:** `plan-to-graph` requires a resolvable target repository and authenticated [`gh`](https://cli.github.com/) access, on a version new enough to support native sub-issues and blocking relationships (`gh issue create --parent`, `gh issue edit --add-blocked-by`). The skill checks this before it creates anything and stops if the flags are missing.
 
 ---
 
@@ -173,10 +173,10 @@ Converts Lousy Agents specs, master plans, roadmaps, and GitHub epics into nativ
 
 **Use when you want to:**
 - Convert a `*.spec.md` file or master plan into GitHub Issues
-- Break user stories, phases, or roadmap items into an epic and sub-issues with dependencies
+- Break a plan's tasks into one epic and a single level of sub-issues with explicit blocking dependencies
 - Preserve each task's complete structured content in its child-issue body
 
-**Requires** authenticated `gh` access and a target GitHub repository.
+**Requires** a target GitHub repository and authenticated `gh` access with native sub-issue support. Re-running against an epic that already has sub-issues will not duplicate them — the skill detects the collision and stops.
 
 ---
 
