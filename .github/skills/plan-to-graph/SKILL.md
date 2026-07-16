@@ -33,14 +33,13 @@ gh repo view <OWNER/REPO> --json nameWithOwner,url
 Before drafting, confirm that the installed GitHub CLI supports the required native-relationship flags and returns every required issue JSON field. These checks are read-only:
 
 ```bash
-gh issue create --help | grep -F -e '--parent'
-gh issue edit --help | grep -F -e '--add-blocked-by'
-gh issue view --help | grep -F -e 'blockedBy'
-gh issue view --help | grep -F -e 'blocking'
-gh issue view --help | grep -F -e 'subIssues'
+gh version
+gh issue create --help
+gh issue edit --help
+gh issue view --help
 ```
 
-Confirm the `create` help includes `--parent`, the `edit` help includes `--add-blocked-by`, and the `view` help lists `blockedBy`, `blocking`, and `subIssues`. For a GitHub-epic source, also confirm the complete read succeeds:
+Record the `gh` version. Confirm the `create` help output includes `--parent`, the `edit` help output includes `--add-blocked-by`, and the `view` help output lists `blockedBy`, `blocking`, and `subIssues`. For a GitHub-epic source, also confirm the complete read succeeds:
 
 ```bash
 gh issue view <EPIC> --repo <OWNER/REPO> --json number,title,body,labels,url,subIssues,blockedBy,blocking
@@ -84,10 +83,10 @@ Also show the dependency edges in `blocked ← blocker` form and list every unma
 
 After confirmation, make one mutation at a time and record every returned issue URL and number.
 
-1. For a local source, create the confirmed epic first and record its URL/number:
+1. For a local source, create the confirmed epic first and record its URL/number. Write the epic body to a temporary file so Markdown is preserved exactly:
 
    ```bash
-   gh issue create --repo <OWNER/REPO> --title "<Epic Title>" --body "<Epic body>"
+   gh issue create --repo <OWNER/REPO> --title "<Epic Title>" --body-file <EPIC_BODY_FILE>
    ```
 
 2. Create each confirmed child with its full, verbatim structured task content in the body. Every child-creation command must explicitly include the resolved `--repo <OWNER/REPO>`:
@@ -110,10 +109,10 @@ After confirmation, make one mutation at a time and record every returned issue 
 
    ```bash
    gh issue view <EPIC> --repo <OWNER/REPO> --json subIssues,blockedBy,blocking
-   gh issue view <CHILD> --repo <OWNER/REPO> --json subIssues,blockedBy,blocking
+   gh issue view <CHILD> --repo <OWNER/REPO> --json parent,subIssues,blockedBy,blocking
    ```
 
-   Confirm every child is a direct sub-issue of the epic and every explicit edge appears in the relevant `blockedBy`/`blocking` data. Stop and report any mismatch.
+   Confirm every child's `parent` is the epic and every explicit edge appears in the relevant `blockedBy`/`blocking` data. Stop and report any mismatch.
 
 ## Dependency Mapping Example
 
