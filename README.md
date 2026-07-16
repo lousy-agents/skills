@@ -11,7 +11,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | --- | --- | --- |
 | [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into structured EARS-format specs |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
-| [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs and master plans into Beads dependency graphs of epics and tasks |
+| [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small behavior first, executable examples, clear boundaries |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
@@ -45,7 +45,7 @@ feature idea or GitHub issue
   spec-auditor             ← adversarial findings + targeted spec patches
         │
         ▼
-  plan-to-graph            ← Beads dependency graph (epics + tasks)
+  plan-to-graph            ← GitHub Issue graph (epic + sub-issues)
         │
         ▼
   executable work items    ← agents or engineers can now implement
@@ -79,7 +79,7 @@ Invoke it in your agent:
 
 **Step 3: Convert the approved spec to a dependency graph with `plan-to-graph`**
 
-Feed the spec file to `plan-to-graph`. It parses user stories and tasks, drafts a summary table for your review, then populates your [Beads](https://beads.sh) (`bd`) database with epics, tasks, explicit dependencies, and verification notes copied from the spec.
+Feed the approved spec or a GitHub epic to `plan-to-graph`. It parses the tasks, drafts a graph for your review, then creates native GitHub sub-issues with the full task content preserved in each body and explicit blocking dependencies.
 
 ```bash
 npx skills add lousy-agents/skills --skill plan-to-graph
@@ -87,8 +87,8 @@ npx skills add lousy-agents/skills --skill plan-to-graph
 
 Invoke it in your agent:
 
-> *"Convert .github/specs/oauth-login.spec.md to Beads"*
-> *"plan-to-graph on the new spec"*
+> *"Convert .github/specs/oauth-login.spec.md into GitHub sub-issues in OWNER/REPO"*
+> *"Create the task graph for GitHub epic #47"*
 
 **Install all three planning skills at once:**
 
@@ -96,7 +96,7 @@ Invoke it in your agent:
 npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor --skill plan-to-graph
 ```
 
-> **Prerequisite:** `plan-to-graph` requires the Beads `bd` CLI installed and initialized in the repository. See [beads.sh](https://beads.sh) for setup.
+> **Prerequisite:** `plan-to-graph` requires a resolvable target repository and authenticated [`gh`](https://cli.github.com/) access, on a version new enough to support native sub-issues and blocking relationships (`gh issue create --parent`, `gh issue edit --add-blocked-by`). The skill checks this before it creates anything and stops if the flags are missing.
 
 ---
 
@@ -158,7 +158,7 @@ When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and 
 
 **Do NOT use when:**
 - You want to draft a spec from a feature idea or issue. Use `feature-to-plan` instead.
-- You want to convert an approved spec into Beads epics and tasks. Use `plan-to-graph` instead.
+- You want to convert an approved spec into GitHub sub-issues. Use `plan-to-graph` instead.
 - You want to triage PR review comments or Copilot feedback. Use `triaging-pr-reviews` instead.
 
 **Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object, useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
@@ -169,14 +169,14 @@ When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and 
 
 **Install:** `npx skills add lousy-agents/skills --skill plan-to-graph`
 
-Converts Lousy Agents specs, master plans, and roadmaps into Beads (`bd`) epics and tasks with explicit dependencies and verification notes. It drafts the graph for confirmation before populating the Beads database.
+Converts Lousy Agents specs, master plans, roadmaps, and GitHub epics into native GitHub sub-issues with explicit blocking dependencies. It drafts the graph for confirmation before creating any issue.
 
 **Use when you want to:**
-- Convert a `*.spec.md` file or master plan into Beads issues
-- Break user stories, phases, or roadmap items into epics and tasks with dependencies
-- Preserve acceptance criteria and verification steps as issue comments
+- Convert a `*.spec.md` file or master plan into GitHub Issues
+- Break a plan's tasks into one epic and a single level of sub-issues with explicit blocking dependencies
+- Preserve each task's complete structured content in its child-issue body
 
-**Requires** the Beads `bd` CLI installed and initialized.
+**Requires** a target GitHub repository and authenticated `gh` access with native sub-issue support. Re-running against an epic that already has sub-issues will not duplicate them — the skill detects the collision and stops.
 
 ---
 

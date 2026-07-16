@@ -37,10 +37,10 @@
     {
       "name": "plan-to-graph",
       "displayName": "Plan to Graph",
-      "description": "Convert specs or master plans into structured Beads dependency graphs of epics and tasks",
+      "description": "Convert approved specs, master plans, or GitHub epics into native GitHub Issue dependency graphs with sub-issues and blocking relationships",
       "source": "./plan-to-graph",
       "category": "planning",
-      "keywords": ["planning", "graph", "beads", "epics", "tasks"]
+      "keywords": ["planning", "graph", "github-issues", "sub-issues", "blocking-dependencies", "epics", "tasks"]
     },
     {
       "name": "rugged-evil-tester",
