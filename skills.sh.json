@@ -25,6 +25,7 @@
       "description": "Automated pull request triaging and code quality gatekeeping.",
       "skills": [
         "triaging-pr-reviews",
+        "curate-release",
         "skill-reviewer"
       ]
     }

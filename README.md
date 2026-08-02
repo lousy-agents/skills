@@ -16,6 +16,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
+| [`curate-release`](#curate-release) | Code Review / Release | Rewrites a PR's commits into a coherent release story semantic-release can publish |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
 
 ---
@@ -105,14 +106,14 @@ npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor 
 The full set of skills spans the software delivery lifecycle. The table below shows the natural entry point for each skill as features move from idea to production.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Planning          │  Implementation  │  Testing     │  Review  │
-├─────────────────────────────────────────────────────────────────┤
-│  feature-to-plan   │  go-testable-    │  rugged-     │  triaging│
-│  spec-auditor      │  design          │  evil-tester │  -pr-    │
-│  plan-to-graph     │  (your agent or  │  mutation-   │  reviews │
-│                    │   engineers)     │  hunter      │          │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│  Planning          │  Implementation  │  Testing     │  Review                 │
+├────────────────────────────────────────────────────────────────────────────────┤
+│  feature-to-plan   │  go-testable-    │  rugged-     │  triaging-pr-reviews    │
+│  spec-auditor      │  design          │  evil-tester │  curate-release         │
+│  plan-to-graph     │  (your agent or  │  mutation-   │                         │
+│                    │    engineers)    │  hunter      │                         │
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Skill | When in the lifecycle |
@@ -124,6 +125,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
 | `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
 | `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
+| `curate-release` | At merge time: to curate a PR's commits so the release notes tell a coherent story |
 | `skill-reviewer` | When authoring or updating a `SKILL.md`: a contributor/meta tool, not part of the delivery flow |
 
 ---
@@ -240,6 +242,21 @@ Processes PR review comments — from humans or automated reviewers like GitHub 
 
 ---
 
+### `curate-release`
+
+**Install:** `npx skills add lousy-agents/skills --skill curate-release`
+
+Rewrites the commits on a pull request's head branch so the release notes semantic-release generates read as a coherent story. Types each commit by customer impact rather than by which files moved — a real fix typed `chore` does not merely go unmentioned, it can leave the entire release unpublished. The tree at HEAD stays byte-identical to the tree it started from; only commit boundaries and messages change.
+
+**Use when you want to:**
+- Turn `wip` / `address review` / `fix typo` commits into Conventional Commits before merge
+- Run curation unattended from a gate label, with preflight gates that abort on drafts, forks, squash-only repos, and already-curated branches
+- Know what release type and publish channel a PR will actually produce, including pre-release and maintenance branches
+
+**Requires** a repository that merges by merge commit or rebase — squash-only repositories get a proposed squash title instead of a rewrite.
+
+---
+
 ### `skill-reviewer`
 
 **Install:** `npx skills add lousy-agents/skills --skill skill-reviewer`
@@ -300,6 +317,7 @@ Install any skill by name:
 /plugin install mutation-hunter@lousy-agents
 /plugin install spec-auditor@lousy-agents
 /plugin install triaging-pr-reviews@lousy-agents
+/plugin install curate-release@lousy-agents
 /plugin install skill-reviewer@lousy-agents
 ```
 

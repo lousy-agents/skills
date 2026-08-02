@@ -73,6 +73,14 @@
       "source": "./triaging-pr-reviews",
       "category": "code-review",
       "keywords": ["PR", "review", "triage", "code-review", "Copilot"]
+    },
+    {
+      "name": "curate-release",
+      "displayName": "Curate Release",
+      "description": "Rewrite a pull request's commits into a coherent release story that semantic-release can publish, without changing file contents",
+      "source": "./curate-release",
+      "category": "code-review",
+      "keywords": ["git", "commit-history", "conventional-commits", "semantic-release", "changelog", "release-notes", "pull-request"]
     }
   ]
 }
