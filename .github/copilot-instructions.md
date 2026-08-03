@@ -40,10 +40,10 @@ Read existing skills (e.g., `rugged-evil-tester`, `mutation-hunter`, `triaging-p
 The only tooling required to work in this repo is `npx` (Node 18+). There is no `package.json` — skills are markdown and YAML.
 
 - `npx -y @lousy-agents/cli lint` — full lint suite (skills, agents, hooks, instructions). Run from repo root.
-- `npx -y @lousy-agents/cli lint --skills` — frontmatter validation for every `SKILL.md` under `.github/skills/`.
+- `npx -y @lousy-agents/cli lint --skills` — frontmatter validation for every `SKILL.md` under `skills/` (also available through the `.github/skills` compatibility link).
 - `npx -y @lousy-agents/cli lint --hooks` — schema validation for `.claude/settings.json` and `.github/hooks/agent-shell/hooks.json` (if present).
 - `npx -y @lousy-agents/cli lint --instructions` — quality analysis of `.github/copilot-instructions.md`, `CLAUDE.md`, and other instruction files.
-- `npx -y @lousy-agents/cli new skill <name>` — scaffold a new skill folder under `.github/skills/<name>/`.
+- `npx -y @lousy-agents/cli new skill <name>` — scaffold a new skill folder under `skills/<name>/`.
 - `npx -y skills add lousy-agents/skills --skill <name>` — how downstream users install a skill from this repo into their own project.
 
 MCP servers configured in `.mcp.json` (must be enabled in your client to use them):
