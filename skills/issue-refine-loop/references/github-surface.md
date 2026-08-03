@@ -27,9 +27,19 @@ its name — a `*_write` tool that only creates issues cannot serve `update_issu
 ### 2. An invocable `yeet`-family skill
 
 Names to check: `yeet`, `github:yeet`, `github-yeet`. Probe by checking the invocable-skill listing
-and reading the skill's own description for which issue operations it covers. A `yeet` skill that
-only creates issues supplies `create_child_issue` but not `update_issue_body`; in that case keep
-probing for a surface that covers the rest, and bind one surface for the whole run.
+and reading the skill's own description for which of the five abstract operations it covers — do
+not assume full coverage from the name alone. A `yeet` skill scoped to issue *creation* (common in
+Codex-style setups oriented around opening PRs and issues) supplies `create_child_issue` but not
+`update_issue_body`, `add_comment`, or `set_labels`; in that case keep probing down to `gh` for the
+rest, and bind exactly one surface for the whole run — do not split operations across a partial
+`yeet` skill and `gh`. If probing continues to `gh` and it is unavailable too, the run still aborts
+per "Zero write surfaces" below; the abort message must name precisely which operations the `yeet`
+skill lacked, so whoever configured the harness knows to either extend it or install `gh`. **Expected
+Codex configuration for full standalone coverage:** a `github:yeet`-family skill (or an equivalent
+wrapper) that implements all five operations — reading an issue with comments/labels, updating a
+body, commenting, setting labels, and creating a linked child issue — is what lets this skill run in
+a pure-Codex environment with no `gh` fallback; document that requirement wherever this skill is
+installed for Codex use.
 
 ### 3. Authenticated `gh` CLI
 
@@ -143,11 +153,28 @@ each body, and labels failures `needs-refine`. It applies the **same** rubric th
 a looser scan bar produces issues that get labeled, refined, and immediately re-labeled. The scan
 labels only — it does not itself refine.
 
+**Stop-and-ask conversion.** Automation mode never blocks waiting for a human, so every "stop and
+ask" condition named in `SKILL.md` — an ambiguous repository or closed issue in Phase 0, a partial
+or unrelated child-title collision in Phase 5, the 12-task cap — has an automation-mode equivalent:
+write the concrete question into the body's Open Questions with an explicit severity, set the
+terminal state to `needs-human-input`, release the `refining` lock, and exit. The exception is
+Phase 0's repository-ambiguity and closed-issue checks: those happen before any issue is confirmed
+refinable, so there is nowhere to write a question yet. Automation entry points are expected to
+supply unambiguous `owner/repo#N` context already (a label fires on a specific issue in a specific
+repository); if either check fails anyway — a misconfigured trigger, for example — the run aborts
+(terminal state `aborted`) and reports why through whatever channel receives the trigger's own
+output, rather than guessing at a target. The `SKILL.md` Failure and Degradation Summary table is
+the authoritative per-condition listing; this paragraph is the rule it implements.
+
 **Concurrency.** Two runs must never refine one issue at once: body writes are last-writer-wins, so
 the slower run silently discards the faster run's work. Guard with both the skill's own `refining`
 lock (which only the skill sets and clears) and whatever native concurrency group the automation
 platform offers, keyed on `owner/repo#N`. Prefer cancel-in-progress off and queueing on, so a second
-trigger waits rather than truncating a run mid-loop.
+trigger waits rather than truncating a run mid-loop. A stale `refining` label — left by an
+interrupted automation run, or by an interactive session that was approved and then abandoned before
+Phase 6 — is safe to treat as expired once its age clears a reasonable run-duration threshold (a few
+hours is a reasonable default for a 5-round loop); a fresh invocation on the same issue may then
+proceed rather than waiting indefinitely for a release that will never come.
 
 **Autonomy mode.** Every automated entry point runs in automation mode: no approval gate, plan
 comment mandatory and posted before the first body mutation, no close/reopen/transfer, and the

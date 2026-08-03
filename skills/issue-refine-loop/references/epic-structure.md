@@ -23,9 +23,19 @@ Platform — Baseline Scan*), read directly for this skill. Its personas are a t
 `spec-format.md`, so no conflict is currently outstanding.
 
 **On first run against a new repository**, re-derive structure from that repository's own best
-refined epic when one exists — the section set below is the default, not a repo-invariant law. If
-the gold standard cannot be fetched, use the section set below unchanged and record in the closing
-comment that the tiebreaker was unavailable. **Never invent the gold standard's contents.**
+refined epic when one exists, using this deterministic search order — the section set below is the
+default, not a repo-invariant law:
+
+1. An issue carrying both the `refined` label and the `<!-- issue-refine-loop:v1 -->` marker — the
+   strongest signal, since a prior run of this skill already produced it.
+2. Failing that, an issue titled with an `epic:` prefix (or whatever prefix convention the
+   repository's other issues establish) whose body contains at least six of the eight canonical
+   section headings below.
+3. Neither found — use the section set below unchanged, and record in the closing comment that the
+   tiebreaker was unavailable.
+
+**Never invent the gold standard's contents.** A partial match under (2) only supplies structure,
+never content.
 
 ## Canonical Section Set and Ordering
 
