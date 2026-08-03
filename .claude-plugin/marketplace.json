@@ -7,7 +7,7 @@
     "email": "pratt.zach@gmail.com"
   },
   "metadata": {
-    "pluginRoot": ".github/skills"
+    "pluginRoot": "skills"
   },
   "plugins": [
     {

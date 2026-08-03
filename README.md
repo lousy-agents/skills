@@ -341,7 +341,7 @@ For the full list of supported agents, see [vercel-labs/skills](https://github.c
 
 ## Contributing
 
-Skills live in `.github/skills/<name>/SKILL.md`. To scaffold a new skill:
+Skills live in `skills/<name>/SKILL.md`. The `.agents/skills`, `.claude/skills`, and `.github/skills` discovery paths are compatibility links to that canonical tree. To scaffold a new skill:
 
 ```bash
 npx -y @lousy-agents/cli new skill <name>
