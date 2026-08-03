@@ -252,20 +252,33 @@ format defines: **Objective, Context, Affected files, Requirements, Verification
 Checkboxes are written unchecked. See [`references/epic-structure.md`](./references/epic-structure.md)
 for the anatomy.
 
-**Collision check before creating anything.** Compare every proposed child title against the epic's
-existing children and against the repository's open *and* closed issues.
+**Collision check before creating anything.** Compare every proposed child title first against the
+epic's *existing children* — a true collision, since those are already linked to this epic — and
+separately against the titles of the repository's other open and closed issues, which are only
+*candidates*: a repo-wide title match with no link back to this epic is not evidence the graph is
+populated, only that some other issue happens to share a title (generic task titles like "Add
+tests" make this plausible).
 
-- No overlap → proceed.
-- Every proposed title already exists → create nothing; record that the graph is already populated.
-- Partial overlap → **stop and ask** which children to create. Never choose for the user. GitHub
-  issues cannot be deleted, so a duplicate is manual cleanup for a human.
+- No title matches anything, in either pool → proceed; create every proposed child.
+- Every proposed title matches an **existing child of this epic** → create nothing; record that the
+  graph is already populated.
+- Some proposed titles match an existing child and the rest do not → **stop and ask** which children
+  to create. Never choose for the user. GitHub issues cannot be deleted, so a duplicate is manual
+  cleanup for a human.
+- A proposed title matches a repository issue that is **not** a child of this epic → do not count it
+  as populated and do not silently create a duplicate-titled issue either. Stop and ask whether to
+  link the existing issue as the child, rename the proposed child, or proceed with the collision
+  accepted.
 
 **Creation path**, in order of preference:
 
-1. `plan-to-graph` is available **and** the surface supports native hierarchy → delegate creation
-   and dependency wiring to it, passing the refined epic as the source.
-2. Native hierarchy supported without `plan-to-graph` → `create_child_issue` per task, linked to
-   the epic.
+1. `plan-to-graph` is available, the surface supports native hierarchy, **and the write path Phase
+   1b bound is the authenticated `gh` CLI** → delegate creation and dependency wiring to it, passing
+   the refined epic as the source. `plan-to-graph` is `gh`-CLI-only; delegating to it while the bound
+   write path is an MCP/connector surface or a `yeet`-family skill would mix surfaces mid-run — the
+   exact thing Phase 1b forbids — so skip delegation whenever the bound path is not `gh`.
+2. Native hierarchy supported, and either `plan-to-graph` is unavailable or the bound write path is
+   not `gh` → `create_child_issue` per task through the already-bound surface, linked to the epic.
 3. Native hierarchy unsupported → create standalone issues, each opening with a
    `Parent: owner/repo#N` line; add a task list to the epic's Tasks section linking each child; and
    **disclose the degradation explicitly in the closing comment**. Do not emulate hierarchy with
@@ -287,8 +300,8 @@ Re-run the Phase 2 rubric one final time. Exactly one terminal state applies.
 
 | State | Condition | Actions |
 | --- | --- | --- |
-| `refined` | All eight rubric sections `present` **and** no Blocker or High finding remains | `set_labels` → remove `refining`, add `refined` |
-| `needs-human-input` | Rounds exhausted, or an ambiguity no assumption can safely resolve | Write every remaining Blocker/High finding into the body's Open Questions **with its severity**; `set_labels` → remove `refining`, add `needs-human-input`. **Never apply `refined`.** |
+| `refined` | All eight rubric sections `present` **and** no Blocker or High finding remains | `set_labels` → remove `refining` and `needs-refine` (and the `unrefined` alias if present), add `refined` |
+| `needs-human-input` | Rounds exhausted, or an ambiguity no assumption can safely resolve | Write every remaining Blocker/High finding into the body's Open Questions **with its severity**; `set_labels` → remove `refining` and `needs-refine` (and the `unrefined` alias if present), add `needs-human-input`. **Never apply `refined`.** |
 | `aborted` | No write surface, unresolved repository, closed issue, or any stop-and-ask condition | Leave the issue unchanged beyond comments already posted. Do not add or remove labels beyond removing `refining` if this run set it. |
 
 #### Labels
@@ -361,7 +374,7 @@ nothing about whether any of these already exist.** Detail in
 | No write surface found | Abort with the probe results. Never write a file. |
 | Issue is closed, or is a PR | Stop and ask. |
 | `read_issue` fails on the target | Abort; report the operation and error. Nothing was mutated. |
-| A mutation fails mid-run | Stop immediately. Report the failed operation, its error, and every mutation that already succeeded. Do not retry blindly and do not continue to the next phase. |
+| A mutation fails mid-run | Stop immediately. Before stopping, if this run set `refining`, make one best-effort `set_labels` attempt to remove it — failure only means Phase 6 is unreachable, and a stuck lock would otherwise block every retry until manual cleanup. Report the failed operation, its error, every mutation that already succeeded, and whether the lock release succeeded. Do not retry blindly and do not continue to the next phase. |
 | `refining` already present and not set by this run | Exit immediately, mutate nothing, report the lock. |
 | Label missing and uncreatable | Skip the label, continue, disclose. |
 | Native hierarchy unsupported | Standalone children with `Parent:` line + epic task list, disclosed. |

@@ -129,8 +129,14 @@ Guidance for whoever wires the automation. This skill does not create workflow f
 nothing about which of these already exist in any repository.
 
 **Label trigger.** Fire on `needs-refine` (or the `unrefined` alias) being added to an open issue.
-The entry point sets `refining` before invoking the skill and ensures it is cleared at the terminal
-state, including on failure — a stale `refining` label blocks every subsequent run on that issue.
+The entry point's only job is to invoke the skill on that issue — it must **not** pre-set `refining`
+itself. The skill owns its lock's entire lifecycle: Phase 2 checks it, Phase 3 acquires it, and
+Phase 6 (or the mid-run failure path) releases it. An entry point that set `refining` before
+invoking the skill would make the skill's own Phase 2 check — "does `refining` exist and did *this
+run* set it?" — see a lock it never acquired, and exit believing another run is already in flight
+without refining anything. If the automation platform needs its own external lock (a workflow
+concurrency group, for example), key that on `owner/repo#N` directly; keep it independent of the
+`refining` label rather than trying to hand ownership of the label to the wrapper.
 
 **Scheduled scan.** A periodic job reads open issues, applies the Phase 2 completeness rubric to
 each body, and labels failures `needs-refine`. It applies the **same** rubric the loop converges on;
@@ -138,10 +144,10 @@ a looser scan bar produces issues that get labeled, refined, and immediately re-
 labels only — it does not itself refine.
 
 **Concurrency.** Two runs must never refine one issue at once: body writes are last-writer-wins, so
-the slower run silently discards the faster run's work. Guard with both the `refining` lock above
-and whatever native concurrency group the automation platform offers, keyed on `owner/repo#N`.
-Prefer cancel-in-progress off and queueing on, so a second trigger waits rather than truncating a
-run mid-loop.
+the slower run silently discards the faster run's work. Guard with both the skill's own `refining`
+lock (which only the skill sets and clears) and whatever native concurrency group the automation
+platform offers, keyed on `owner/repo#N`. Prefer cancel-in-progress off and queueing on, so a second
+trigger waits rather than truncating a run mid-loop.
 
 **Autonomy mode.** Every automated entry point runs in automation mode: no approval gate, plan
 comment mandatory and posted before the first body mutation, no close/reopen/transfer, and the
