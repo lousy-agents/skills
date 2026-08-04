@@ -5,6 +5,9 @@
 > `read_issue`, `update_issue_body`, `add_comment`, `set_labels`, `create_child_issue` — and the
 > mapping below is what binds them.
 >
+> **Phase 6 reloads the Closing Comment Contract section** of this file when composing the terminal
+> comment — do not treat this reference as discovery-only after Phase 1b.
+>
 > **Nothing here is a required call.** These are examples of what a probe may find. Bind whichever
 > surface is actually present; if the harness exposes something not listed, use it and record it.
 
@@ -155,21 +158,30 @@ reordered column breaks that consumer silently, with no error on either side.
 
 Rules for populating it, so two runs produce a comment a parser can rely on:
 
-- **`### Child issues created`** carries one row per child created **this run**. Column 1 is the
-  bare `#<N>` issue number (not a link, not `owner/repo#N`) — a consumer resolves the repository
-  from context. Column 3 lists blockers as a comma-separated list of `#<N>` tokens resolved from
-  Phase 5's `Depends on: <title>` bookkeeping now that every blocker created this run has a known
-  number; use the literal character `—` (em dash) for no blockers, never an empty cell. A blocker
-  that has not been created yet (capped, or awaiting a collision decision) is not representable as
-  `#<N>` — name it in the uncreated-tasks line instead, not as a table row.
-- When Phase 5 created no child this run (Tasks stayed inline, or every proposed title already
-  existed), leave the table as header and separator only — zero data rows — and change the one-line
-  note below it to say so plainly, e.g. `No children created this run.`, instead of naming uncreated
-  tasks.
+- **`### Child issues created` is a full snapshot of the epic's current child graph**, not an
+  audit of this run alone. One row per child that currently exists for this epic — every child
+  created this run, plus every live child already linked from a prior run (the same membership
+  rule as the body manifest). A dispatcher that greps the **most recent** closing comment must see
+  the complete graph without merging older comments. Column 1 is the bare `#<N>` issue number (not
+  a link, not `owner/repo#N`) — a consumer resolves the repository from context. Column 3 lists
+  blockers as a comma-separated list of `#<N>` tokens resolved from Phase 5 dependency wiring (or
+  from each existing child's known blockers when the child was not created this run); use the
+  literal character `—` (em dash) for no blockers, never an empty cell. A blocker that has not been
+  created yet (capped, or awaiting a collision decision) is not representable as `#<N>` — name it
+  in the uncreated-tasks line instead, not as a table row.
+- When the epic still has **no** children at all (Tasks stayed inline; nothing was ever linked),
+  leave the table as header and separator only — zero data rows — and set the one-line note to
+  `No children linked to this epic.` When children already exist but none were created this run
+  (re-run, or every proposed title already matched), still list **every** current child in the
+  table and set the note to `No children created this run; table is the full current graph.` (plus
+  any capped-task line if applicable).
 - **`### Degradations`** always states the hierarchy outcome, even when nothing degraded — write
-  exactly `None for hierarchy.` as its own bullet when native parent links and native blocking edges
-  both worked. Any other wording in that slot means a consumer parsing this comment should not trust
-  the `Blocked by` column as a live GitHub relationship, only as a same-run reference.
+  exactly `None for hierarchy.` as its own bullet only when native parent links **and** native
+  blocking edges were both applied for the edges this snapshot describes. Path 2/3 text-only
+  dependencies always get an explicit degradation bullet even if Phase 1b recorded blocking-edge
+  support as yes (native edges are applied only on path 1 — see Capability Facts). Any wording
+  other than `None for hierarchy.` means a consumer parsing this comment should not trust the
+  `Blocked by` column as a live GitHub relationship, only as a same-run reference.
 - Every field above must be present even when its answer is "none" or "not disclosed" — an omitted
   field and an empty one are indistinguishable to a parser, so state emptiness explicitly.
 
@@ -189,11 +201,16 @@ emulate hierarchy with labels or with an external tracker.
 not just a parent/child link? Confirm by reading the tool schema or CLI help; do not assume it
 follows from sub-issue support. GitHub's REST `dependencies/blocked_by` and `blocked-by` edge
 endpoints are commonly **not** exposed through MCP issue tools even when hierarchy (`sub_issue_write`
-or similar) is — verify against the bound server's actual schema rather than assuming coverage. When
-unsupported, Phase 5 records dependencies as `Depends on: <title>` text in the child body instead of
-a native edge, and the closing comment's `### Degradations` section discloses it, since a consumer
-reading only the closing comment cannot otherwise tell a text-only reference from an enforced GitHub
-relationship.
+or similar) is — verify against the bound server's actual schema rather than assuming coverage.
+
+**v1 application rule:** native blocking edges are applied **only** when Phase 5 takes creation
+path 1 (`plan-to-graph` delegated on a `gh`-bound write path). Paths 2 and 3 always record
+dependencies as `Depends on: <title>` text in the child body, even when this capability fact is
+`yes` — there is no abstract operation for adding a blocking edge outside `plan-to-graph`, and path 2
+must not improvise one. Record the capability fact honestly for disclosure; when path 2 or 3 ran (or
+when the capability is unsupported on path 1), the closing comment's `### Degradations` section must
+state that edges are text-only, since a consumer reading only the closing comment cannot otherwise
+tell a text-only reference from an enforced GitHub relationship.
 
 **Labels.** Can the bound write path add and remove labels, and can it create a label that does not
 exist? Read-only label access still lets the run proceed — it just skips label transitions.
@@ -203,12 +220,14 @@ exist? Read-only label access still lets the run proceed — it just skips label
 Canonical lifecycle: `needs-refine` → `refining` → `refined`, plus the terminal `needs-human-input`.
 This lifecycle governs the **epic's own** label, transitioned via `set_labels` in Phases 3 and 6.
 
-Child issues created in Phase 5 do not pass through this lifecycle — each one is already
-implementation-ready by construction (Phase 5 only creates children after the epic's Tasks section
-scored `present` under the same rubric, and each child body carries the full six-part anatomy). Add
-`refined` to a child directly at creation, using the same missing/uncreatable-label skip-and-disclose
-rule as any other label. A downstream dispatcher that filters open issues on `refined` before picking
-work depends on this label existing on every child the moment it is created; a child left unlabeled
+Child issues handled in Phase 5 do not pass through this lifecycle — each one is already
+implementation-ready by construction (Phase 5 only runs after the epic's Tasks section scored
+`present` under the same rubric, and each child body carries the full six-part anatomy). Add
+`refined` to every child that exists for the epic once Phase 5 finishes a creation path — including
+children returned by `plan-to-graph` (path 1 never calls `create_child_issue`) and existing children
+skipped at the collision check that still lack `refined` — using the same missing/uncreatable-label
+skip-and-disclose rule as any other label. A downstream dispatcher that filters open issues on
+`refined` before picking work depends on this label existing on every child; a child left unlabeled
 is invisible to that kind of automation even though its body is complete.
 
 Read-time aliases, accepted as equivalent on input only, never written:

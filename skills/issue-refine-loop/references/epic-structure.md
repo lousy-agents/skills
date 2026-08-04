@@ -98,8 +98,8 @@ Notes drawn from the reference epic:
   any repository's gold-standard epic. An older reference epic — including the one used to derive
   the section list above — predates this section and won't contain it; treat that absence as
   expected, not as evidence the section should be dropped. See "Issue Graph Manifest Anatomy" below
-  for its content, and the closing-comment format in `SKILL.md` Phase 6 for the machine-parseable
-  form the manifest summarizes.
+  for its content, and the Closing Comment Contract in
+  [`github-surface.md`](./github-surface.md) for the machine-parseable form the manifest summarizes.
 
 ## The Completeness Rubric in Full
 
@@ -267,17 +267,20 @@ Rules:
 
 - One row per child that currently exists for this epic — every child created this run, plus every
   child recorded by a prior run that a `read_issue` on this epic still confirms as a live child. A
-  re-run appends or updates rows; it never drops a row for a child that still exists.
+  re-run appends or updates rows; it never drops a row for a child that still exists. Build or
+  refresh the section whenever any child exists, including when this run created none.
 - **Status** is `open` or `closed`, read at write time. This field goes stale the moment GitHub state
   changes after the write — it is a snapshot, not a live value — so do not treat it as authoritative
   for dispatch decisions; that is exactly what the closing comment's precedence note exists to say.
-- **Depends on** lists the same blocker issues recorded in Phase 5's dependency wiring, resolved to
-  `owner/repo#N` (never a bare title) once the blocker's own issue exists. A blocker capped or not
-  yet created keeps its title-text form until it exists in a later run. Use `—` for no blockers.
+- **Depends on** lists blocker issues resolved to `owner/repo#N` (never a bare title) once the
+  blocker's own issue exists. Prefer Phase 5's dependency wiring for children created this run; for
+  children not created this run, take blockers from that child's body (`Depends on:` line) or from
+  native blocking edges when the bound read path exposes them. A blocker capped or not yet created
+  keeps its title-text form until it exists in a later run. Use `—` for no blockers.
 - A child dropped by the 12-issue cap, or declined at the collision gate, gets no row and stays named
   only in the collapsed Tasks link list — the manifest describes issues that exist, not the full task
   list.
-- Omit the whole section when Phase 5 has not yet created or linked any child.
+- Omit the whole section only when the epic still has no children at all.
 
 ## Diagram Requirements
 

@@ -20,8 +20,9 @@ Two on-demand references back this skill:
   ordering, the full completeness rubric, EARS patterns, persona/value/task anatomy, and diagram
   requirements. **Load before Phase 2 (Assess) and keep loaded through Phase 4.**
 - [`references/github-surface.md`](./references/github-surface.md) — surface probe details, the
-  mapping from abstract operations to each surface, degradation modes, label handling, and
-  automation entry points. **Load during Phase 1 (Discovery).**
+  mapping from abstract operations to each surface, degradation modes, label handling, automation
+  entry points, and the Closing Comment Contract. **Load during Phase 1 (Discovery); reload the
+  Closing Comment Contract section in Phase 6.**
 
 ## When to Use
 
@@ -285,24 +286,27 @@ titles like "Add tests" make this plausible).
    exact thing Phase 1b forbids — so skip delegation whenever the bound path is not `gh`.
 2. Native hierarchy supported, and either `plan-to-graph` is unavailable or the bound write path is
    not `gh` → `create_child_issue` per task, linked to the epic. **Known v1 limitation:** this path
-   establishes the parent link but not `plan-to-graph`'s dependency-edge wiring (`blocked ← blocker`);
-   record dependencies as `Depends on: <title>` text in the child body instead, and disclose the gap.
+   establishes the parent link but not native dependency-edge wiring (`blocked ← blocker`), even when
+   Phase 1b recorded blocking-edge support as yes — native edges are applied only via path 1
+   (`plan-to-graph`). Record dependencies as `Depends on: <title>` text in the child body instead,
+   and always disclose the text-only gap in `### Degradations`.
 3. Native hierarchy unsupported → create standalone issues, each opening with a
    `Parent: owner/repo#N` line; add a task list to the epic's Tasks section linking each child; and
    **disclose the degradation explicitly in the closing comment**. Do not emulate hierarchy with
    labels.
 
-**Label every child issue created this round with `refined`.** Immediately after
-`create_child_issue` succeeds — regardless of which of the three creation paths above ran —
-`set_labels` to add `refined` to the new child. A child's body is already implementation-ready by
-construction (Phase 5 only runs once Tasks scored `present`, and every child carries the full
-six-part anatomy), so it does not pass through `needs-refine` → `refining` first. This matters
-beyond bookkeeping: a downstream dispatcher that selects work by filtering open issues on `refined`
-will never see a child that skipped this label, no matter how complete its body is. Apply the same
+**Label every child that exists for this epic with `refined`.** After each creation path finishes
+(path 1 returns from `plan-to-graph`, path 2/`create_child_issue` succeeds, or path 3 creates a
+standalone issue) — and again for any existing child the collision check skipped that does not
+already carry `refined` or the `ready-for-implementation` alias — `set_labels` to add `refined`.
+Do not key the label step on the `create_child_issue` abstract op alone: path 1 never calls that op,
+and a re-run on an epic decomposed before this labeling rule must still make legacy children visible
+to a `refined`-filtering dispatcher. A child's body is already implementation-ready by construction
+(Phase 5 only runs once Tasks scored `present`, and every child carries the full six-part anatomy),
+so it does not pass through `needs-refine` → `refining` first. Apply the same
 missing/uncreatable-label skip-and-disclose rule as any other label — a label the run could not
 apply never aborts a run, but disclose the skip in the `### Degradations` section of the closing
-comment (Phase 6). Existing children skipped at the collision check are left as-is; this only
-labels children created in this run.
+comment (Phase 6).
 
 **Cap child creation at 12 per run.** If the epic has more than 12 tasks, create the first 12 in
 dependency order, then stop and ask before creating the rest. Report the remaining task titles.
@@ -320,19 +324,26 @@ routine or cloud session running unattended — often cannot query GitHub's hier
 blocking-relationship data directly: no MCP connector exposes it, a `gh` CLI isn't installed, or the
 session's GitHub credentials are scoped out of the org's dependency-graph endpoints even though `gh`
 itself works. The manifest makes the graph readable from the epic body alone, no follow-up API call
-required, for whichever consumer reads the body directly. Build it only from data this phase already
-has — never issue a new read to construct it. See
+required, for whichever consumer reads the body directly. Prefer data this phase already has
+(titles, numbers, and `Depends on` text from children just created). When the graph was already
+populated — collision check created nothing, or this is a re-run repairing a stale manifest — use
+the child list from the hierarchy read Phase 5 already did for the collision check, and for any
+child not created this run resolve **Depends on** from that child's body (`Depends on:` line) or
+from native blocking edges if the bound read path exposes them. Do not skip the manifest merely
+because this run created zero children. See
 [`references/epic-structure.md`](./references/epic-structure.md) for the table format.
 
-The Phase 6 closing comment carries the same information in a stricter, machine-parseable form
-(`### Child issues created`) and is the authoritative snapshot for automation that reads comments
-instead of the body — a dispatcher should prefer that comment when both exist, because the epic
-body can be hand-edited by a human afterward and the comment cannot. State this precedence in the
-manifest section itself with a one-line pointer, so a reader lands on the right source regardless of
-which one it opens first.
+The Phase 6 closing comment carries the same membership in a stricter, machine-parseable form
+(`### Child issues created`) as a **full current-graph snapshot** (not this-run-only) and is the
+authoritative snapshot for automation that reads comments instead of the body — a dispatcher should
+prefer the **most recent** closing comment when both exist, because the epic body can be
+hand-edited by a human afterward and the comment cannot. State this precedence in the manifest
+section itself with a one-line pointer, so a reader lands on the right source regardless of which
+one it opens first.
 
-Skip this section entirely when Phase 5 has not yet created or linked any child — an epic whose
-Tasks section is still inline detail has no graph to describe yet.
+Skip this section entirely only when the epic still has **no** children at all — an epic whose
+Tasks section is still fully inline detail and has never linked a child has no graph to describe
+yet.
 
 ### Phase 6 — Terminal state, labels, and closing comment
 
@@ -340,11 +351,15 @@ Re-run the Phase 2 rubric one final time. Exactly one terminal state applies.
 
 **Manifest gate, before applying `refined`.** `read_issue` this epic's current children (however
 Phase 1b's read path exposes hierarchy). If any current child is missing a row in the
-`## Issue Graph Manifest` section — a child created this run whose manifest write was skipped, or
-one left over from a prior run that the manifest never picked up — that is itself a High finding:
-fix it with one more `update_issue_body` before applying `refined`. This is a one-time consistency
-check, not a rubric row re-scored every round (see epic-structure.md's note on why the manifest
-sits outside the eight-row rubric).
+`## Issue Graph Manifest` section — a child created this run whose manifest write was skipped, one
+left over from a prior run that the manifest never picked up, or the whole section absent while
+children exist — that is itself a High finding: fix it with one more `update_issue_body` before
+applying `refined`. For rows added at this gate for children not created this run, fill **Depends
+on** from each child's body (`Depends on:` line) or from native blocking edges when the bound read
+path exposes them; `—` when neither source yields blockers. This is a one-time consistency check,
+not a rubric row re-scored every round (see epic-structure.md's note on why the manifest sits
+outside the eight-row rubric). The same child list feeds the closing comment's full-graph
+`### Child issues created` table.
 
 | State | Condition | Actions |
 | --- | --- | --- |
@@ -355,8 +370,9 @@ sits outside the eight-row rubric).
 #### Labels
 
 Canonical lifecycle: `needs-refine` → `refining` → `refined`, plus the terminal `needs-human-input`.
-This is the **epic's** lifecycle. Child issues get `refined` directly at creation in Phase 5 — see
-that phase's labeling step — and never carry `needs-refine` or `refining`.
+This is the **epic's** lifecycle. Child issues get `refined` in Phase 5 once they exist (created
+this run or already linked and unlabeled) — see that phase's labeling step — and never carry
+`needs-refine` or `refining`.
 
 - Read-time aliases, accepted as equivalent on input only: `unrefined` for `needs-refine`, and
   `ready-for-implementation` for `refined`. Never write an alias; always write the canonical name.
@@ -369,15 +385,17 @@ that phase's labeling step — and never carry `needs-refine` or `refining`.
 #### Closing comment
 
 One `add_comment` at the end. This is the run log — there is no log file, and it is also the
-**authoritative, machine-parseable snapshot of the issue graph** for any consumer that reads
-comments rather than the body (see the Issue Graph Manifest note in Phase 5). Its structure is a
-contract, not a style choice: a downstream dispatcher greps this comment for exact headings and an
-exact table shape when it cannot reach GitHub's native dependency-graph API (an unauthorized `gh
-api .../dependencies/blocked_by` call, or an MCP surface with no blocking-edge tool, are both
-ordinary operating conditions for it, not failures of this skill). Deviating from the required shape
-— even a renamed heading or a reordered column — silently breaks that consumer with no error on
-either side. See [`references/github-surface.md`](./references/github-surface.md) for the exact
-template and the rules for populating each section.
+**authoritative, machine-parseable full snapshot of the issue graph** for any consumer that reads
+comments rather than the body (see the Issue Graph Manifest note in Phase 5). Each run appends a
+new comment; consumers must use the **most recent** `## issue-refine-loop closing comment`, whose
+`### Child issues created` table lists every current child — not only children created this run.
+Its structure is a contract, not a style choice: a downstream dispatcher greps this comment for
+exact headings and an exact table shape when it cannot reach GitHub's native dependency-graph API
+(an unauthorized `gh api .../dependencies/blocked_by` call, or an MCP surface with no blocking-edge
+tool, are both ordinary operating conditions for it, not failures of this skill). Deviating from the
+required shape — even a renamed heading or a reordered column — silently breaks that consumer with
+no error on either side. See [`references/github-surface.md`](./references/github-surface.md)
+(Closing Comment Contract) for the exact template and the rules for populating each section.
 
 ## Idempotency and Re-run Safety
 
