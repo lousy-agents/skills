@@ -94,11 +94,12 @@ Notes drawn from the reference epic:
   settled a trade-off; omit it when nothing was decided.
 - The epic closes with a provenance footer stating where the body came from and what review it
   passed.
-- `## Issue Graph Manifest` is not present in the `lousy-agents/coach#97` gold standard — it is a v1
-  addition to this skill, not a structural element re-derived from the reference epic. Treat its
-  absence from the gold standard as expected, not as evidence the section should be dropped. See
-  "Issue Graph Manifest Anatomy" below for its content, and the closing-comment format in
-  `SKILL.md` Phase 6 for the machine-parseable form the manifest summarizes.
+- `## Issue Graph Manifest` is a v1 addition to this skill, not a structural element re-derived from
+  any repository's gold-standard epic. An older reference epic — including the one used to derive
+  the section list above — predates this section and won't contain it; treat that absence as
+  expected, not as evidence the section should be dropped. See "Issue Graph Manifest Anatomy" below
+  for its content, and the closing-comment format in `SKILL.md` Phase 6 for the machine-parseable
+  form the manifest summarizes.
 
 ## The Completeness Rubric in Full
 
