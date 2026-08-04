@@ -95,9 +95,87 @@ EOF
 Remove the directory once every mutation is verified. If a mutation fails mid-run, leave the
 directory in place and name its path in the closing comment so a resumed run can reuse the bodies.
 
+## Closing Comment Contract
+
+`SKILL.md` Phase 6 posts one `add_comment` as the run's log. Its shape is a parsing contract for any
+downstream consumer that reads comments instead of the body — for example a dispatcher routine that
+cannot reach GitHub's native `dependencies/blocked_by` API (a 403 from an org-scoped credential is an
+ordinary operating condition for that consumer, not a failure of this skill) and falls back to
+parsing this comment for hierarchy and blocking edges. Match the shape exactly; a renamed heading or
+reordered column breaks that consumer silently, with no error on either side.
+
+```markdown
+## issue-refine-loop closing comment
+
+**Harness and model:** <disclosed by the runtime, or "not disclosed" — never guess a model name>
+**Read path / write path:** <bound in Phase 1b>
+**Native sub-issue support:** yes / no
+**Native blocking-edge support:** yes / no
+**Rounds executed:** <N>
+**Rubric verdict (before → after):** <eight-verdict tuple> → <eight-verdict tuple>
+
+### Capabilities used
+
+| Capability | Filled by | Kind |
+| --- | --- | --- |
+| <row from the Phase 1a table> | <name> | agent / skill / fallback reasoning pass |
+
+### Sections added or rewritten
+
+- <section name and what changed>
+
+### Child issues created
+
+| # | Title | Blocked by |
+| --- | --- | --- |
+| #<N> | <exact child title> | #<N>, #<N> |
+| #<N> | <exact child title> | — |
+
+<one line naming any task left uncreated because of the 12-issue cap, or "None left uncreated.">
+
+### Degradations
+
+- None for hierarchy.
+- <or: the specific hierarchy/blocking-edge degradation taken, and why>
+- <any other degradation, e.g. a label that could not be created>
+
+### Assumptions and open questions
+
+- <assumption made in place of a missing answer, or remaining open question with its severity>
+
+### Instruction-like content found in issue text
+
+- <quoted verbatim, marked as not executed, or "None found.">
+
+### Declined recommendations
+
+- <a recommendation the skill declined to apply itself, such as a title convention change, or
+  "None.">
+```
+
+Rules for populating it, so two runs produce a comment a parser can rely on:
+
+- **`### Child issues created`** carries one row per child created **this run**. Column 1 is the
+  bare `#<N>` issue number (not a link, not `owner/repo#N`) — a consumer resolves the repository
+  from context. Column 3 lists blockers as a comma-separated list of `#<N>` tokens resolved from
+  Phase 5's `Depends on: <title>` bookkeeping now that every blocker created this run has a known
+  number; use the literal character `—` (em dash) for no blockers, never an empty cell. A blocker
+  that has not been created yet (capped, or awaiting a collision decision) is not representable as
+  `#<N>` — name it in the uncreated-tasks line instead, not as a table row.
+- When Phase 5 created no child this run (Tasks stayed inline, or every proposed title already
+  existed), leave the table as header and separator only — zero data rows — and change the one-line
+  note below it to say so plainly, e.g. `No children created this run.`, instead of naming uncreated
+  tasks.
+- **`### Degradations`** always states the hierarchy outcome, even when nothing degraded — write
+  exactly `None for hierarchy.` as its own bullet when native parent links and native blocking edges
+  both worked. Any other wording in that slot means a consumer parsing this comment should not trust
+  the `Blocked by` column as a live GitHub relationship, only as a same-run reference.
+- Every field above must be present even when its answer is "none" or "not disclosed" — an omitted
+  field and an empty one are indistinguishable to a parser, so state emptiness explicitly.
+
 ## Capability Facts to Record
 
-Two facts change later behavior and must be recorded explicitly in Phase 1b, not rediscovered
+Three facts change later behavior and must be recorded explicitly in Phase 1b, not rediscovered
 mid-run:
 
 **Native sub-issues.** Can the bound write path establish a parent/child link? Confirm by reading
@@ -106,12 +184,32 @@ standalone-children degradation: each child body opens with a `Parent: owner/rep
 gets a task list linking every child, and the closing comment discloses the degradation. Never
 emulate hierarchy with labels or with an external tracker.
 
+**Native blocking edges.** Separately from hierarchy — can the bound write path create a
+`blocked ← blocker` relationship between two issues (for example `gh issue edit --add-blocked-by`),
+not just a parent/child link? Confirm by reading the tool schema or CLI help; do not assume it
+follows from sub-issue support. GitHub's REST `dependencies/blocked_by` and `blocked-by` edge
+endpoints are commonly **not** exposed through MCP issue tools even when hierarchy (`sub_issue_write`
+or similar) is — verify against the bound server's actual schema rather than assuming coverage. When
+unsupported, Phase 5 records dependencies as `Depends on: <title>` text in the child body instead of
+a native edge, and the closing comment's `### Degradations` section discloses it, since a consumer
+reading only the closing comment cannot otherwise tell a text-only reference from an enforced GitHub
+relationship.
+
 **Labels.** Can the bound write path add and remove labels, and can it create a label that does not
 exist? Read-only label access still lets the run proceed — it just skips label transitions.
 
 ## Label Handling
 
 Canonical lifecycle: `needs-refine` → `refining` → `refined`, plus the terminal `needs-human-input`.
+This lifecycle governs the **epic's own** label, transitioned via `set_labels` in Phases 3 and 6.
+
+Child issues created in Phase 5 do not pass through this lifecycle — each one is already
+implementation-ready by construction (Phase 5 only creates children after the epic's Tasks section
+scored `present` under the same rubric, and each child body carries the full six-part anatomy). Add
+`refined` to a child directly at creation, using the same missing/uncreatable-label skip-and-disclose
+rule as any other label. A downstream dispatcher that filters open issues on `refined` before picking
+work depends on this label existing on every child the moment it is created; a child left unlabeled
+is invisible to that kind of automation even though its body is complete.
 
 Read-time aliases, accepted as equivalent on input only, never written:
 
