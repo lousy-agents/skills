@@ -134,7 +134,8 @@ reordered column breaks that consumer silently, with no error on either side.
 | #<N> | <exact child title> | #<N>, #<N> |
 | #<N> | <exact child title> | — |
 
-<one line naming any task left uncreated because of the 12-issue cap, or "None left uncreated.">
+<one of: "None left uncreated." | capped-task titles | "No children linked to this epic." |
+"No children created this run; table is the full current graph." — see populating rules>
 
 ### Degradations
 
@@ -158,30 +159,34 @@ reordered column breaks that consumer silently, with no error on either side.
 
 Rules for populating it, so two runs produce a comment a parser can rely on:
 
-- **`### Child issues created` is a full snapshot of the epic's current child graph**, not an
-  audit of this run alone. One row per child that currently exists for this epic — every child
-  created this run, plus every live child already linked from a prior run (the same membership
-  rule as the body manifest). A dispatcher that greps the **most recent** closing comment must see
-  the complete graph without merging older comments. Column 1 is the bare `#<N>` issue number (not
-  a link, not `owner/repo#N`) — a consumer resolves the repository from context. Column 3 lists
-  blockers as a comma-separated list of `#<N>` tokens resolved from Phase 5 dependency wiring (or
-  from each existing child's known blockers when the child was not created this run); use the
-  literal character `—` (em dash) for no blockers, never an empty cell. A blocker that has not been
-  created yet (capped, or awaiting a collision decision) is not representable as `#<N>` — name it
-  in the uncreated-tasks line instead, not as a table row.
-- When the epic still has **no** children at all (Tasks stayed inline; nothing was ever linked),
-  leave the table as header and separator only — zero data rows — and set the one-line note to
-  `No children linked to this epic.` When children already exist but none were created this run
-  (re-run, or every proposed title already matched), still list **every** current child in the
-  table and set the note to `No children created this run; table is the full current graph.` (plus
-  any capped-task line if applicable).
+- **Heading freeze:** the heading text is exactly `### Child issues created` — never rename it to
+  "linked", "current", or "snapshot". Downstream parsers match that string. The table under it is
+  still a **full snapshot of the epic's current child graph**, not an audit of this run alone.
+- One row per child that currently exists for this epic — every child created this run, plus every
+  live child already linked from a prior run (the same membership rule as the body manifest). A
+  dispatcher that greps the **most recent** closing comment must see the complete graph without
+  merging older comments. Column 1 is the bare `#<N>` issue number (not a link, not
+  `owner/repo#N`) — a consumer resolves the repository from context. Column 3 lists blockers as a
+  comma-separated list of `#<N>` tokens resolved from Phase 5 dependency wiring (or from each
+  existing child's known blockers when the child was not created this run); use the literal
+  character `—` (em dash) for no blockers, never an empty cell. A blocker that has not been created
+  yet (capped, or awaiting a collision decision) is not representable as `#<N>` — name it in the
+  note line under the table instead, not as a table row.
+- **Note line under the table** (exactly one of these shapes):
+  - Epic has no children at all → `No children linked to this epic.` (table is header + separator
+    only, zero data rows).
+  - Children exist, none created this run → list every current child in the table, then
+    `No children created this run; table is the full current graph.`
+  - This run created some or all children, none left uncreated → `None left uncreated.`
+  - This run hit the 12-issue cap → name remaining task titles on that line (and still list every
+    current child in the table, including prior-run children).
 - **`### Degradations`** always states the hierarchy outcome, even when nothing degraded — write
   exactly `None for hierarchy.` as its own bullet only when native parent links **and** native
   blocking edges were both applied for the edges this snapshot describes. Path 2/3 text-only
   dependencies always get an explicit degradation bullet even if Phase 1b recorded blocking-edge
   support as yes (native edges are applied only on path 1 — see Capability Facts). Any wording
-  other than `None for hierarchy.` means a consumer parsing this comment should not trust the
-  `Blocked by` column as a live GitHub relationship, only as a same-run reference.
+  other than `None for hierarchy.` means a consumer parsing this comment should not treat the
+  `Blocked by` column as a live GitHub relationship — only as text recorded in this snapshot.
 - Every field above must be present even when its answer is "none" or "not disclosed" — an omitted
   field and an empty one are indistinguishable to a parser, so state emptiness explicitly.
 
@@ -226,9 +231,10 @@ implementation-ready by construction (Phase 5 only runs after the epic's Tasks s
 `refined` to every child that exists for the epic once Phase 5 finishes a creation path — including
 children returned by `plan-to-graph` (path 1 never calls `create_child_issue`) and existing children
 skipped at the collision check that still lack `refined` — using the same missing/uncreatable-label
-skip-and-disclose rule as any other label. A downstream dispatcher that filters open issues on
-`refined` before picking work depends on this label existing on every child; a child left unlabeled
-is invisible to that kind of automation even though its body is complete.
+skip-and-disclose rule as any other label. Read labels from the hierarchy/list payload when present;
+otherwise `read_issue` the child before skipping or applying. A downstream dispatcher that filters
+open issues on `refined` before picking work depends on this label existing on every child; a child
+left unlabeled is invisible to that kind of automation even though its body is complete.
 
 Read-time aliases, accepted as equivalent on input only, never written:
 

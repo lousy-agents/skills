@@ -301,12 +301,14 @@ standalone issue) — and again for any existing child the collision check skipp
 already carry `refined` or the `ready-for-implementation` alias — `set_labels` to add `refined`.
 Do not key the label step on the `create_child_issue` abstract op alone: path 1 never calls that op,
 and a re-run on an epic decomposed before this labeling rule must still make legacy children visible
-to a `refined`-filtering dispatcher. A child's body is already implementation-ready by construction
-(Phase 5 only runs once Tasks scored `present`, and every child carries the full six-part anatomy),
-so it does not pass through `needs-refine` → `refining` first. Apply the same
-missing/uncreatable-label skip-and-disclose rule as any other label — a label the run could not
-apply never aborts a run, but disclose the skip in the `### Degradations` section of the closing
-comment (Phase 6).
+to a `refined`-filtering dispatcher. Detect labels on existing children from the hierarchy/list
+payload when it includes them; otherwise `read_issue` that child before deciding. Newly created
+children are unlabeled until this step — always apply `refined` after create. A child's body is
+already implementation-ready by construction (Phase 5 only runs once Tasks scored `present`, and
+every child carries the full six-part anatomy), so it does not pass through
+`needs-refine` → `refining` first. Apply the same missing/uncreatable-label skip-and-disclose rule
+as any other label — a label the run could not apply never aborts a run, but disclose the skip in
+the `### Degradations` section of the closing comment (Phase 6).
 
 **Cap child creation at 12 per run.** If the epic has more than 12 tasks, create the first 12 in
 dependency order, then stop and ask before creating the rest. Report the remaining task titles.
