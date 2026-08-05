@@ -38,14 +38,21 @@ the coverage that proves a feature or bug fix works at the public boundary —
 takes whatever form the repository already mandates. Detect that form before
 writing the test; do not infer it from this document.
 
-Run these checks in order, stopping once one gives an unambiguous answer:
+Run these checks and combine the results. Check 1 alone is enough to stop when
+it finds an existing acceptance suite. Check 2 is never enough on its own:
+many modules pull in assertion helpers (especially `testify/assert` or
+`testify/require`) for unit tests without adopting that library as an
+acceptance harness.
 
 ```bash
 # 1. Existing acceptance suites, by filename or directory
 find . -name '*_test.go' | grep -Ei '(_acceptance_test\.go|/(acceptance|e2e|features|specs?)/)'
 
-# 2. Suite-harness or spec-runner modules already in the dependency graph
-find . -name go.mod -exec grep -Ein '(ginkgo|gomega|testify|godog|goconvey|check\.v1)' {} +
+# 2. Suite-harness or spec-runner modules already in the dependency graph.
+#    Match suite/spec packages, not bare assertion helpers: `testify` alone is
+#    not a signal — only `testify/suite` (or another runner below) counts.
+find . -name go.mod -exec grep -Ein \
+  '(ginkgo|gomega|testify/suite|godog|goconvey|check\.v1)' {} +
 
 # 3. A suite entrypoint — the bootstrap that hands control to a runner.
 #    `func TestMain` on its own does NOT count: it is routine stdlib plumbing
@@ -68,15 +75,17 @@ returns nothing. Empty output is a clean "no signal", not a tooling failure.
 
 Reading the result:
 
-- **A convention exists** (an acceptance suite file, a runner in `go.mod` plus
-  an entrypoint, or a written policy): write the acceptance test in that form,
-  matching the existing suite's file layout, naming, and bootstrap. Do not
-  introduce a second acceptance style alongside it.
+- **A convention exists** (an acceptance suite file; a runner module from
+  check 2 *plus* a matching entrypoint from check 1 or 3; or a written
+  policy): write the acceptance test in that form, matching the existing
+  suite's file layout, naming, and bootstrap. Do not introduce a second
+  acceptance style alongside it.
 - **No convention exists**: the acceptance form is standard-library `testing`,
   written the way the rest of the repository writes tests. Do NOT add a spec
   runner, BDD framework, or assertion library to a repository that does not
   already depend on one — that is a dependency decision owned by the module's
-  maintainers, not something to settle inside a test.
+  maintainers, not something to settle inside a test. A `go.mod` that only
+  lists unit-test assertion helpers is still "no convention".
 - **Signals conflict** (e.g. a runner sits in `go.mod` but the package under
   test uses stdlib tables): follow the nearest existing acceptance suite, and
   state in your report which signal you followed and which you set aside.

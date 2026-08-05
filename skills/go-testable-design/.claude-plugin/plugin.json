@@ -6,5 +6,5 @@
   "repository": "https://github.com/lousy-agents/skills",
   "homepage": "https://github.com/lousy-agents/skills#readme",
   "skills": "./",
-  "keywords": ["Go", "TDD", "testing", "refactoring", "test-first"]
+  "keywords": ["Go", "TDD", "testing", "refactoring", "test-first", "outside-in", "acceptance", "package-purity"]
 }

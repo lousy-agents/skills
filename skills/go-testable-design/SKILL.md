@@ -13,11 +13,12 @@ Guide Go development with tests: small behavior first, executable documentation,
 
 Use this skill when the user asks to:
 
-- Build or change Go code using TDD, tests first, or red-green-refactor.
-- Add, improve, or explain Go tests.
-- Design Go code around interfaces, `io.Reader`/`io.Writer`, `fs.FS`, `http.Handler`, `context.Context`, goroutines, channels, or storage boundaries.
+- Build or change Go code using TDD, tests first, red-green-refactor, or outside-in / acceptance-first starts.
+- Add, improve, or explain Go unit or acceptance tests.
+- Match acceptance / public-boundary coverage to the repository's existing test harness instead of inventing a new form.
+- Design Go code around interfaces, `io.Reader`/`io.Writer`, `fs.FS`, `http.Handler`, `context.Context`, goroutines, channels, storage boundaries, or package purity.
 - Refactor Go code while preserving behavior.
-- Review Go code for testability or missing test cases.
+- Review Go code for testability, missing test cases, or IO creeping into decision packages.
 - Learn or demonstrate Go concepts through tests.
 
 Do not use this skill for non-Go projects, generic CI setup, or broad architecture work where tests are not part of the task.
@@ -96,8 +97,8 @@ Before finalizing any Go test, check it against these requirements:
 
 1. **Orient**
    - Inspect `go.mod`, package layout, existing tests, and naming conventions.
-   - **Detect the repository's acceptance-test convention before choosing any test shape.** Check every signal: existing acceptance suite files (`*_acceptance_test.go` or equivalently named suites, and `*_test.go` under `acceptance/`, `e2e/`, `features/`, or `specs/`); spec-runner or suite-harness modules in `go.mod`; a suite entrypoint (a `RunSpecs`-style bootstrap, a `suite.Run` call, a `godog.TestSuite`, or a `TestMain` that bootstraps a suite — not one that merely does setup, teardown, or flag parsing); acceptance targets in `Makefile`, `mise.toml`, `Taskfile.yml`, or CI workflows; and stated policy in project agent docs (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`).
-   - Record the answer explicitly: which acceptance form the repository mandates, or that it has none. **No signals means stdlib `testing`** — do not add a runner. See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for the detection commands and how to read conflicting signals.
+   - **Detect the repository's acceptance-test convention before choosing any test shape.** Check every signal: existing acceptance suite files (`*_acceptance_test.go` or equivalently named suites, and `*_test.go` under `acceptance/`, `e2e/`, `features/`, or `specs/`); suite/spec-runner modules in `go.mod` (match the runner package — e.g. `testify/suite` — not bare unit-assertion helpers like `testify/assert`); a suite entrypoint (a `RunSpecs`-style bootstrap, a `suite.Run` call, a `godog.TestSuite`, or a `TestMain` that bootstraps a suite — not one that merely does setup, teardown, or flag parsing); acceptance targets in `Makefile`, `mise.toml`, `Taskfile.yml`, or CI workflows; and stated policy in project agent docs (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`). A runner module counts only with a matching suite file or entrypoint.
+   - Record the answer explicitly: which acceptance form the repository mandates, or that it has none. **No signals means stdlib `testing`** — do not add a runner. Unit-test assertion helpers alone are not an acceptance convention. See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for the detection commands and how to read conflicting signals.
    - Identify the smallest package or file that owns the behavior.
    - If `go` is available, run the narrowest baseline test first:
 
@@ -147,7 +148,7 @@ Before finalizing any Go test, check it against these requirements:
      ```
 
    - If the local environment lacks Go or dependencies, report that clearly and include the exact command that should be run.
-   - Before finalizing, sweep the tests you touched for a comment that is the *only* record of a behavior — an `// AC-1.8: ...` annotation, a prose rule above a test function, a note explaining what the assertions add up to. Convert each one into structure: a named subtest, `given`/`when`/`then` helpers, or the runner's own block name. The traceability ID may stay; the rule it was carrying moves into the code.
+   - Before finalizing, sweep the tests you touched for a comment that is the *only* record of a behavior — an `// AC-1.8: ...` annotation, a prose rule above a test function, a note explaining what the assertions add up to. Convert each one into structure: a named subtest, `given`/`when`/`then` helpers, or the runner's own block name. The traceability ID may stay; the rule it was carrying moves into the code. The grep below is a candidate finder, not a convert-everything mandate: skip hits where structure and naming already carry the rule (ordinary `// should not panic` notes, leftover prose next to a descriptive `t.Run`, etc.).
 
      ```bash
      grep -rnE --include='*_test.go' '^[[:space:]]*//.*([Aa][Cc]-[0-9]|[Rr]equirement|[Cc]riteri|\bmust\b|\bshould\b)' path/to/package
