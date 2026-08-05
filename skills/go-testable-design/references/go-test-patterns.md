@@ -482,20 +482,35 @@ that *provides* it returns concrete types. The dependency then points from
 the adapter toward the pure package, and each test's fake stays local to the
 test that needs it.
 
-Check this rather than trusting it. The command below lists a package's
-transitive dependencies, drops the module's own packages, and reports the
-third-party and IO ones that remain:
+Check this rather than trusting it, with two commands. The first walks the
+module's own packages the target reaches and reports the IO ones *they*
+import directly. The second drops the module's own packages and reports the
+third-party ones that remain.
 
 ```bash
-go list -deps ./pricing |
-  grep -Ev "^$(go list -m)(/|$)" |
-  grep -E '^[^/]*\.[^/]*/|^(os|net|log|database/sql)(/|$)'
+m=$(go list -m)
+# stdlib IO reached through your own packages
+go list -deps ./pricing | grep -E "^$m(/|\$)" |
+  xargs go list -f '{{join .Imports "\n"}}' | sort -u |
+  grep -E '^(os|net|log|database/sql)(/|$)'
+# third-party dependencies
+go list -deps ./pricing | grep -Ev "^$m(/|\$)" | grep -E '^[^/]*\.[^/]*/'
 ```
 
-A package that is still pure prints nothing (grep exits 1 on no match):
+Keep the two separate. A single `go list -deps` piped into one IO grep also
+matches the stdlib's own internals: `fmt` and `encoding/json` both depend on
+`os`, so that shorter form reports `os` for any package whose only sin is
+calling `fmt.Errorf` — a false positive on exactly the pure domain packages
+this section tells you to build.
+
+A package that is still pure prints nothing from either command (grep exits 1
+on no match):
 
 ```
-$ go list -deps ./pricing | grep -Ev ... | grep -E ...
+$ <io-check>
+$ echo $?
+1
+$ <third-party-check>
 $ echo $?
 1
 ```
@@ -503,29 +518,28 @@ $ echo $?
 The same package after someone reaches for `os` and `net/http` inside it:
 
 ```
-$ go list -deps ./pricing | grep -Ev ... | grep -E ...
-os
-net/netip
-net
-net/url
-log/internal
-log
-net/textproto
-net/http/httptrace
-net/http/internal
-net/http/internal/ascii
+$ <io-check>
 net/http
+os
 ```
 
-Notes on running it:
+A package that has picked up a third-party dependency:
 
-- The list is transitive, which is the point: a pure package that depends on
-  a helper package that opens files is not pure either. The single import
-  that caused it is usually the first or last line of the output.
+```
+$ <third-party-check>
+github.com/acme/rates/rates
+```
+
+Notes on running them:
+
+- The IO check is transitive across your own packages, which is the point: a
+  pure package that depends on a helper package that opens files is not pure
+  either. To find which import caused a hit, list a package's direct imports:
+  `go list -f '{{join .Imports "\n"}}' ./pricing`.
 - A third-party dependency shows up as its full import path
-  (`github.com/acme/rates/rates`), matched by the first alternation; the
-  module's own packages are removed by the `go list -m` filter.
-- Extend the second alternation with whatever else must stay out of the
+  (`github.com/acme/rates/rates`); stdlib packages have no dot in their first
+  path element, so they never match that pattern.
+- Extend the IO alternation with whatever else must stay out of the
   package (`os/exec`, `database/sql`, a config or logging package of your
   own).
 - `go list` needs the module graph to resolve. If dependencies are not

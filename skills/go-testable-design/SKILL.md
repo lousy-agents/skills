@@ -66,12 +66,16 @@ A package's import list decides how testable it is before any test exists: a pac
 
 - Keep the packages that hold calculations and decisions free of framework, network, database, and filesystem imports. Put those adapters in packages at the edge and wire them together in the composition root.
 - Declare interfaces at the use site: the consuming package defines the small interface it needs, and the producing package returns concrete types.
-- Verify purity instead of asserting it. This lists the third-party and IO dependencies reaching a package that should be pure; empty output means it is clean, and a `go list` error (module deps not downloaded) means the check did not run, not that it passed:
+- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages, the second reports third-party dependencies; empty output from both means the package is clean. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. A `go list` error (module deps not downloaded) means the check did not run, not that it passed:
 
   ```bash
-  go list -deps ./internal/pricing |
-    grep -Ev "^$(go list -m)(/|$)" |
-    grep -E '^[^/]*\.[^/]*/|^(os|net|log|database/sql)(/|$)'
+  m=$(go list -m)
+  # stdlib IO reached through your own packages
+  go list -deps ./internal/pricing | grep -E "^$m(/|\$)" |
+    xargs go list -f '{{join .Imports "\n"}}' | sort -u |
+    grep -E '^(os|net|log|database/sql)(/|$)'
+  # third-party dependencies
+  go list -deps ./internal/pricing | grep -Ev "^$m(/|\$)" | grep -E '^[^/]*\.[^/]*/'
   ```
 
 - See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for a worked purity check on a pure and an impure package.
@@ -86,7 +90,7 @@ Before finalizing any Go test, check it against these requirements:
 - **Diagnostic failure:** Each assertion failure identifies what behavior was expected, the important input or state, and the observed value. Avoid failures that only say `expected true`, `not equal`, or `wrong result`.
 - **Legitimate interaction checks:** Spy/mock assertions are reserved for observable boundary contracts, such as command arguments, repository writes, emitted events, cancellation calls, or external requests. Avoid verifying incidental call order or helper calls.
 - **No duplicate algorithms:** Do not compute `want` by reimplementing the production algorithm in the test. Use concrete examples, fixtures, properties, or independent invariants.
-- **Structure over comments for acceptance criteria:** When a test exists to satisfy a specific acceptance criterion, prefer expressing it through the structure the repository's runner provides — `given`/`when`/`then` helpers, a descriptive subtest name, or the runner's own nested blocks — rather than relying on a comment to explain the mapping.
+- **Structure over comments for acceptance criteria:** When a test exists to satisfy a specific acceptance criterion, express it through the structure the repository's runner provides — `given`/`when`/`then` helpers, a descriptive subtest name, or the runner's own nested blocks — rather than relying on a comment to explain the mapping.
 
 ## Procedure
 
@@ -146,7 +150,7 @@ Before finalizing any Go test, check it against these requirements:
    - Before finalizing, sweep the tests you touched for a comment that is the *only* record of a behavior — an `// AC-1.8: ...` annotation, a prose rule above a test function, a note explaining what the assertions add up to. Convert each one into structure: a named subtest, `given`/`when`/`then` helpers, or the runner's own block name. The traceability ID may stay; the rule it was carrying moves into the code.
 
      ```bash
-     grep -rnE '^[[:space:]]*//.*([Aa][Cc]-[0-9]|[Rr]equirement|[Cc]riteri|\bmust\b|\bshould\b)' path/to/package
+     grep -rnE --include='*_test.go' '^[[:space:]]*//.*([Aa][Cc]-[0-9]|[Rr]equirement|[Cc]riteri|\bmust\b|\bshould\b)' path/to/package
      ```
 
 ## Test Patterns
