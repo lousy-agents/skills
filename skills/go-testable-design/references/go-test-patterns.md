@@ -483,15 +483,15 @@ the adapter toward the pure package, and each test's fake stays local to the
 test that needs it.
 
 Check this rather than trusting it, with two commands. The first walks the
-module's own packages the target reaches and reports the IO ones *they*
-import directly. The second drops the module's own packages and reports the
-third-party ones that remain.
+module's own packages the target reaches and prints the packages *they*
+import directly, then greps for IO. The second drops the module's own packages
+and reports the third-party ones that remain. Each is a single `go list` — no
+`xargs` second hop.
 
 ```bash
 # stdlib IO reached through your own packages
-go list -deps -f '{{if and .Module .Module.Main}}{{.ImportPath}}{{end}}' ./pricing |
-  xargs -r go list -f '{{join .Imports "\n"}}' | sort -u |
-  grep -E '^(os|net|log|database/sql)(/|$)'
+go list -deps -f '{{if and .Module .Module.Main}}{{range .Imports}}{{.}}{{"\n"}}{{end}}{{end}}' ./pricing |
+  sort -u | grep -E '^(os|net|log|database/sql)(/|$)'
 # third-party dependencies
 go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./pricing
 ```
@@ -505,11 +505,12 @@ this section tells you to build.
 Two details in that form are load-bearing. The `-f` template asks `go list`
 which module each dependency belongs to instead of string-matching the module
 path, so a multi-module `go.work` (where `go list -m` prints several lines and
-silently corrupts the pattern) still classifies correctly. And `xargs -r` stops
-the second `go list` from running with no arguments: bare `xargs` would fall
-back to *the package in the current directory* and report its imports as
-though they were the target's, so a typo'd path or an undownloaded dependency
-prints a confident, entirely fabricated impurity report.
+silently corrupts the pattern) still classifies correctly. And the IO check
+prints each main-module package's *direct* `.Imports` inside that same
+invocation — it never shells out to a second `go list` via `xargs`. A two-step
+`go list | xargs go list` form is how a typo'd path or undownloaded dependency
+used to print a confident, entirely fabricated impurity report (bare `xargs`
+falls back to the package in the current directory).
 
 A package that is still pure prints nothing from either command (grep exits 1
 on no match):

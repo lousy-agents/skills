@@ -1,6 +1,6 @@
 ---
 name: go-testable-design
-description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, red-green-refactor, executable documentation, behavior-focused assertions, or reviewing Go code for testability. Guides unit tests, table tests, subtests, helpers with t.Helper(), constructor injection for dependencies, CLI/process/filesystem boundaries, business logic, httptest, io/fs boundaries, context cancellation, goroutine and concurrency tests (channels, sync.WaitGroup, race detector), property tests, standard-library-first unit design, and acceptance suites that follow the repository's existing test harness."
+description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, red-green-refactor, outside-in or acceptance-first starts, executable documentation, behavior-focused assertions, or reviewing Go code for testability or package purity. Guides unit tests, table tests, subtests, helpers with t.Helper(), constructor injection for dependencies, CLI/process/filesystem boundaries, business logic, httptest, io/fs boundaries, context cancellation, goroutine and concurrency tests (channels, sync.WaitGroup, race detector), property tests, standard-library-first unit design, dual-track unit vs acceptance form, and acceptance suites that follow the repository's existing test harness."
 argument-hint: "Optional: package, file path, bug, feature, or testing topic to work on"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
@@ -66,13 +66,12 @@ A package's import list decides how testable it is before any test exists: a pac
 
 - Keep the packages that hold calculations and decisions free of framework, network, database, and filesystem imports. Put those adapters in packages at the edge and wire them together in the composition root.
 - Declare interfaces at the use site: the consuming package defines the small interface it needs, and the producing package returns concrete types.
-- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages; the second lists third-party dependencies for review. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. Both filter on `go list`'s own module metadata rather than string-matching the module path, so neither misreports under `go.work`. Check the target path resolves: a `go list` error (bad path, deps not downloaded) means the check did not run, not that it passed:
+- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages; the second lists third-party dependencies for review. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. Both filter on `go list`'s own module metadata rather than string-matching the module path, so neither misreports under `go.work`. Each command is a single `go list` (no `xargs`): a bad path or undownloaded deps makes `go list` exit non-zero with an error on stderr and empty stdout — that means the check did not run, not that it passed:
 
   ```bash
   # stdlib IO reached through your own packages
-  go list -deps -f '{{if and .Module .Module.Main}}{{.ImportPath}}{{end}}' ./internal/pricing |
-    xargs -r go list -f '{{join .Imports "\n"}}' | sort -u |
-    grep -E '^(os|net|log|database/sql)(/|$)'
+  go list -deps -f '{{if and .Module .Module.Main}}{{range .Imports}}{{.}}{{"\n"}}{{end}}{{end}}' ./internal/pricing |
+    sort -u | grep -E '^(os|net|log|database/sql)(/|$)'
   # third-party dependencies
   go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./internal/pricing
   ```
