@@ -30,6 +30,108 @@ tutorial structure.
 - Avoid adding assertion libraries or mocking frameworks unless the repo
   already uses them.
 
+## Detecting the Repository's Acceptance-Test Convention
+
+Unit tests and acceptance tests are different products with different
+defaults. Unit tests default to the standard library. An acceptance suite —
+the coverage that proves a feature or bug fix works at the public boundary —
+takes whatever form the repository already mandates. Detect that form before
+writing the test; do not infer it from this document.
+
+Run these checks in order, stopping once one gives an unambiguous answer:
+
+```bash
+# 1. Existing acceptance suites, by filename or directory
+find . -name '*_test.go' | grep -Ei '(_acceptance_test\.go|/(acceptance|e2e|features|specs?)/)'
+
+# 2. Suite-harness or spec-runner modules already in the dependency graph
+find . -name go.mod -exec grep -Ein '(ginkgo|gomega|testify|godog|goconvey|check\.v1)' {} +
+
+# 3. A suite entrypoint — the bootstrap that hands control to a runner.
+#    `func TestMain` on its own does NOT count: it is routine stdlib plumbing
+#    for flag parsing, fixture setup, or container teardown. Treat it as an
+#    entrypoint signal only when check 1 or check 2 also matched.
+find . -name '*_test.go' -exec grep -En '(RunSpecs|suite\.Run|godog\.TestSuite|func TestMain)' {} +
+
+# 4. Declared acceptance targets
+find . \( -name Makefile -o -name '*.toml' -o -name 'Taskfile.y*ml' \
+  -o -path '*/.github/workflows/*' \) -exec grep -Ein 'acceptance|e2e' {} +
+
+# 5. Stated project policy
+find . \( -name AGENTS.md -o -name CLAUDE.md -o -name CONTRIBUTING.md \) \
+  -exec grep -Ein 'acceptance|e2e|spec runner|test (harness|framework|suite)' {} +
+```
+
+Every check searches the tree instead of naming files that may not exist, so a
+repository without a `go.mod` at the root, a task runner, or agent docs simply
+returns nothing. Empty output is a clean "no signal", not a tooling failure.
+
+Reading the result:
+
+- **A convention exists** (an acceptance suite file, a runner in `go.mod` plus
+  an entrypoint, or a written policy): write the acceptance test in that form,
+  matching the existing suite's file layout, naming, and bootstrap. Do not
+  introduce a second acceptance style alongside it.
+- **No convention exists**: the acceptance form is standard-library `testing`,
+  written the way the rest of the repository writes tests. Do NOT add a spec
+  runner, BDD framework, or assertion library to a repository that does not
+  already depend on one — that is a dependency decision owned by the module's
+  maintainers, not something to settle inside a test.
+- **Signals conflict** (e.g. a runner sits in `go.mod` but the package under
+  test uses stdlib tables): follow the nearest existing acceptance suite, and
+  state in your report which signal you followed and which you set aside.
+
+### The Same Criterion in Two Acceptance Forms
+
+The criterion does not change; only the vehicle does. Both versions below make
+the rule legible from structure alone.
+
+Standard library `testing` — the form to use when the repository has no
+runner:
+
+```go
+func TestWithdrawAcceptance(t *testing.T) {
+    t.Run("an account with insufficient funds", func(t *testing.T) {
+        t.Run("rejects the withdrawal and leaves the balance unchanged", func(t *testing.T) {
+            account := givenAccountWith(Money(20))
+
+            err := whenWithdrawing(account, Money(25))
+
+            thenErrorIs(t, err, ErrInsufficientFunds, "overdrafts must be rejected")
+            thenBalanceIs(t, account, Money(20), "a rejected withdrawal must not move money")
+        })
+    })
+}
+```
+
+A nested-block spec runner — use this form *only* when the repository already
+runs one. The example below is written in Ginkgo/Gomega syntax; a testify
+`suite`, a `godog` feature file, or an in-tree harness expresses the same
+structure with its own vocabulary:
+
+```go
+var _ = Describe("Withdraw", func() {
+    var account *Account
+
+    When("the account has insufficient funds", func() {
+        BeforeEach(func() { account = NewAccount(Money(20)) })
+
+        It("rejects the withdrawal and leaves the balance unchanged", func() {
+            err := account.Withdraw(Money(25))
+
+            Expect(err).To(MatchError(ErrInsufficientFunds))
+            Expect(account.Balance()).To(Equal(Money(20)))
+        })
+    })
+})
+```
+
+The mapping is mechanical: the runner's outer blocks carry what `given...`
+helpers and outer subtest names carry, and its innermost block carries what
+the innermost subtest name and `then...` assertions carry. Whichever vehicle
+the repository uses, the bar is identical — the structure names the criterion,
+and the failure output names the behavior that broke.
+
 ## Executable Documentation and Diagnostic Assertions
 
 Tests should document the behavior a caller relies on, not the mechanism the

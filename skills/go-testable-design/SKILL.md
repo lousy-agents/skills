@@ -1,6 +1,6 @@
 ---
 name: go-testable-design
-description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, red-green-refactor, executable documentation, behavior-focused assertions, or reviewing Go code for testability. Guides unit tests, table tests, subtests, helpers with t.Helper(), constructor injection for dependencies, CLI/process/filesystem boundaries, business logic, httptest, io/fs boundaries, context cancellation, goroutine and concurrency tests (channels, sync.WaitGroup, race detector), property tests, and standard-library-first design."
+description: "Use when writing, adding, or improving Go tests, developing or refactoring Go code using TDD, test-first, red-green-refactor, executable documentation, behavior-focused assertions, or reviewing Go code for testability. Guides unit tests, table tests, subtests, helpers with t.Helper(), constructor injection for dependencies, CLI/process/filesystem boundaries, business logic, httptest, io/fs boundaries, context cancellation, goroutine and concurrency tests (channels, sync.WaitGroup, race detector), property tests, standard-library-first unit design, and acceptance suites that follow the repository's existing test harness."
 argument-hint: "Optional: package, file path, bug, feature, or testing topic to work on"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
@@ -24,7 +24,7 @@ Do not use this skill for non-Go projects, generic CI setup, or broad architectu
 
 ## Core Rules
 
-- Prefer the standard library unless the repository already uses a focused dependency.
+- For unit tests, prefer the standard library unless the repository already uses a focused dependency. Acceptance suites instead follow the repository's existing acceptance form (see [Unit vs Acceptance Tests](#unit-vs-acceptance-tests)).
 - Match nearby test style; keep new tests succinct, direct, and behavior-focused.
 - Start from externally visible behavior: exported function, method, handler, CLI, file reader, or concurrent contract.
 - Tests MUST read like executable documentation for the behavior being implemented: names, setup, inputs, and expectations should explain the contract without requiring the reader to inspect production internals.
@@ -40,10 +40,21 @@ Do not use this skill for non-Go projects, generic CI setup, or broad architectu
 - Do not hide meaningful errors from tests; assert them.
 - Avoid sleeps in tests unless the behavior is explicitly timing-based. Prefer fake clocks, channels, contexts, or retry helpers.
 
-### Acceptance-Criteria-First Helpers (Given/When/Then)
+### Unit vs Acceptance Tests
 
-- Prefer capturing acceptance criteria in the test's structure — named `given`/`when`/`then` helpers or descriptive `t.Run` subtests — instead of explaining them only in a comment (e.g. an `// AC-1.8: ...` annotation). The test should demonstrate the criterion; the comment should not be the only place it is recorded.
-- Suggested shape: `given...` builds the starting state or fixture, `when...` performs the action under test, and `then...`/`assert...` checks the observable outcome. Keep each helper small and focused on one concern; for helpers that accept `*testing.T`/`testing.TB` (typically `then`/`assert` helpers), call `t.Helper()` so failures point at the caller — pure `given`/`when` builders that don't take `t` don't need it.
+These are two different products and they do not share a default form.
+
+- **Unit tests** cover a function, method, type, or package-internal seam. Standard-library `testing` is the default here, unless the repository already uses a focused dependency.
+- **Acceptance tests** (also called public-boundary, feature, or spec suites) prove a feature or bug fix works through the program's public boundary. Their form is dictated by the repository, not by this skill: it may be stdlib `testing`, a BDD spec runner, a testify-style suite, a `godog` feature suite, or an in-tree custom harness.
+- Determine the acceptance form during **Orient**, before choosing a test shape. If no acceptance convention and no project policy exist, stdlib `testing` is the acceptance form too — write it the way the rest of the repository writes tests.
+- NEVER invent a stdlib acceptance test when the repository mandates a different acceptance form. Conversely, NEVER import a spec runner into a repository that does not already use one: adding a runner is a dependency decision owned by the module's maintainers, not a test decision.
+- See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for the detection commands and a worked example of the same criterion in two acceptance forms.
+
+### Acceptance-Criteria-First Structure (Given/When/Then)
+
+- The principle is that **the test's structure should read as the criterion** — not that any particular helper style is required. Capture acceptance criteria in structure and naming instead of explaining them only in a comment (e.g. an `// AC-1.8: ...` annotation). The test should demonstrate the criterion; the comment should not be the only place it is recorded.
+- The vehicle is whatever the repository already uses: a spec runner's `Describe`/`When`/`It` blocks, stdlib `t.Run` subtests, named `given`/`when`/`then` helpers, or another in-tree runner's block structure. Do not switch vehicles to satisfy this principle.
+- Suggested shape when the vehicle is stdlib helpers: `given...` builds the starting state or fixture, `when...` performs the action under test, and `then...`/`assert...` checks the observable outcome. Keep each helper small and focused on one concern; for helpers that accept `*testing.T`/`testing.TB` (typically `then`/`assert` helpers), call `t.Helper()` so failures point at the caller — pure `given`/`when` builders that don't take `t` don't need it.
 - Subtest names should read as the behavioral rule itself (`"rejects overdraft withdrawals"`, `"cancels in-flight work when the context ends"`) so the test file reads like a spec without needing the comment to translate intent.
 - It is fine to keep a short traceability comment (e.g. referencing an acceptance-criteria ID from a spec) above a test, but it must not be the only description of the behavior — the extracted `given`/`when`/`then` structure should independently make the criterion legible.
 - Do not over-extract: a single straight-line test with clear variable names can already satisfy this if it reads like the criterion. Reach for `given`/`when`/`then` helpers when a comment is currently doing the work that structure and naming should do instead.
@@ -59,12 +70,14 @@ Before finalizing any Go test, check it against these requirements:
 - **Diagnostic failure:** Each assertion failure identifies what behavior was expected, the important input or state, and the observed value. Avoid failures that only say `expected true`, `not equal`, or `wrong result`.
 - **Legitimate interaction checks:** Spy/mock assertions are reserved for observable boundary contracts, such as command arguments, repository writes, emitted events, cancellation calls, or external requests. Avoid verifying incidental call order or helper calls.
 - **No duplicate algorithms:** Do not compute `want` by reimplementing the production algorithm in the test. Use concrete examples, fixtures, properties, or independent invariants.
-- **Structure over comments for acceptance criteria:** When a test exists to satisfy a specific acceptance criterion, prefer expressing it through `given`/`when`/`then` helpers or a descriptive subtest name rather than relying on a comment to explain the mapping.
+- **Structure over comments for acceptance criteria:** When a test exists to satisfy a specific acceptance criterion, prefer expressing it through the structure the repository's runner provides — `given`/`when`/`then` helpers, a descriptive subtest name, or the runner's own nested blocks — rather than relying on a comment to explain the mapping.
 
 ## Procedure
 
 1. **Orient**
    - Inspect `go.mod`, package layout, existing tests, and naming conventions.
+   - **Detect the repository's acceptance-test convention before choosing any test shape.** Check every signal: existing acceptance suite files (`*_acceptance_test.go` or equivalently named suites, and `*_test.go` under `acceptance/`, `e2e/`, `features/`, or `specs/`); spec-runner or suite-harness modules in `go.mod`; a suite entrypoint (a `RunSpecs`-style bootstrap, a `suite.Run` call, a `godog.TestSuite`, or a `TestMain` that bootstraps a suite — not one that merely does setup, teardown, or flag parsing); acceptance targets in `Makefile`, `mise.toml`, `Taskfile.yml`, or CI workflows; and stated policy in project agent docs (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`).
+   - Record the answer explicitly: which acceptance form the repository mandates, or that it has none. **No signals means stdlib `testing`** — do not add a runner. See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for the detection commands and how to read conflicting signals.
    - Identify the smallest package or file that owns the behavior.
    - If `go` is available, run the narrowest baseline test first:
 
@@ -73,6 +86,7 @@ Before finalizing any Go test, check it against these requirements:
      ```
 
 2. **Choose the Test Shape**
+   - If this is acceptance coverage for a feature or bug fix, use the repository's acceptance form identified in Orient; the shapes below are for unit and other non-acceptance tests.
    - Pure functions: use direct assertions, then table tests once cases multiply.
    - Methods with mutation: assert state before and after, and cover error paths.
    - Business logic with collaborators: inject dependencies through constructors and test with small local fakes.
@@ -174,6 +188,7 @@ Read [`references/go-test-patterns.md`](./references/go-test-patterns.md) when t
 - Constructor injection for testable business logic, handlers, CLIs, process execution, filesystem access, or other external boundaries.
 - Preserving simple local test style while improving isolation and test hygiene.
 - Converting acceptance-criteria comments into Given/When/Then-style helpers or subtests.
+- Detecting whether the repository mandates a particular acceptance-test form before writing acceptance coverage.
 
 ## Output Expectations
 
