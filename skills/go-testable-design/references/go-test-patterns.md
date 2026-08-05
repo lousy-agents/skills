@@ -467,6 +467,74 @@ dependencies.
 - Avoid service locators, mutable package-level state, and hidden singleton
   clients.
 
+## Package Fitness and the Dependency Rule
+
+A package's imports decide how testable it is before a test is written: a
+package that imports no IO needs no fakes, no `httptest` server, and no temp
+directory. Keep calculation and decision packages pure, keep the adapters —
+HTTP clients, database access, parsers, filesystem readers — in packages at
+the edge, and let the composition root wire the two together.
+
+Declare interfaces at the use site. The package that *consumes* a dependency
+declares the small interface it needs next to the code that calls it (e.g.
+`type RateSource interface { Rate(string) (float64, error) }`); the package
+that *provides* it returns concrete types. The dependency then points from
+the adapter toward the pure package, and each test's fake stays local to the
+test that needs it.
+
+Check this rather than trusting it. The command below lists a package's
+transitive dependencies, drops the module's own packages, and reports the
+third-party and IO ones that remain:
+
+```bash
+go list -deps ./pricing |
+  grep -Ev "^$(go list -m)(/|$)" |
+  grep -E '^[^/]*\.[^/]*/|^(os|net|log|database/sql)(/|$)'
+```
+
+A package that is still pure prints nothing (grep exits 1 on no match):
+
+```
+$ go list -deps ./pricing | grep -Ev ... | grep -E ...
+$ echo $?
+1
+```
+
+The same package after someone reaches for `os` and `net/http` inside it:
+
+```
+$ go list -deps ./pricing | grep -Ev ... | grep -E ...
+os
+net/netip
+net
+net/url
+log/internal
+log
+net/textproto
+net/http/httptrace
+net/http/internal
+net/http/internal/ascii
+net/http
+```
+
+Notes on running it:
+
+- The list is transitive, which is the point: a pure package that depends on
+  a helper package that opens files is not pure either. The single import
+  that caused it is usually the first or last line of the output.
+- A third-party dependency shows up as its full import path
+  (`github.com/acme/rates/rates`), matched by the first alternation; the
+  module's own packages are removed by the `go list -m` filter.
+- Extend the second alternation with whatever else must stay out of the
+  package (`os/exec`, `database/sql`, a config or logging package of your
+  own).
+- `go list` needs the module graph to resolve. If dependencies are not
+  downloaded it errors instead of printing packages — that is a check that
+  did not run, not a package that passed.
+- The symptom that precedes a failing check: a unit test that needs three
+  fakes to reach one calculation. Moving that calculation into a package
+  with no IO imports usually deletes the fakes outright.
+
 ## Testing Goroutines and Concurrency
 
 Concurrent code needs its own deliberate test strategy — non-deterministic

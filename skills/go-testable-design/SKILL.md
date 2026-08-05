@@ -60,6 +60,22 @@ These are two different products and they do not share a default form.
 - Do not over-extract: a single straight-line test with clear variable names can already satisfy this if it reads like the criterion. Reach for `given`/`when`/`then` helpers when a comment is currently doing the work that structure and naming should do instead.
 - See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for a before/after example converting an AC comment into Given/When/Then helpers.
 
+### Package Fitness (Dependency Rule)
+
+A package's import list decides how testable it is before any test exists: a package that imports no IO needs no fakes, which is what makes the constructor-injection and boundary-interface rules above achievable.
+
+- Keep the packages that hold calculations and decisions free of framework, network, database, and filesystem imports. Put those adapters in packages at the edge and wire them together in the composition root.
+- Declare interfaces at the use site: the consuming package defines the small interface it needs, and the producing package returns concrete types.
+- Verify purity instead of asserting it. This lists the third-party and IO dependencies reaching a package that should be pure; empty output means it is clean, and a `go list` error (module deps not downloaded) means the check did not run, not that it passed:
+
+  ```bash
+  go list -deps ./internal/pricing |
+    grep -Ev "^$(go list -m)(/|$)" |
+    grep -E '^[^/]*\.[^/]*/|^(os|net|log|database/sql)(/|$)'
+  ```
+
+- See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for a worked purity check on a pure and an impure package.
+
 ## Mandatory Test Quality Bar
 
 Before finalizing any Go test, check it against these requirements:
@@ -127,6 +143,11 @@ Before finalizing any Go test, check it against these requirements:
      ```
 
    - If the local environment lacks Go or dependencies, report that clearly and include the exact command that should be run.
+   - Before finalizing, sweep the tests you touched for a comment that is the *only* record of a behavior — an `// AC-1.8: ...` annotation, a prose rule above a test function, a note explaining what the assertions add up to. Convert each one into structure: a named subtest, `given`/`when`/`then` helpers, or the runner's own block name. The traceability ID may stay; the rule it was carrying moves into the code.
+
+     ```bash
+     grep -rnE '^[[:space:]]*//.*([Aa][Cc]-[0-9]|[Rr]equirement|[Cc]riteri|\bmust\b|\bshould\b)' path/to/package
+     ```
 
 ## Test Patterns
 
@@ -192,6 +213,7 @@ Read [`references/go-test-patterns.md`](./references/go-test-patterns.md) when t
 - Constructor injection for testable business logic, handlers, CLIs, process execution, filesystem access, or other external boundaries.
 - Preserving simple local test style while improving isolation and test hygiene.
 - Converting acceptance-criteria comments into Given/When/Then-style helpers or subtests.
+- Checking that a package meant to stay pure has not picked up IO, network, or third-party dependencies.
 - Detecting whether the repository mandates a particular acceptance-test form before writing acceptance coverage.
 - Starting a feature or bug fix outside-in: a failing boundary test that invents the ports it needs, then drilling inward with unit tests.
 
