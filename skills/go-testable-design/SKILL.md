@@ -86,7 +86,9 @@ Before finalizing any Go test, check it against these requirements:
      ```
 
 2. **Choose the Test Shape**
+   - **New feature or bug fix that changes externally visible behavior: start outside-in.** The first failing test exercises the public boundary — CLI invocation, HTTP endpoint, exported package API — rather than an internal helper.
    - If this is acceptance coverage for a feature or bug fix, use the repository's acceptance form identified in Orient; the shapes below are for unit and other non-acceptance tests.
+   - Inside-out is legitimate for a pure internal helper, an algorithmic core, or a well-understood domain whose public API is already settled: start at the unit and skip the boundary test.
    - Pure functions: use direct assertions, then table tests once cases multiply.
    - Methods with mutation: assert state before and after, and cover error paths.
    - Business logic with collaborators: inject dependencies through constructors and test with small local fakes.
@@ -97,6 +99,7 @@ Before finalizing any Go test, check it against these requirements:
    - Properties or reversible transformations: add `testing/quick` after concrete examples establish the expected behavior.
 
 3. **Write the First Failing Test**
+   - Working outside-in, write the call you wish existed and invent the ports, spies, and fakes it needs from inside the test: the test is the API's first consumer, so an awkward test is evidence of an awkward API — change the signature, not the test. See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for a worked walkthrough.
    - Name the behavior with `t.Run` when multiple cases are expected.
    - Phrase test and subtest names as contract statements, such as `rejects overdraft withdrawals`, `writes JSON with a 201 status`, or `cancels in-flight work when the context ends`.
    - Put expected values in the test, not hidden inside helpers.
@@ -106,6 +109,7 @@ Before finalizing any Go test, check it against these requirements:
 4. **Implement Simply**
    - Hard-code when that is the honest smallest step.
    - Parameterize once the second test forces it.
+   - Working outside-in, once the boundary test is green return to step 3 for the pieces that carry real logic: their unit tests own the edge cases the boundary test should not enumerate.
    - Extract functions, interfaces, or generic helpers only when tests show repeated structure.
 
 5. **Refactor Under Tests**
@@ -189,6 +193,7 @@ Read [`references/go-test-patterns.md`](./references/go-test-patterns.md) when t
 - Preserving simple local test style while improving isolation and test hygiene.
 - Converting acceptance-criteria comments into Given/When/Then-style helpers or subtests.
 - Detecting whether the repository mandates a particular acceptance-test form before writing acceptance coverage.
+- Starting a feature or bug fix outside-in: a failing boundary test that invents the ports it needs, then drilling inward with unit tests.
 
 ## Output Expectations
 

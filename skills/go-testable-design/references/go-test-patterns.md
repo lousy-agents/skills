@@ -132,6 +132,77 @@ the innermost subtest name and `then...` assertions carry. Whichever vehicle
 the repository uses, the bar is identical — the structure names the criterion,
 and the failure output names the behavior that broke.
 
+## Starting Outside-In
+
+For a new feature or a bug fix, the first failing test belongs at the public
+boundary — the CLI invocation, the HTTP request, or the exported call a user
+actually makes. Write it in whichever acceptance form the detection above
+identified; the walkthrough uses standard-library `testing` because that is
+the form for a repository with no runner.
+
+1. **Write the boundary test first, calling the API you wish existed.** The
+   test is that API's first consumer, so let it invent the seam instead of
+   designing the seam up front. This one needs a rate source that production
+   does not have yet — and nothing else, so invent nothing else:
+
+   ```go
+   func TestQuoteAcceptance(t *testing.T) {
+       t.Run("prices an order in the customer's currency", func(t *testing.T) {
+           quoter := NewQuoter(stubRates{"EUR": 0.9})
+
+           got, err := quoter.Quote(Order{Subtotal: Money(100), Currency: "EUR"})
+
+           if err != nil {
+               t.Fatalf("quoting a EUR order should succeed: got err %v", err)
+           }
+           if want := Money(90); got != want {
+               t.Fatalf("EUR order priced at the source's rate: got %v, want %v", got, want)
+           }
+       })
+   }
+   ```
+
+2. **Let the test define the ports.** `stubRates` does not exist yet either;
+   write it in the test file, and the interface it satisfies becomes the port
+   production accepts through its constructor:
+
+   ```go
+   // In the test file — the fake the test just invented.
+   type stubRates map[string]float64
+
+   func (r stubRates) Rate(currency string) (float64, error) {
+       rate, ok := r[currency]
+       if !ok {
+           return 0, fmt.Errorf("no rate for %s", currency)
+       }
+       return rate, nil
+   }
+
+   // In production — the port that fake forced, and the constructor that takes it.
+   type RateSource interface {
+       Rate(currency string) (float64, error)
+   }
+
+   func NewQuoter(rates RateSource) *Quoter // body comes in step 3
+   ```
+
+   If the arrangement is awkward to write — too many parameters, a hidden
+   global, an unclear return — that is the API being awkward, not the test.
+   Change the signature before writing production code.
+
+3. **Make it pass with the smallest honest change.** A hard-coded conversion
+   or a single-branch `Quote` is enough; the boundary test only has to go
+   green.
+
+4. **Drill inward.** Add unit tests for the pieces that carry real logic —
+   rounding rules, unsupported-currency errors, missing-rate handling — and let
+   those tests own the edge cases. The boundary test keeps proving the feature
+   works end to end; it should not grow a case per rounding rule.
+
+Inside-out remains the right start for a pure internal helper, an algorithmic
+core, or a well-understood domain whose public API is already settled: write
+the unit test directly and skip the boundary step.
+
 ## Executable Documentation and Diagnostic Assertions
 
 Tests should document the behavior a caller relies on, not the mechanism the
