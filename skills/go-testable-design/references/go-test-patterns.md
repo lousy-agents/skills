@@ -488,13 +488,12 @@ import directly. The second drops the module's own packages and reports the
 third-party ones that remain.
 
 ```bash
-m=$(go list -m)
 # stdlib IO reached through your own packages
-go list -deps ./pricing | grep -E "^$m(/|\$)" |
-  xargs go list -f '{{join .Imports "\n"}}' | sort -u |
+go list -deps -f '{{if and .Module .Module.Main}}{{.ImportPath}}{{end}}' ./pricing |
+  xargs -r go list -f '{{join .Imports "\n"}}' | sort -u |
   grep -E '^(os|net|log|database/sql)(/|$)'
 # third-party dependencies
-go list -deps ./pricing | grep -Ev "^$m(/|\$)" | grep -E '^[^/]*\.[^/]*/'
+go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./pricing
 ```
 
 Keep the two separate. A single `go list -deps` piped into one IO grep also
@@ -502,6 +501,15 @@ matches the stdlib's own internals: `fmt` and `encoding/json` both depend on
 `os`, so that shorter form reports `os` for any package whose only sin is
 calling `fmt.Errorf` — a false positive on exactly the pure domain packages
 this section tells you to build.
+
+Two details in that form are load-bearing. The `-f` template asks `go list`
+which module each dependency belongs to instead of string-matching the module
+path, so a multi-module `go.work` (where `go list -m` prints several lines and
+silently corrupts the pattern) still classifies correctly. And `xargs -r` stops
+the second `go list` from running with no arguments: bare `xargs` would fall
+back to *the package in the current directory* and report its imports as
+though they were the target's, so a typo'd path or an undownloaded dependency
+prints a confident, entirely fabricated impurity report.
 
 A package that is still pure prints nothing from either command (grep exits 1
 on no match):
@@ -530,6 +538,15 @@ $ <third-party-check>
 github.com/acme/rates/rates
 ```
 
+That second list is a review list, not a verdict. It is transitive like the
+IO check, so a package whose own imports are entirely stdlib can still list a
+third-party path it reaches through an internal sub-package that exists to own
+exactly that dependency — a parser package wrapping a grammar library, say.
+That is the shape this section is asking for: the dependency is quarantined
+behind a seam instead of spread through the domain. Read the list and ask
+whether each entry is quarantined or has leaked into the code that holds
+decisions; only the second is a finding.
+
 Notes on running them:
 
 - The IO check is transitive across your own packages, which is the point: a
@@ -537,8 +554,8 @@ Notes on running them:
   either. To find which import caused a hit, list a package's direct imports:
   `go list -f '{{join .Imports "\n"}}' ./pricing`.
 - A third-party dependency shows up as its full import path
-  (`github.com/acme/rates/rates`); stdlib packages have no dot in their first
-  path element, so they never match that pattern.
+  (`github.com/acme/rates/rates`). Stdlib packages belong to no module, so
+  `go list`'s module metadata excludes them from both checks automatically.
 - Extend the IO alternation with whatever else must stay out of the
   package (`os/exec`, `database/sql`, a config or logging package of your
   own).

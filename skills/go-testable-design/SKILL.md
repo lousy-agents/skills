@@ -66,17 +66,18 @@ A package's import list decides how testable it is before any test exists: a pac
 
 - Keep the packages that hold calculations and decisions free of framework, network, database, and filesystem imports. Put those adapters in packages at the edge and wire them together in the composition root.
 - Declare interfaces at the use site: the consuming package defines the small interface it needs, and the producing package returns concrete types.
-- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages, the second reports third-party dependencies; empty output from both means the package is clean. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. A `go list` error (module deps not downloaded) means the check did not run, not that it passed:
+- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages; the second lists third-party dependencies for review. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. Both filter on `go list`'s own module metadata rather than string-matching the module path, so neither misreports under `go.work`. Check the target path resolves: a `go list` error (bad path, deps not downloaded) means the check did not run, not that it passed:
 
   ```bash
-  m=$(go list -m)
   # stdlib IO reached through your own packages
-  go list -deps ./internal/pricing | grep -E "^$m(/|\$)" |
-    xargs go list -f '{{join .Imports "\n"}}' | sort -u |
+  go list -deps -f '{{if and .Module .Module.Main}}{{.ImportPath}}{{end}}' ./internal/pricing |
+    xargs -r go list -f '{{join .Imports "\n"}}' | sort -u |
     grep -E '^(os|net|log|database/sql)(/|$)'
   # third-party dependencies
-  go list -deps ./internal/pricing | grep -Ev "^$m(/|\$)" | grep -E '^[^/]*\.[^/]*/'
+  go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./internal/pricing
   ```
+
+- Read the third-party list, do not just count it. Both checks are transitive, so a dependency reached only through an internal sub-package that exists to own it is the intended shape, not a violation — what you are looking for is framework and IO creep into the packages that hold decisions.
 
 - See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for a worked purity check on a pure and an impure package.
 
@@ -120,7 +121,7 @@ Before finalizing any Go test, check it against these requirements:
 
 3. **Write the First Failing Test**
    - Working outside-in, write the call you wish existed and invent the ports, spies, and fakes it needs from inside the test: the test is the API's first consumer, so an awkward test is evidence of an awkward API — change the signature, not the test. See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for a worked walkthrough.
-   - Name the behavior with `t.Run` when multiple cases are expected.
+   - In stdlib tests, name the behavior with `t.Run` when multiple cases are expected; in an acceptance suite, use the block structure that suite already uses.
    - Phrase test and subtest names as contract statements, such as `rejects overdraft withdrawals`, `writes JSON with a 201 status`, or `cancels in-flight work when the context ends`.
    - Put expected values in the test, not hidden inside helpers.
    - Write assertion messages that include the protected behavior, relevant inputs, and `got`/`want`.
