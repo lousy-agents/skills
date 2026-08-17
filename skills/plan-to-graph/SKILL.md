@@ -52,7 +52,9 @@ Accept exactly one source:
 - A GitHub epic issue URL or number. Derive the target repository from a URL; require a supplied target repository for a number.
 - A readable local spec or master-plan file. The user must also provide a target repository; derive one epic title from the plan title.
 
-This skill produces one epic with a single level of direct children. It does not create nested sub-issues or multiple epics in one run. If a local source implies more than one grouping — several `### Story N` headings under `## User Stories`, numbered phases, or distinct milestones — stop and ask the user which grouping is the epic and whether the rest belong in separate runs. Do not silently flatten multiple stories into one epic, and do not invent an epic per story on your own.
+This skill produces one epic with a single level of direct children. It does not create nested sub-issues or multiple epics in one run. A canonical `feature-to-plan` spec is one epic: any number of `### Story` / `### Story N` headings under `## User Stories`, and exactly one `## Tasks` section. Story headings are acceptance-criteria structure, not epic groupings. Several story headings are not a reason to stop and are not a reason to invent an epic per story.
+
+The grouping signal is the task list, not the story list. Stop and ask which grouping is the epic, and whether the rest belong in separate runs, only when a local source shows genuine epic-multiplicity: more than one `## Tasks` section, or tasks partitioned under explicit `### Phase` / `### Milestone` (or equivalent) subheadings inside `## Tasks`. Do not silently flatten multiple task groups into one epic.
 
 If the source has no `## Tasks` section, or that section contains no task entries, stop and report that there is nothing to map. Do not infer tasks from prose, requirements, or acceptance criteria.
 
