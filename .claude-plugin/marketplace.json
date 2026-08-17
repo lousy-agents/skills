@@ -29,7 +29,7 @@
     {
       "name": "issue-refine-loop",
       "displayName": "Issue Refine Loop",
-      "description": "Turn a title-only GitHub issue into an implementable epic, then create child issues",
+      "description": "Rewrite a GitHub issue with acceptance criteria and tasks, then create child issues",
       "source": "./issue-refine-loop",
       "category": "planning",
       "keywords": ["planning", "github-issues", "epic", "EARS", "backlog", "refinement"]

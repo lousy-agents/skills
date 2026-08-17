@@ -13,7 +13,7 @@
     },
     {
       "title": "Planning & Workflows",
-      "description": "Turn ideas and GitHub issues into executable plans and issue graphs.",
+      "description": "Turn ideas and GitHub issues into spec files, rewritten epics, and issue graphs.",
       "skills": [
         "plan-to-graph",
         "feature-to-plan",
