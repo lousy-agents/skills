@@ -53,7 +53,7 @@ existing thin issue ────────────────────
 
 **Rewrite an existing GitHub issue with `issue-refine-loop`**
 
-Requires an issue number or URL — it will not create the issue from a freeform idea. It snapshots the original body as a comment, adds acceptance criteria, design, and tasks to that issue, then splits those tasks into child issues on GitHub. Each child is sized for one coding-agent session (roughly one to three files). A child lists `Depends on` only when another child actually blocks it; independent children have no blocker and are labeled `refined`, so they can be picked up in parallel. It does not write files in your repo. If `plan-to-graph` is installed, child creation uses it; otherwise the skill creates the children itself.
+Requires an issue number or URL — it will not create the issue from a freeform idea. It snapshots the original body as a comment, adds acceptance criteria, design, and tasks to that issue, then splits those tasks into child issues on GitHub. Each child is sized for one coding-agent session (roughly one to three files). A child lists `Depends on` only when another child actually blocks it; independent children have no blocker and are labeled `refined`, so they can be picked up in parallel. It does not write files in your repo. If `plan-to-graph` is installed and authenticated `gh` can create native sub-issues, child creation uses it; otherwise the skill creates the children itself.
 
 ```bash
 npx skills add lousy-agents/skills --skill issue-refine-loop --skill feature-to-plan
@@ -112,7 +112,7 @@ Invoke it in your agent:
 npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor --skill plan-to-graph
 ```
 
-> **Prerequisite:** `plan-to-graph` requires a resolvable target repository and authenticated [`gh`](https://cli.github.com/) access, on a version new enough to support native sub-issues and blocking relationships (`gh issue create --parent`, `gh issue edit --add-blocked-by`). The skill checks this before it creates anything and stops if the flags are missing.
+> **Prerequisite:** `plan-to-graph` requires a resolvable target repository and a way to create native sub-issues and blocking relationships: authenticated [`gh`](https://cli.github.com/) with `gh issue create --parent` and `gh issue edit --add-blocked-by`, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent or lacks those flags. The skill checks this before it creates anything and stops if neither works.
 
 ---
 
@@ -225,7 +225,7 @@ Converts Lousy Agents specs, master plans, roadmaps, and GitHub epics into nativ
 - Break a plan's tasks into one epic and a single level of sub-issues with explicit blocking dependencies
 - Preserve each task's complete structured content in its child-issue body
 
-**Requires** a target GitHub repository and authenticated `gh` access with native sub-issue support. Re-running against an epic that already has sub-issues will not duplicate them — the skill detects the collision and stops.
+**Requires** a target GitHub repository and authenticated [`gh`](https://cli.github.com/) with native sub-issue and blocking-relationship support, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent or lacks those flags. Re-running against an epic that already has sub-issues will not duplicate them — the skill detects the collision and stops.
 
 ---
 
