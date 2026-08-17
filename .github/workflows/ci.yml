@@ -26,6 +26,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
+      - name: Validate catalog JSON
+        run: |
+          fail=0
+          for f in skills/*/.claude-plugin/plugin.json .claude-plugin/marketplace.json skills.sh.json; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" \
+              || { echo "::error file=$f::invalid JSON"; fail=1; }
+          done
+          exit $fail
+
       - name: Lint with lousy-agents
         uses: zpratt/lousy-agents@99bd67b5eec8ec829b6e0fb3b5c9d7a5bdb8b37f  # v5.14.2
         with:
