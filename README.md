@@ -35,10 +35,12 @@ For agentic software engineers, the value is not simply "more prompts." Each ski
 
 ### Hi-Fi Planning
 
-**Hi-fi planning** is writing acceptance criteria and tasks before implementation. These skills are not interchangeable:
+**Hi-fi planning** is writing acceptance criteria and tasks before implementation. `feature-to-plan` and `issue-refine-loop` share that bar — EARS criteria, personas, value assessment, Mermaid design, session-sized tasks — but they write different artifacts and are not a pipeline:
 
 - **No GitHub issue yet, or you want a spec file** — `feature-to-plan` → `spec-auditor` → `plan-to-graph`
 - **You already have a GitHub issue and want that issue rewritten** — [`issue-refine-loop`](#issue-refine-loop)
+
+When both are installed, `issue-refine-loop` uses `feature-to-plan`'s format rules for EARS and task anatomy. It does not read or write the spec file.
 
 ```
 freeform idea ──► feature-to-plan ──► spec-auditor ──► plan-to-graph
@@ -54,8 +56,10 @@ existing GitHub issue ───┤
 Requires an issue number or URL — it will not create the issue from a freeform idea. It snapshots the original body as a comment, adds acceptance criteria, design, and tasks to that issue, then splits those tasks into child issues on GitHub. Each child is sized for one coding-agent session (roughly one to three files). A child lists `Depends on` only when another child actually blocks it; independent children have no blocker and are labeled `refined`, so they can be picked up in parallel. It does not write files in your repo. If `plan-to-graph` is installed, child creation uses it; otherwise the skill creates the children itself.
 
 ```bash
-npx skills add lousy-agents/skills --skill issue-refine-loop
+npx skills add lousy-agents/skills --skill issue-refine-loop --skill feature-to-plan
 ```
+
+`feature-to-plan` is optional on this path. Install it too if you want the shared format skill present — `issue-refine-loop` prefers it for EARS and task anatomy.
 
 > *"Refine issue #47"*
 > *"Use issue-refine-loop on https://github.com/owner/repo/issues/162"*
@@ -155,7 +159,7 @@ Converts feature requests — either freeform or seeded from a GitHub issue — 
 **Do NOT use when:**
 - You want the GitHub issue itself rewritten into an epic. Use `issue-refine-loop` instead.
 
-**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context.
+**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context. `issue-refine-loop` applies the same EARS, persona, and task format to a GitHub issue instead of a file.
 
 ---
 
@@ -169,6 +173,8 @@ Rewrites an existing GitHub issue — title-only, one-sentence, or an epic missi
 - Fill in a GitHub issue that is too thin to implement (title-only, one sentence, or missing acceptance criteria, design, or tasks)
 - Break a large issue into session-sized children that can proceed in parallel except where one truly blocks another
 - Keep the plan on that issue instead of creating a spec file
+
+Uses the same EARS, persona, and task format as `feature-to-plan`. When both are installed, this skill loads that format instead of its fallback. It does not read or write a spec file.
 
 **Do NOT use when:**
 - You want a spec file in the repo. Use `feature-to-plan` instead.
