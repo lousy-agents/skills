@@ -1,6 +1,6 @@
 # skills
 
-Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into executable specs, audit those specs before an agent writes code, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
+Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into spec files or rewritten GitHub issues, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
 
 [![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
 [![CI](https://github.com/lousy-agents/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/lousy-agents/skills/actions/workflows/ci.yml)
@@ -9,12 +9,13 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 
 | Skill | Phase | Description |
 | --- | --- | --- |
-| [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into structured EARS-format specs |
+| [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into an EARS spec file |
+| [`issue-refine-loop`](#issue-refine-loop) | Planning | Rewrites a GitHub issue, then splits it into session-sized children with only real blockers |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
-| [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small behavior first, executable examples, clear boundaries |
+| [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
-| [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript source |
+| [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript, Go, or Python |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
 | [`curate-release`](#curate-release) | Code Review / Release | Rewrites a PR's commits into a coherent release story semantic-release can publish |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
@@ -23,34 +24,47 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 
 ## Workflows
 
-Skills are designed to be composed. The sections below show two common patterns: a planning workflow that takes a raw feature idea all the way to an actionable issue graph, and a map of where each skill belongs across the broader delivery lifecycle.
+Skills are designed to be composed. The sections below show two common patterns: a planning workflow that produces either a spec file or a rewritten GitHub issue, and a map of where each skill belongs across the broader delivery lifecycle.
 
 For agentic software engineers, the value is not simply "more prompts." Each skill gives your agent a specific harness-engineering role with explicit standards, evidence requirements, and failure modes:
 
-- **Before coding:** convert intent into a spec, then adversarially audit the spec so agents do not guess through ambiguity.
+- **Before coding:** convert intent into a spec file, or rewrite an existing GitHub issue, before an agent implements it.
 - **Before scheduling:** turn approved work into dependency-aware issues that preserve verification context.
 - **Before merge:** generate hostile tests, find mutation survivors, and triage review comments by verifying claims against code.
 - **Before publishing skills:** review skill instructions themselves so the agent behavior stays discoverable, portable, and robust.
 
 ### Hi-Fi Planning
 
-**Hi-fi planning** is the practice of converting a fuzzy idea into a precise, executable plan before a single line of code is written. Three skills make this possible end-to-end:
+**Hi-fi planning** is writing acceptance criteria and tasks before implementation. `feature-to-plan` and `issue-refine-loop` share that bar — EARS criteria, personas, value assessment, Mermaid design, session-sized tasks — but they write different artifacts and are not a pipeline:
+
+- **No GitHub issue yet, or you want a spec file** — `feature-to-plan` → `spec-auditor` → `plan-to-graph`
+- **You already have a GitHub issue and want that issue rewritten** — [`issue-refine-loop`](#issue-refine-loop)
+
+When both are installed, `issue-refine-loop` uses `feature-to-plan`'s format rules for EARS and task anatomy. It does not read or write the spec file.
 
 ```
-feature idea or GitHub issue
-        │
-        ▼
-  feature-to-plan          ← structured EARS-format spec
-        │
-        ▼
-  spec-auditor             ← adversarial findings + targeted spec patches
-        │
-        ▼
-  plan-to-graph            ← GitHub Issue graph (epic + sub-issues)
-        │
-        ▼
-  executable work items    ← agents or engineers can now implement
+freeform idea ──► feature-to-plan ──► spec-auditor ──► plan-to-graph
+                         ▲
+existing GitHub issue ───┤
+                         │
+                         └──► issue-refine-loop
+                              session-sized children, only real blockers
 ```
+
+**Rewrite an existing GitHub issue with `issue-refine-loop`**
+
+Requires an issue number or URL — it will not create the issue from a freeform idea. It snapshots the original body as a comment, adds acceptance criteria, design, and tasks to that issue, then splits those tasks into child issues on GitHub. Each child is sized for one coding-agent session (roughly one to three files). A child lists `Depends on` only when another child actually blocks it; independent children have no blocker and are labeled `refined`, so they can be picked up in parallel. It does not write files in your repo. If `plan-to-graph` is installed, child creation uses it; otherwise the skill creates the children itself.
+
+```bash
+npx skills add lousy-agents/skills --skill issue-refine-loop --skill feature-to-plan
+```
+
+`feature-to-plan` is optional on this path. Install it too if you want the shared format skill present — `issue-refine-loop` prefers it for EARS and task anatomy.
+
+> *"Refine issue #47"*
+> *"Use issue-refine-loop on https://github.com/owner/repo/issues/162"*
+
+**Write a spec file in the repo**
 
 **Step 1: Draft the spec with `feature-to-plan`**
 
@@ -91,7 +105,7 @@ Invoke it in your agent:
 > *"Convert .github/specs/oauth-login.spec.md into GitHub sub-issues in OWNER/REPO"*
 > *"Create the task graph for GitHub epic #47"*
 
-**Install all three planning skills at once:**
+**Install all three at once:**
 
 ```bash
 npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor --skill plan-to-graph
@@ -110,16 +124,17 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 │  Planning          │  Implementation  │  Testing     │  Review                 │
 ├────────────────────────────────────────────────────────────────────────────────┤
 │  feature-to-plan   │  go-testable-    │  rugged-     │  triaging-pr-reviews    │
-│  spec-auditor      │  design          │  evil-tester │  curate-release         │
-│  plan-to-graph     │  (your agent or  │  mutation-   │                         │
-│                    │    engineers)    │  hunter      │                         │
+│  issue-refine-loop │  design          │  evil-tester │  curate-release         │
+│  spec-auditor      │  (your agent or  │  mutation-   │                         │
+│  plan-to-graph     │    engineers)    │  hunter      │                         │
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Skill | When in the lifecycle |
 | --- | --- |
-| `feature-to-plan` | Before implementation begins: when you have an idea or issue but no spec |
-| `spec-auditor` | Before implementation begins: after a draft spec exists, before an agent receives it |
+| `feature-to-plan` | Before implementation begins: when you want a spec file from an idea or issue |
+| `issue-refine-loop` | Before implementation begins: you have a GitHub issue to split into session-sized, parallel-ready children |
+| `spec-auditor` | Before implementation begins: you have a draft spec or issue and want findings, not edits |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
 | `go-testable-design` | During implementation: to write Go code test-first and design testable boundaries |
 | `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
@@ -134,14 +149,40 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 
 **Install:** `npx skills add lousy-agents/skills --skill feature-to-plan`
 
-Converts feature requests — either freeform or seeded from a GitHub issue — into structured EARS-format specs. It supports both single-shot generation and interactive, multi-turn drafting.
+Converts feature requests — either freeform or seeded from a GitHub issue — into an EARS spec file. It supports both single-shot generation and interactive, multi-turn drafting.
 
 **Use when you want to:**
-- Turn a freeform idea or a GitHub issue into a rigorous spec before writing code
+- Turn a freeform idea or a GitHub issue into a spec file before writing code
 - Break down feature requirements into specific Personas, User Stories, and Tasks
 - Automatically generate Mermaid diagrams (data-flow, sequence) for your proposed architecture
 
-**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context.
+**Do NOT use when:**
+- You want the GitHub issue itself rewritten into an epic. Use `issue-refine-loop` instead.
+
+**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context. `issue-refine-loop` applies the same EARS, persona, and task format to a GitHub issue instead of a file.
+
+---
+
+### `issue-refine-loop`
+
+**Install:** `npx skills add lousy-agents/skills --skill issue-refine-loop`
+
+Rewrites an existing GitHub issue — title-only, one-sentence, or an epic missing acceptance criteria, design, or tasks — then splits the work into child issues. Each child is sized for one coding-agent session (roughly one to three files). Dependencies are recorded only when one child actually blocks another; independent children have no blocker and are labeled `refined`, so agents can take them in parallel instead of walking a serial task list. The original body is snapshotted as a comment first. No files are added to your git repo; the issue body, labels, comments, and new child issues change on GitHub.
+
+**Use when you want to:**
+- Fill in a GitHub issue that is too thin to implement (title-only, one sentence, or missing acceptance criteria, design, or tasks)
+- Break a large issue into session-sized children that can proceed in parallel except where one truly blocks another
+- Keep the plan on that issue instead of creating a spec file
+
+Uses the same EARS, persona, and task format as `feature-to-plan`. When both are installed, this skill loads that format instead of its fallback. It does not read or write a spec file.
+
+**Do NOT use when:**
+- You want a spec file in the repo. Use `feature-to-plan` instead.
+- The epic is already approved and you only need child issues. Use `plan-to-graph` instead.
+- You want a findings list and nothing changed. Use `spec-auditor` instead.
+- The target is a pull request, discussion, or project card. Only issues.
+
+**Requires** GitHub access (`gh` or the agent's GitHub tools) and write permission on the issue.
 
 ---
 
@@ -160,6 +201,7 @@ When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and 
 
 **Do NOT use when:**
 - You want to draft a spec from a feature idea or issue. Use `feature-to-plan` instead.
+- You want to refine a GitHub issue in place into an epic. Use `issue-refine-loop` instead.
 - You want to convert an approved spec into GitHub sub-issues. Use `plan-to-graph` instead.
 - You want to triage PR review comments or Copilot feedback. Use `triaging-pr-reviews` instead.
 
@@ -186,14 +228,14 @@ Converts Lousy Agents specs, master plans, roadmaps, and GitHub epics into nativ
 
 **Install:** `npx skills add lousy-agents/skills --skill go-testable-design`
 
-Guides Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring. Informed by patterns from [`learn-go-with-tests`](https://github.com/quii/learn-go-with-tests).
+Guides Go development with tests: smallest failing test first, start from public behavior, keep IO out of decision packages, and match the repo's existing acceptance tests. Informed by patterns from [`learn-go-with-tests`](https://github.com/quii/learn-go-with-tests).
 
 **Use when you want to:**
-- Build or change Go code using TDD, tests-first, or red-green-refactor
+- Build or change Go code using TDD, tests-first, red-green-refactor, or outside-in / acceptance-first starts
 - Design testable boundaries around interfaces, `io.Reader`/`io.Writer`, `fs.FS`, `http.Handler`, `context.Context`, goroutines, or channels
 - Refactor Go code while preserving behavior, or review Go code for testability gaps
 
-**Standard-library-first.** Covers table tests, subtests, `t.Helper()`, constructor injection, `httptest`, goroutine/concurrency tests, and property tests.
+**Standard-library-first.** Covers table tests, subtests, `t.Helper()`, constructor injection, `httptest`, goroutine/concurrency tests, property tests, and acceptance suites that follow the repository's existing test harness.
 
 ---
 
@@ -216,14 +258,14 @@ Generates adversarial tests that prove your defenses actually work. Instead of h
 
 **Install:** `npx skills add lousy-agents/skills --skill mutation-hunter`
 
-Applies semantic mutations to TypeScript source code — swapping operators, removing null guards, inverting conditions — and identifies mutations that survive without causing any tests to fail. Each surviving mutation is a concrete test gap with actionable advice on how to close it.
+Applies semantic mutations to TypeScript, Go, or Python source code — swapping operators, removing null guards, inverting conditions — and identifies mutations that survive without causing any tests to fail. Each surviving mutation is a concrete test gap with actionable advice on how to close it.
 
 **Use when you want to:**
 - Audit whether your test suite would catch real behavioral regressions
 - Get a coverage grade (A–F) based on mutation survival rate
 - Identify exactly which boundary conditions, operator assumptions, and null-handling paths are untested
 
-**Outputs a JSON report** with killed/survived mutations, coverage grade, and per-gap advice. Reverts all mutations before finishing — the codebase is always left clean.
+**Works on TypeScript, Go, and Python** — language is detected from the repo. Outputs a JSON report with killed/survived mutations, coverage grade, and per-gap advice. Reverts all mutations before finishing — the codebase is always left clean.
 
 ---
 
@@ -311,6 +353,7 @@ Install any skill by name:
 
 ```
 /plugin install feature-to-plan@lousy-agents
+/plugin install issue-refine-loop@lousy-agents
 /plugin install plan-to-graph@lousy-agents
 /plugin install go-testable-design@lousy-agents
 /plugin install rugged-evil-tester@lousy-agents
