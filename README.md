@@ -238,7 +238,7 @@ Processes PR review comments — from humans or automated reviewers like GitHub 
 - Classify comments by root concern (security, correctness, style) and prioritize fixes
 - Automatically reply to review threads and resolve them after fixes land
 
-**Requires** `gh` CLI and `jq`.
+**Requires** an authenticated [`gh`](https://cli.github.com/) CLI and `jq` locally, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent — including Claude Code cloud sessions, which do not pre-install `gh`.
 
 ---
 
