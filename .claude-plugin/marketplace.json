@@ -21,18 +21,26 @@
     {
       "name": "go-testable-design",
       "displayName": "Go Testable Design",
-      "description": "Guide Go development with tests: small behavior first, executable examples, clear boundaries, and incremental refactoring",
+      "description": "Guide Go development with tests: smallest test first, start from public behavior, keep IO out of decision packages",
       "source": "./go-testable-design",
       "category": "testing",
-      "keywords": ["Go", "TDD", "testing", "refactoring", "test-first"]
+      "keywords": ["Go", "TDD", "testing", "refactoring", "test-first", "outside-in", "acceptance", "package-purity"]
+    },
+    {
+      "name": "issue-refine-loop",
+      "displayName": "Issue Refine Loop",
+      "description": "Turn a title-only GitHub issue into an implementable epic, then create child issues",
+      "source": "./issue-refine-loop",
+      "category": "planning",
+      "keywords": ["planning", "github-issues", "epic", "EARS", "backlog", "refinement"]
     },
     {
       "name": "mutation-hunter",
       "displayName": "Mutation Hunter",
-      "description": "Uncover test coverage gaps by applying semantic mutations to production TypeScript code",
+      "description": "Uncover test coverage gaps by applying semantic mutations to production TypeScript, Go, or Python code",
       "source": "./mutation-hunter",
       "category": "testing",
-      "keywords": ["testing", "mutation", "coverage", "TypeScript"]
+      "keywords": ["testing", "mutation", "coverage", "TypeScript", "Go", "Python"]
     },
     {
       "name": "plan-to-graph",

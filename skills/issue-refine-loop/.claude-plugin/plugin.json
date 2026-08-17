@@ -1,0 +1,10 @@
+{
+  "name": "issue-refine-loop",
+  "displayName": "Issue Refine Loop",
+  "description": "Turn a title-only GitHub issue into an implementable epic, then create child issues",
+  "license": "BSD-2-Clause",
+  "repository": "https://github.com/lousy-agents/skills",
+  "homepage": "https://github.com/lousy-agents/skills#readme",
+  "skills": "./",
+  "keywords": ["planning", "github-issues", "epic", "EARS", "backlog", "refinement"]
+}

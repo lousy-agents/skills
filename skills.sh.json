@@ -13,11 +13,12 @@
     },
     {
       "title": "Planning & Workflows",
-      "description": "Graph mappings and translation of features into actionable execution plans.",
+      "description": "Turn ideas and GitHub issues into executable plans and issue graphs.",
       "skills": [
         "plan-to-graph",
         "feature-to-plan",
-        "spec-auditor"
+        "spec-auditor",
+        "issue-refine-loop"
       ]
     },
     {
