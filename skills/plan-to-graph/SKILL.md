@@ -1,6 +1,6 @@
 ---
 name: plan-to-graph
-description: "Converts an approved local spec, master plan, or GitHub epic issue into a GitHub Issue dependency graph with native sub-issues and blocking relationships. Use when asked to 'convert plan to issues', 'create GitHub sub-issues', 'populate issues from a spec', 'plan to graph', or 'break down a GitHub epic into tasks'."
+description: "Converts an approved local spec, master plan, or GitHub epic issue into a GitHub Issue dependency graph with native sub-issues and blocking relationships. Use when asked to 'convert plan to issues', 'create GitHub sub-issues', 'populate issues from a spec', 'plan to graph', or 'break down a GitHub epic into tasks'. Do NOT use to author a new plan (use feature-to-plan) or to rewrite an existing issue in place (use issue-refine-loop)."
 argument-hint: "GitHub epic issue URL/number, or path to a local spec or master plan; include a target repository for local files"
 effort: medium
 allowed-tools: Read, Grep, Glob, Bash
@@ -16,7 +16,7 @@ Translate an approved plan into GitHub Issues. Do not implement code or modify t
 - Turn a GitHub epic's `## Tasks` section into native GitHub sub-issues.
 - Preserve task requirements and verification as issue bodies while representing explicit dependencies as blocking edges.
 
-Do not use this skill to implement a plan, triage unrelated issues, or create speculative project-management work.
+Do not use this skill to implement a plan, triage unrelated issues, or create speculative project-management work. Do not use it to author a new plan from an idea (use `feature-to-plan` — spec file or one new GitHub issue) or to rewrite an existing issue in place and split it (use `issue-refine-loop`). A `feature-to-plan`-authored issue whose tasks are already session-sized is a valid epic source; no refine run is required in between.
 
 ## Prerequisites and Input
 

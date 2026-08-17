@@ -13,10 +13,10 @@
     {
       "name": "feature-to-plan",
       "displayName": "Feature to Plan",
-      "description": "Turn feature requests, PRDs, and backlog issues into structured EARS-format specs",
+      "description": "Turn feature requests, PRDs, and backlog issues into an EARS-format spec file or one new GitHub issue",
       "source": "./feature-to-plan",
       "category": "planning",
-      "keywords": ["planning", "spec", "EARS", "requirements"]
+      "keywords": ["planning", "spec", "EARS", "requirements", "github-issues"]
     },
     {
       "name": "go-testable-design",

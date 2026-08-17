@@ -1,6 +1,6 @@
 # skills
 
-Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into spec files or rewritten GitHub issues, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
+Professional-grade skills for **agentic software engineers** who use coding agents to plan, implement, test, and review production software. These skills turn vague requests into spec files or GitHub issues, expose weak tests and brittle defenses, and prevent blind acceptance of automated review feedback. Compatible with [GitHub Copilot, Gemini CLI, Claude Code, and 50+ other agents](#supported-agents) via the [Agent Skills](https://agentskills.io/) spec. Claude Code users can also install individual skills via the [plugin marketplace](#claude-code-plugin-marketplace).
 
 [![skills.sh](https://skills.sh/b/lousy-agents/skills)](https://skills.sh/lousy-agents/skills)
 [![CI](https://github.com/lousy-agents/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/lousy-agents/skills/actions/workflows/ci.yml)
@@ -9,7 +9,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 
 | Skill | Phase | Description |
 | --- | --- | --- |
-| [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into an EARS spec file |
+| [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into an EARS spec file or one new GitHub issue |
 | [`issue-refine-loop`](#issue-refine-loop) | Planning | Rewrites a GitHub issue, then splits it into session-sized children with only real blockers |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
@@ -24,31 +24,31 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 
 ## Workflows
 
-Skills are designed to be composed. The sections below show two common patterns: a planning workflow that produces either a spec file or a rewritten GitHub issue, and a map of where each skill belongs across the broader delivery lifecycle.
+Skills are designed to be composed. The sections below show two common patterns: a planning workflow that produces a spec file, a new GitHub issue, or a rewritten epic, and a map of where each skill belongs across the broader delivery lifecycle.
 
 For agentic software engineers, the value is not simply "more prompts." Each skill gives your agent a specific harness-engineering role with explicit standards, evidence requirements, and failure modes:
 
-- **Before coding:** convert intent into a spec file, or rewrite an existing GitHub issue, before an agent implements it.
+- **Before coding:** convert intent into a spec file or one new GitHub issue, or rewrite an existing GitHub issue, before an agent implements it.
 - **Before scheduling:** turn approved work into dependency-aware issues that preserve verification context.
 - **Before merge:** generate hostile tests, find mutation survivors, and triage review comments by verifying claims against code.
 - **Before publishing skills:** review skill instructions themselves so the agent behavior stays discoverable, portable, and robust.
 
 ### Hi-Fi Planning
 
-**Hi-fi planning** is writing acceptance criteria and tasks before implementation. `feature-to-plan` and `issue-refine-loop` share that bar — EARS criteria, personas, value assessment, Mermaid design, session-sized tasks — but they write different artifacts and are not a pipeline:
+**Hi-fi planning** is writing acceptance criteria and tasks before implementation. The four planning skills share that bar — EARS criteria, personas, value assessment, Mermaid design — but they are stages with one destination (an executable GitHub issue graph), not a single pipeline:
 
-- **No GitHub issue yet, or you want a spec file** — `feature-to-plan` → `spec-auditor` → `plan-to-graph`
-- **You already have a GitHub issue and want that issue rewritten** — [`issue-refine-loop`](#issue-refine-loop)
+- **Author a spec file** — `feature-to-plan` → `spec-auditor` → `plan-to-graph`
+- **Author one new GitHub issue** — `feature-to-plan` (ask it to keep the plan on GitHub) → `issue-refine-loop` **or** `plan-to-graph` if the tasks are already session-sized
+- **Rewrite an issue that already exists** — [`issue-refine-loop`](#issue-refine-loop)
 
-When both are installed, `issue-refine-loop` uses `feature-to-plan`'s format rules for EARS and task anatomy. It does not read or write the spec file.
+`feature-to-plan` **creates** a new artifact. `issue-refine-loop` **rewrites** an existing issue in place. `plan-to-graph` **fans out** an approved task list. When both authoring skills are installed, `issue-refine-loop` uses `feature-to-plan`'s format rules for EARS and task anatomy. It does not read or write the spec file.
 
 ```
-freeform idea ──► feature-to-plan ──► spec-auditor ──► plan-to-graph
-                         ▲
-existing GitHub issue ───┤
-                         │
-                         └──► issue-refine-loop
-                              session-sized children, only real blockers
+                        ┌─ spec file ──► spec-auditor ──► plan-to-graph ──┐
+freeform idea ──► feature-to-plan                                          ├──► parallel-ready
+                        └─ new GitHub issue ─┬─ issue-refine-loop ─────────┤     issue graph
+                                             └─ plan-to-graph ─────────────┘
+existing thin issue ─────────────────────────► issue-refine-loop ──────────┘
 ```
 
 **Rewrite an existing GitHub issue with `issue-refine-loop`**
@@ -59,7 +59,7 @@ Requires an issue number or URL — it will not create the issue from a freeform
 npx skills add lousy-agents/skills --skill issue-refine-loop --skill feature-to-plan
 ```
 
-`feature-to-plan` is optional on this path. Install it too if you want the shared format skill present — `issue-refine-loop` prefers it for EARS and task anatomy.
+`feature-to-plan` is optional on this path. Install it too if you want the shared format skill present — `issue-refine-loop` prefers it for EARS and task anatomy — or if you need it to **create** the starting issue from a freeform idea first.
 
 > *"Refine issue #47"*
 > *"Use issue-refine-loop on https://github.com/owner/repo/issues/162"*
@@ -68,7 +68,7 @@ npx skills add lousy-agents/skills --skill issue-refine-loop --skill feature-to-
 
 **Step 1: Draft the spec with `feature-to-plan`**
 
-Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). It produces a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist. This includes everything an agent needs to implement the feature faithfully.
+Point the skill at a GitHub issue number, a freeform idea, or nothing (it will ask). Default output is a Markdown spec under `.github/specs/` with personas, EARS acceptance criteria, Mermaid diagrams, and a task checklist. Ask it to keep the plan on GitHub and it creates **one new issue** with the same section set instead — a drafted plan, not a refined epic, and not a child graph. That is a new issue, not a rewrite of an issue you already have.
 
 ```bash
 npx skills add lousy-agents/skills --skill feature-to-plan
@@ -78,6 +78,7 @@ Invoke it in your agent:
 
 > *"Draft a spec for adding OAuth login to the API"*
 > *"Use feature-to-plan on issue #47"*
+> *"Draft this as a GitHub issue and keep it on GitHub"*
 
 **Step 2: Audit the spec with `spec-auditor`**
 
@@ -132,7 +133,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 
 | Skill | When in the lifecycle |
 | --- | --- |
-| `feature-to-plan` | Before implementation begins: when you want a spec file from an idea or issue |
+| `feature-to-plan` | Before implementation begins: when you want a spec file or one new GitHub issue from an idea or seed |
 | `issue-refine-loop` | Before implementation begins: you have a GitHub issue to split into session-sized, parallel-ready children |
 | `spec-auditor` | Before implementation begins: you have a draft spec or issue and want findings, not edits |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
@@ -149,17 +150,21 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 
 **Install:** `npx skills add lousy-agents/skills --skill feature-to-plan`
 
-Converts feature requests — either freeform or seeded from a GitHub issue — into an EARS spec file. It supports both single-shot generation and interactive, multi-turn drafting.
+Converts feature requests — either freeform or seeded from a GitHub issue — into an EARS spec file by default, or into **one new GitHub issue** with that same plan when you ask to keep it on GitHub. It supports both single-shot generation and interactive, multi-turn drafting.
 
 **Use when you want to:**
-- Turn a freeform idea or a GitHub issue into a spec file before writing code
+- Turn a freeform idea or a seed issue into a spec file before writing code
+- File that same drafted plan as one new GitHub issue instead of a file
 - Break down feature requirements into specific Personas, User Stories, and Tasks
 - Automatically generate Mermaid diagrams (data-flow, sequence) for your proposed architecture
 
 **Do NOT use when:**
-- You want the GitHub issue itself rewritten into an epic. Use `issue-refine-loop` instead.
+- You want an existing GitHub issue rewritten into an epic. Use `issue-refine-loop` instead.
+- You want an approved task list fanned into child issues. Use `plan-to-graph` instead.
 
-**Outputs a Markdown spec file** (e.g., in `.github/specs/`) complete with unchecked task lists, ready for an agent to implement. Optionally integrates with the `gh` CLI to fetch issue context. `issue-refine-loop` applies the same EARS, persona, and task format to a GitHub issue instead of a file.
+**Outputs** a Markdown spec file (e.g., in `.github/specs/`) by default, or one new GitHub issue on request — unchecked task lists, no children, no blocking edges, no lifecycle label unless you opt in to `needs-refine`. `issue-refine-loop` rewrites an existing issue in place and splits it; `plan-to-graph` fans an already-approved task list into the graph.
+
+**Requires** GitHub access (`gh` or the agent's GitHub tools) only for issue output or for seeding from / commenting on an issue. Spec-file output does not.
 
 ---
 
@@ -172,12 +177,12 @@ Rewrites an existing GitHub issue — title-only, one-sentence, or an epic missi
 **Use when you want to:**
 - Fill in a GitHub issue that is too thin to implement (title-only, one sentence, or missing acceptance criteria, design, or tasks)
 - Break a large issue into session-sized children that can proceed in parallel except where one truly blocks another
-- Keep the plan on that issue instead of creating a spec file
+- Keep the plan on an issue that already exists, instead of authoring a new spec file or a new issue
 
 Uses the same EARS, persona, and task format as `feature-to-plan`. When both are installed, this skill loads that format instead of its fallback. It does not read or write a spec file.
 
 **Do NOT use when:**
-- You want a spec file in the repo. Use `feature-to-plan` instead.
+- You want a new spec file, or one new GitHub issue from a freeform idea. Use `feature-to-plan` instead.
 - The epic is already approved and you only need child issues. Use `plan-to-graph` instead.
 - You want a findings list and nothing changed. Use `spec-auditor` instead.
 - The target is a pull request, discussion, or project card. Only issues.
@@ -200,7 +205,7 @@ When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and 
 - Produce structured findings (SA-001, SA-002, …) with stable IDs that can feed a spec-improvement loop or downstream agent handoff
 
 **Do NOT use when:**
-- You want to draft a spec from a feature idea or issue. Use `feature-to-plan` instead.
+- You want to draft a spec file or one new GitHub issue from a feature idea. Use `feature-to-plan` instead.
 - You want to refine a GitHub issue in place into an epic. Use `issue-refine-loop` instead.
 - You want to convert an approved spec into GitHub sub-issues. Use `plan-to-graph` instead.
 - You want to triage PR review comments or Copilot feedback. Use `triaging-pr-reviews` instead.
