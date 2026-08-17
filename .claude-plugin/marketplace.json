@@ -29,7 +29,7 @@
     {
       "name": "issue-refine-loop",
       "displayName": "Issue Refine Loop",
-      "description": "Rewrite a GitHub issue with acceptance criteria and tasks, then create child issues",
+      "description": "Rewrite a GitHub issue into session-sized child issues, with dependencies only where work actually blocks",
       "source": "./issue-refine-loop",
       "category": "planning",
       "keywords": ["planning", "github-issues", "epic", "EARS", "backlog", "refinement"]

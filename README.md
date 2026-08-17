@@ -10,7 +10,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | Skill | Phase | Description |
 | --- | --- | --- |
 | [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into an EARS spec file |
-| [`issue-refine-loop`](#issue-refine-loop) | Planning | Rewrites a GitHub issue with acceptance criteria, design, and tasks, then creates child issues |
+| [`issue-refine-loop`](#issue-refine-loop) | Planning | Rewrites a GitHub issue, then splits it into session-sized children with only real blockers |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
@@ -46,12 +46,12 @@ freeform idea ──► feature-to-plan ──► spec-auditor ──► plan-to
 existing GitHub issue ───┤
                          │
                          └──► issue-refine-loop
-                              rewrites the issue and creates children
+                              session-sized children, only real blockers
 ```
 
 **Rewrite an existing GitHub issue with `issue-refine-loop`**
 
-Requires an issue number or URL — it will not create the issue from a freeform idea. It snapshots the original body as a comment, adds acceptance criteria, design, and tasks to that issue, then creates child issues on GitHub. It does not write files in your repo. If `plan-to-graph` is installed, child creation uses it; otherwise the skill creates the children itself.
+Requires an issue number or URL — it will not create the issue from a freeform idea. It snapshots the original body as a comment, adds acceptance criteria, design, and tasks to that issue, then splits those tasks into child issues on GitHub. Each child is sized for one coding-agent session (roughly one to three files). A child lists `Depends on` only when another child actually blocks it; independent children have no blocker and are labeled `refined`, so they can be picked up in parallel. It does not write files in your repo. If `plan-to-graph` is installed, child creation uses it; otherwise the skill creates the children itself.
 
 ```bash
 npx skills add lousy-agents/skills --skill issue-refine-loop
@@ -129,7 +129,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | Skill | When in the lifecycle |
 | --- | --- |
 | `feature-to-plan` | Before implementation begins: when you want a spec file from an idea or issue |
-| `issue-refine-loop` | Before implementation begins: you have a GitHub issue to rewrite, not a spec file to draft |
+| `issue-refine-loop` | Before implementation begins: you have a GitHub issue to split into session-sized, parallel-ready children |
 | `spec-auditor` | Before implementation begins: you have a draft spec or issue and want findings, not edits |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
 | `go-testable-design` | During implementation: to write Go code test-first and design testable boundaries |
@@ -163,10 +163,11 @@ Converts feature requests — either freeform or seeded from a GitHub issue — 
 
 **Install:** `npx skills add lousy-agents/skills --skill issue-refine-loop`
 
-Rewrites an existing GitHub issue — title-only, one-sentence, or an epic missing acceptance criteria, design, or tasks — then creates child issues. The original body is snapshotted as a comment first. No files are added to your git repo; the issue body, labels, comments, and new child issues change on GitHub.
+Rewrites an existing GitHub issue — title-only, one-sentence, or an epic missing acceptance criteria, design, or tasks — then splits the work into child issues. Each child is sized for one coding-agent session (roughly one to three files). Dependencies are recorded only when one child actually blocks another; independent children have no blocker and are labeled `refined`, so agents can take them in parallel instead of walking a serial task list. The original body is snapshotted as a comment first. No files are added to your git repo; the issue body, labels, comments, and new child issues change on GitHub.
 
 **Use when you want to:**
 - Fill in a GitHub issue that is too thin to implement (title-only, one sentence, or missing acceptance criteria, design, or tasks)
+- Break a large issue into session-sized children that can proceed in parallel except where one truly blocks another
 - Keep the plan on that issue instead of creating a spec file
 
 **Do NOT use when:**
