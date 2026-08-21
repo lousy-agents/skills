@@ -143,3 +143,10 @@ vite.config.ts.timestamp-*
 .vite/
 
 .DS_Store
+
+# Python (test bytecode)
+__pycache__/
+*.py[cod]
+
+# Agent worktrees (transient)
+.claude/worktrees/
