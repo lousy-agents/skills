@@ -281,11 +281,15 @@ Applies semantic mutations to TypeScript, Go, or Python source code — swapping
 Processes PR review comments — from humans or automated reviewers like GitHub Copilot — by verifying each claim against the actual code before acting on it. Automated reviewers frequently cite the wrong lines, describe behavior that can't occur, or suggest fixes that introduce the vulnerability they claim to prevent.
 
 **Use when you want to:**
-- Work through a batch of Copilot or CodeRabbit suggestions without blindly implementing them
+- Work through Copilot or CodeRabbit suggestions without blindly implementing them
+- Catch review direction left as a plain conversation comment, not only as inline comments
+- Skip threads an earlier round already resolved, instead of re-verifying them
 - Classify comments by root concern (security, correctness, style) and prioritize fixes
 - Automatically reply to review threads and resolve them after fixes land
 
-**Requires** an authenticated [`gh`](https://cli.github.com/) CLI and `jq` locally, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent — including Claude Code cloud sessions, which do not pre-install `gh`.
+It triages **every comment whose thread is still unresolved**, plus conversation-tab comments and review summaries — not the most recent batch. One submitted review's comments do not share a timestamp, so grouping by time splits a single review and leaves part of it untriaged.
+
+**Requires** an authenticated [`gh`](https://cli.github.com/) CLI and `jq` locally, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent — including Claude Code cloud sessions, which do not pre-install `gh`. The bound surface must also be able to read review threads and their resolution state. A surface that cannot is rejected during the probe, with the missing capability named, rather than binding and then re-triaging threads that were already closed.
 
 ---
 
