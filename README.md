@@ -210,7 +210,7 @@ When run from a repository, it reads `AGENTS.md`, `CLAUDE.md`, `README.md`, and 
 - You want to convert an approved spec into GitHub sub-issues. Use `plan-to-graph` instead.
 - You want to triage PR review comments or Copilot feedback. Use `triaging-pr-reviews` instead.
 
-**Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object, useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script for deterministic structure checks, but the skill's primary value is adversarial, evidence-grounded review.
+**Outputs an audit report** with severity (Blocker / High / Medium / Low), confidence, evidence, Socratic questions, recommended spec patches, verification implications, and downstream agent instructions. Ask for JSON output to get a machine-readable findings object, useful when piping findings into a spec-improvement loop or another agent. Includes an optional Python lint script that checks a draft against the `feature-to-plan` template — required sections at the levels the template uses, acceptance criteria **per story**, the fields each task must carry, and both mandated Mermaid diagram types — while treating fenced blocks as illustrations rather than spec content. It exits 1 when it produced a High finding, 0 when it did not (Medium and Low findings can still be present, so read the output rather than the exit code alone), and 2 when the spec could not be read. The skill's primary value is still adversarial, evidence-grounded review.
 
 ---
 
