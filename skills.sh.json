@@ -18,7 +18,8 @@
         "plan-to-graph",
         "feature-to-plan",
         "spec-auditor",
-        "issue-refine-loop"
+        "issue-refine-loop",
+        "designing-for-intent"
       ]
     },
     {

@@ -89,6 +89,14 @@
       "source": "./curate-release",
       "category": "code-review",
       "keywords": ["git", "commit-history", "conventional-commits", "semantic-release", "changelog", "release-notes", "pull-request"]
+    },
+    {
+      "name": "designing-for-intent",
+      "displayName": "Designing for Intent",
+      "description": "Review a UX flow, agentic handoff point, or delegation-boundary decision for agency risks and articulation barriers before implementation — advocating for the user's intent map, not the screen in front of you",
+      "source": "./designing-for-intent",
+      "category": "planning",
+      "keywords": ["ux", "intent", "agency", "onboarding", "consent", "delegation", "design-review"]
     }
   ]
 }
