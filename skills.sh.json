@@ -13,7 +13,7 @@
     },
     {
       "title": "Planning & Workflows",
-      "description": "Turn ideas and GitHub issues into spec files, new GitHub issues, rewritten epics, and parallel-ready issue graphs.",
+      "description": "Turn ideas and GitHub issues into spec files, new GitHub issues, rewritten epics, and parallel-ready issue graphs, and review UX/onboarding/consent artifacts for intent and agency risk before implementation.",
       "skills": [
         "plan-to-graph",
         "feature-to-plan",
