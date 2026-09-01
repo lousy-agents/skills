@@ -13,6 +13,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`issue-refine-loop`](#issue-refine-loop) | Planning | Rewrites a GitHub issue, then splits it into session-sized children with only real blockers |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
+| [`designing-for-intent`](#designing-for-intent) | Planning | Reviews a UX/onboarding/consent artifact for intent map, delegation boundary, and agency risks before implementation |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript, Go, or Python |
@@ -121,14 +122,15 @@ npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor 
 The full set of skills spans the software delivery lifecycle. The table below shows the natural entry point for each skill as features move from idea to production.
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│  Planning          │  Implementation  │  Testing     │  Review                 │
-├────────────────────────────────────────────────────────────────────────────────┤
-│  feature-to-plan   │  go-testable-    │  rugged-     │  triaging-pr-reviews    │
-│  issue-refine-loop │  design          │  evil-tester │  curate-release         │
-│  spec-auditor      │  (your agent or  │  mutation-   │                         │
-│  plan-to-graph     │    engineers)    │  hunter      │                         │
-└────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│  Planning              │  Implementation  │  Testing     │  Review                 │
+├────────────────────────────────────────────────────────────────────────────────────┤
+│  feature-to-plan       │  go-testable-    │  rugged-     │  triaging-pr-reviews    │
+│  issue-refine-loop     │  design          │  evil-tester │  curate-release         │
+│  spec-auditor          │  (your agent or  │  mutation-   │                         │
+│  plan-to-graph         │  engineers)      │  hunter      │                         │
+│  designing-for-intent  │                  │              │                         │
+└────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Skill | When in the lifecycle |
@@ -137,6 +139,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `issue-refine-loop` | Before implementation begins: you have a GitHub issue to split into session-sized, parallel-ready children |
 | `spec-auditor` | Before implementation begins: you have a draft spec or issue and want findings, not edits |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
+| `designing-for-intent` | Before implementation, independent of whether a spec exists yet: reviewing a UX/onboarding/consent artifact for intent and agency risk |
 | `go-testable-design` | During implementation: to write Go code test-first and design testable boundaries |
 | `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
 | `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
@@ -226,6 +229,34 @@ Converts Lousy Agents specs, master plans, roadmaps, and GitHub epics into nativ
 - Preserve each task's complete structured content in its child-issue body
 
 **Requires** a target GitHub repository and authenticated [`gh`](https://cli.github.com/) with native sub-issue and blocking-relationship support, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent or lacks those flags. Re-running against an epic that already has sub-issues will not duplicate them — the skill detects the collision and stops.
+
+---
+
+### `designing-for-intent`
+
+**Install:** `npx skills add lousy-agents/skills --skill designing-for-intent`
+
+Reviews a UX flow, agentic handoff point, or delegation-boundary decision for the user's intent map — desired outcome, constraints, and delegation boundary — rather than for the screen or user experience sitting in front of you. Runs in one of two depth modes (strategic for a full cross-surface journey, tactical for a single screen or decision point) and works through a nine-mode adversarial agency pass (silent auto-action, no undo, dead-end on wrong inference, hidden reasoning, intent debt, coherence breaks across surfaces or agents, over-inference from behavior, ignored capacity or deadlines, multi-party action without approval), setting a confidence-to-response policy where even high confidence only proposes, never silently acts.
+
+This is **the first skill in this repository to also ship a subagent** — `ux-advocate`, a peer pairing partner that studies how a customer actually encounters a product (onboarding, screens, CLI, docs, consent moments, multi-actor handoffs) from outside the repository. The skill runs the intent/agency method inline in your main conversation; the agent is a separate, complementary customer-reading voice. Neither substitutes for the other: the agent never runs the skill's method or fills its schema. Coach appears only as a labeled worked example in `references/`; it is not a runtime dependency.
+
+| Install path | Skill | Agent |
+| --- | --- | --- |
+| `/plugin install designing-for-intent@lousy-agents` | yes | yes, as `designing-for-intent:ux-advocate` |
+| `npx skills add lousy-agents/skills --skill designing-for-intent` | yes | copied but inert (Claude Code only discovers subagents at `.claude/agents/` or a plugin root) |
+
+**Use when you want to:**
+- Review a screen, flow, journey, or report for whether it faithfully carries the user's intent, or quietly substitutes a system's convenient interpretation of it
+- Audit an onboarding or consent moment (an install step, a permission grant, a data-sharing choice) for whether the person understands and controls what they are agreeing to
+- Check the delegation boundary, confidence-to-response policy, and undo path at a point where a feature or agent proposes to act on a user's behalf
+- Audit a multi-agent handoff for coherence — does the user's intent survive the trip from one surface or agent to the next, or does it drift?
+
+**Do NOT use when:**
+- You want a release-readiness, adoption risk, or ship/no-ship verdict — hand that to your project's product-strategy peer (or dedicated go/no-go evaluation flow); this skill only feeds that peer the evidence question, it never answers it
+- You want infrastructure, security model, or platform-foundation questions answered — hand that to your project's system-design peer
+- You want implementation work done — hand that to whatever implementation workflow your project uses, once a design decision has actually been made
+
+**Outputs** a two-to-three sentence verdict naming the sharpest finding, then an Intent map, Interaction model, Orchestration surface, severity-ranked Agency risks with stable IDs, Open questions, and Out of scope — plus an editable YAML intent/constraint object the human keeps evolving as their own understanding of the request evolves. Ships a **pilot** worked example (`references/github-app-install.md`, Coach-shaped and fenced so it does not leak into the host) and a pattern library (`references/pattern-library.md`) with a trust-posture fence: when a host project states no explicit trust posture, both the skill and the `ux-advocate` agent default to propose-and-confirm, no silent irreversible action, and coverage honesty over anticipatory automation, recording that default as an Open Question rather than assuming a posture was found and read.
 
 ---
 
@@ -364,6 +395,7 @@ Install any skill by name:
 /plugin install feature-to-plan@lousy-agents
 /plugin install issue-refine-loop@lousy-agents
 /plugin install plan-to-graph@lousy-agents
+/plugin install designing-for-intent@lousy-agents
 /plugin install go-testable-design@lousy-agents
 /plugin install rugged-evil-tester@lousy-agents
 /plugin install mutation-hunter@lousy-agents
