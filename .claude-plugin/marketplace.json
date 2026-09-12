@@ -102,7 +102,7 @@
       "name": "customer-strategy-forge",
       "displayName": "Customer Strategy Forge",
       "description": "Turn customer evidence into auditable personas, journeys, progression hypotheses, and product-strategy opportunity maps",
-      "source": "./customer-strategy-forge",
+      "source": "./skills/customer-strategy-forge",
       "category": "planning",
       "keywords": ["customer-research", "persona", "journey", "segmentation", "product-strategy", "evidence"]
     }

@@ -104,10 +104,60 @@ start as coordinator. In paired mode, clarify the decision and evidence source.
 In autonomous mode, missing required fields stop the run.
 
 Load [modes-and-routing.md](./references/modes-and-routing.md) and select the
-smallest run graph. The default is Grounding Brief + Evidence Audit +
-stop-or-continue. A continue verdict does not authorize additional artifacts.
+smallest run graph, then dispatch. The default is Grounding Brief + Evidence
+Audit + stop-or-continue. A continue verdict does not authorize additional
+artifacts.
 
-### 2. Establish the Input Boundary
+### 2. Dispatch by Role
+
+Follow only the resolved role. Do not change roles in place. Use the Role
+Dispatch table in [modes-and-routing.md](./references/modes-and-routing.md).
+
+Load on entry:
+
+- Coordinator: [modes-and-routing.md](./references/modes-and-routing.md),
+  [isolation-and-critic.md](./references/isolation-and-critic.md)
+- Synthesizer: [evidence-and-gates.md](./references/evidence-and-gates.md),
+  [operations.md](./references/operations.md),
+  [artifact-contracts.md](./references/artifact-contracts.md)
+- Critic: [isolation-and-critic.md](./references/isolation-and-critic.md),
+  [evidence-and-gates.md](./references/evidence-and-gates.md),
+  [artifact-contracts.md](./references/artifact-contracts.md)
+- Product mapper: [artifact-contracts.md](./references/artifact-contracts.md),
+  [operations.md](./references/operations.md), and this invocation's
+  released-input manifest
+
+Role contracts:
+
+- Coordinator prepares the manifest and role packets, authorizes a stop
+  sink, routes child invocations, receives their returns, and is the
+  publication owner for the inquiry. After a child returns, resume
+  coordination; do not re-enter the child's procedure.
+- Synthesizer establishes the input boundary, audits, and runs only
+  selected customer operations. It returns the audit and authorized
+  candidate artifacts, or a stop. It does not obtain a critic, map
+  products, or publish a passed artifact.
+- Critic executes only the critic procedure in
+  [isolation-and-critic.md](./references/isolation-and-critic.md) and
+  returns the verdict and findings. It does not request another critic,
+  synthesize, map products, or publish.
+- Product mapper consumes only version-pinned passed artifacts under its
+  own released-input manifest and returns mapping artifacts or a stop. It
+  does not revise the customer model.
+
+A child-role return is not inquiry completion. Inquiry completion is the
+Coordinator's publication after required children return. Do not publish
+customer artifacts before an independent pass.
+
+If this invocation is Synthesizer, Critic, or Product mapper, perform only
+that role and stop after the return. Only the Coordinator continues into
+packet routing and publication.
+
+### 3. Establish the Input Boundary
+
+Coordinator or Synthesizer. Critic verifies the critic packet and access
+record instead of creating a synthesis manifest. Product mapper verifies
+its released-input manifest only.
 
 Before synthesis, load
 [isolation-and-critic.md](./references/isolation-and-critic.md). Create or
@@ -122,7 +172,10 @@ If product material has already entered the proposed synthesizer or critic
 context, start a fresh invocation with a sanitized packet. If that is
 unavailable, stop.
 
-### 3. Audit Evidence Before Synthesis
+### 4. Audit Evidence Before Synthesis
+
+Synthesizer, or Coordinator preparing an audit-only packet. Critic and
+Product mapper skip.
 
 Load [evidence-and-gates.md](./references/evidence-and-gates.md). Inspect the
 actual approved evidence records and their source context, not only IDs or
@@ -136,7 +189,7 @@ Publish either:
 
 Do not produce downstream customer or product artifacts from a failed run.
 
-### 4. Run Only Selected Customer Operations
+### 5. Run Only Selected Customer Operations
 
 If the manifest explicitly selects customer artifacts and the audit permits
 them, load [operations.md](./references/operations.md). Run only the operations
@@ -147,14 +200,19 @@ output formats and persistence rules. Every consequential claim carries its
 scope, inference, supporting and contradicting evidence, confidence rationale,
 validation state, and decision relevance.
 
-Progression models enter only after behavioral synthesis. Product goals and
+Progression models enter only after behavioral synthesis. Withhold any
+progression model until the behavioral artifact is version-pinned. See
+[modes-and-routing.md](./references/modes-and-routing.md). Product goals and
 capabilities do not enter customer operations.
 
-### 5. Obtain Independent Criticism
+### 6. Obtain Independent Criticism
 
 Any candidate persona, segment, journey, progression interpretation, or
 customer-emotion map requires the Critic role before publication or product
 mapping.
+
+Only the Coordinator routes a fresh Critic. A Critic invocation must not
+reach this step.
 
 Delegate to a fresh non-forked subagent or begin a separate invocation using
 the critic packet in [isolation-and-critic.md](./references/isolation-and-critic.md).
@@ -169,10 +227,13 @@ If a separate critic cannot be run:
 
 Do not self-approve in the synthesizer context.
 
-### 6. Map Product Fit Only After a Pass
+### 7. Map Product Fit Only After a Pass
 
 Run product or portfolio mapping only when explicitly requested and only from
 version-pinned customer artifacts that passed independent review.
+
+Only the Product mapper performs this work, or the Coordinator routes that
+role after a pass.
 
 The Product mapper may identify strong or partial coverage, gaps, overlaps,
 broken handoffs, shared-artifact opportunities, partners, intentionally
@@ -183,11 +244,15 @@ Experience mapping may connect capabilities to already evidenced emotional
 outcomes. It may propose labeled delight hypotheses, but it cannot invent joy
 from branding or product intent.
 
-### 7. Persist the Outcome
+### 8. Persist the Outcome
 
 Write only to authorized locations. Packs and published artifact versions are
 append-only. Chat may summarize a run but is not the system of record when
 file output is available and authorized.
+
+If no authorized stop sink can be resolved, return the structured stop payload
+through the caller or conversation channel. Record that no artifact was
+persisted. Do not invent a run ID, permission, or path.
 
 Record:
 
@@ -202,8 +267,10 @@ Record:
 
 Stop rather than synthesize when any material condition holds:
 
-- required customer evidence or provenance is absent;
-- evidence is expired, unsafe to use, or outside the decision cutoff;
+- required customer evidence or provenance is absent, unless a recorded
+  speculative authorization covers the requested assumption artifact;
+- evidence is expired, freshness is unresolved for a material time-sensitive
+  claim, the record is unsafe to use, or it is outside the decision cutoff;
 - the requested claim exceeds the sampling method;
 - unresolved material contradictions prevent a coherent scope;
 - product contamination invalidates a product-blind invocation;
@@ -212,8 +279,10 @@ Stop rather than synthesize when any material condition holds:
 - an independent critic is required but unavailable.
 
 Follow the stop-only publication contract in
-[evidence-and-gates.md](./references/evidence-and-gates.md). A stop is a useful
-result, not permission to fill gaps with fluent prose.
+[evidence-and-gates.md](./references/evidence-and-gates.md). If the stop sink
+cannot be resolved, return the payload in-band and do not claim a file was
+written. A stop is a useful result, not permission to fill gaps with fluent
+prose.
 
 ## Tool and Harness Portability
 
@@ -232,7 +301,8 @@ use the paired handoff or autonomous stop behavior above.
 Summarize:
 
 1. run mode, role, and disposition;
-2. artifacts written or the stop-artifact path;
+2. artifacts written, the stop-artifact path, or the in-band stop payload
+   when nothing was persisted;
 3. validation ceiling and material contradictions;
 4. critic verdict, if applicable;
 5. decisions supported, unsupported, or deferred; and
