@@ -14,6 +14,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
 | [`designing-for-intent`](#designing-for-intent) | Planning | Reviews a UX/onboarding/consent artifact for intent map, delegation boundary, and agency risks before implementation |
+| [`customer-strategy-forge`](#customer-strategy-forge) | Product Strategy | Turns customer evidence into auditable personas, journeys, progression hypotheses, and opportunity maps |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript, Go, or Python |
@@ -30,6 +31,7 @@ Skills are designed to be composed. The sections below show two common patterns:
 For agentic software engineers, the value is not simply "more prompts." Each skill gives your agent a specific harness-engineering role with explicit standards, evidence requirements, and failure modes:
 
 - **Before coding:** convert intent into a spec file or one new GitHub issue, or rewrite an existing GitHub issue, before an agent implements it.
+- **Before product commitments:** audit customer evidence, synthesize only supported personas or journeys, then map independently reviewed needs to product opportunities.
 - **Before scheduling:** turn approved work into dependency-aware issues that preserve verification context.
 - **Before merge:** generate hostile tests, find mutation survivors, and triage review comments by verifying claims against code.
 - **Before publishing skills:** review skill instructions themselves so the agent behavior stays discoverable, portable, and robust.
@@ -130,6 +132,8 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 │  spec-auditor          │  (your agent or  │  mutation-   │                         │
 │  plan-to-graph         │  engineers)      │  hunter      │                         │
 │  designing-for-intent  │                  │              │                         │
+│  customer-strategy-    │                  │              │                         │
+│  forge                 │                  │              │                         │
 └────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,6 +144,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `spec-auditor` | Before implementation begins: you have a draft spec or issue and want findings, not edits |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
 | `designing-for-intent` | Before implementation, independent of whether a spec exists yet: reviewing a UX/onboarding/consent artifact for intent and agency risk |
+| `customer-strategy-forge` | Before product commitments: auditing customer evidence, developing customer artifacts, or mapping passed needs and journeys to product opportunities |
 | `go-testable-design` | During implementation: to write Go code test-first and design testable boundaries |
 | `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
 | `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
@@ -257,6 +262,32 @@ This is **the first skill in this repository to also ship a subagent** — `ux-a
 - You want implementation work done — hand that to whatever implementation workflow your project uses, once a design decision has actually been made
 
 **Outputs** a two-to-three sentence verdict naming the sharpest finding, then an Intent map, Interaction model, Orchestration surface, severity-ranked Agency risks with stable IDs, Open questions, and Out of scope — plus an editable YAML intent/constraint object the human keeps evolving as their own understanding of the request evolves. Ships a **pilot** worked example (`references/github-app-install.md`, Coach-shaped and fenced so it does not leak into the host) and a pattern library (`references/pattern-library.md`) with a trust-posture fence: when a host project states no explicit trust posture, both the skill and the `ux-advocate` agent default to propose-and-confirm, no silent irreversible action, and coverage honesty over anticipatory automation, recording that default as an Open Question rather than assuming a posture was found and read.
+
+---
+
+### `customer-strategy-forge`
+
+**Install:** `npx skills add lousy-agents/skills --skill customer-strategy-forge`
+
+Turns versioned customer evidence into claim-level, auditable strategy artifacts without reverse-engineering customer needs from an existing product. It can stop after a Grounding Brief and Evidence Audit, develop a persona, situation, journey, or progression hypothesis when the evidence permits it, and introduce product or portfolio capabilities only after an independent critic passes the customer model.
+
+The same skill supports two execution styles:
+
+- **Paired** — works with a human at material scope, evidence, privacy, and authorization gates.
+- **Autonomous** — lets a delegated subagent complete the authorized run without questions, ending with either a supported artifact or a terminal stop artifact when evidence, isolation, authority, or an independent critic is unavailable.
+
+**Use when you want to:**
+- Audit what an interview, observation, support, telemetry, founder, or social Signal Pack can safely support
+- Develop or revise an evidence-backed persona, behavioral segment, situation card, customer journey, or progression hypothesis
+- Map independently reviewed customer jobs and transitions to products, modules, alternatives, partnerships, or intentional non-action
+- Preserve contradictions, claim-level validation, decision limits, and rerun history across strategy work
+
+**Do NOT use when:**
+- You want a feature specification or implementation plan — use `feature-to-plan` after the customer decision is bounded
+- You want market-size or willingness-to-pay claims from qualitative or social evidence
+- You want an agent to scrape live sources silently or generate a persona from a product README
+
+**Outputs** a versioned Grounding Brief and Evidence Audit by default. Additional customer artifacts are explicit opt-ins and require an independent critic. Failed gates publish only a stop artifact for that run; “no product action” is a valid outcome. The skill keeps product-aware coordination and opportunity mapping separate from product-blind synthesis and criticism, and it does not treat tool metadata as proof of context isolation.
 
 ---
 
@@ -396,6 +427,7 @@ Install any skill by name:
 /plugin install issue-refine-loop@lousy-agents
 /plugin install plan-to-graph@lousy-agents
 /plugin install designing-for-intent@lousy-agents
+/plugin install customer-strategy-forge@lousy-agents
 /plugin install go-testable-design@lousy-agents
 /plugin install rugged-evil-tester@lousy-agents
 /plugin install mutation-hunter@lousy-agents
