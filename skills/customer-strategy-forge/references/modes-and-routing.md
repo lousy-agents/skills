@@ -62,6 +62,22 @@ A parent agent may prepare a manifest and delegate a role to a subagent. The
 subagent treats the manifest as authority only for the decisions explicitly
 recorded there.
 
+## Role Dispatch
+
+Resolve the role before any customer or product procedure. One invocation
+keeps that role until it returns.
+
+| Role | Entry | This invocation does | Return / stop | Does not |
+| --- | --- | --- | --- | --- |
+| Coordinator | Default for a general human request, or an explicit coordinate/route request. Load this file, then isolation-and-critic.md to build packets. | Prepare/verify the manifest, authorize a stop sink, assemble role packets, delegate, receive child results, and publish only after a required critic pass. | Inquiry completes when the coordinator has published authorized artifacts or a terminal stop. Child return is not inquiry completion. | Synthesize customer artifacts, criticize them, or map products in this context. |
+| Synthesizer | Coordinator packet or explicit synthesizer invocation with an approved product-blind manifest. Load evidence-and-gates.md, artifact-contracts.md, and only selected operations.md sections. | Audit evidence and produce only selected customer artifacts. Persist/version-pin behavioral artifacts before any progression interpretation. | Return the audit, candidates, claim records, and access log to the coordinator. Audit-only runs end here. | Request a critic of its own work in-place, publish after a required critic gate, introduce product inventory, or apply a progression model supplied before the behavioral pin. |
+| Critic | Fresh non-forked invocation with the critic packet. Load isolation-and-critic.md and evidence-and-gates.md. | Execute only the critic procedure. | Return exactly one verdict packet to the caller and stop. | Obtain another critic, publish customer artifacts, or map products. |
+| Product mapper | Explicit mapping request plus a released-input manifest that pins passed artifacts. Load artifact-contracts.md and product-aware operations only. | Map coverage, gaps, handoffs, alternatives, partners, or no-action from the pinned passed artifacts. | Return the mapping and decision limits to the coordinator. | Rewrite the customer model, treat a non-pass as input, or synthesize new customer claims. |
+
+The coordinator is the publication owner for the inquiry. A child role may
+write only the outputs named in its own manifest. Completing a child role is
+not permission to continue the parent procedure in the same context.
+
 ## Artifact Selection
 
 The Grounding Brief's `required_artifacts[]` is the run graph.
@@ -88,12 +104,27 @@ Pass only:
 
 - product-independent inquiry and decision context;
 - evidence-pack pointers and approved records;
-- run manifest and provisional output contracts;
-- applicable progression model only when that operation is selected; and
+- run manifest and provisional output contracts; and
 - authorized output locations.
+
+Do not include a progression model, maturity rubric, or stage taxonomy in
+this initial packet, even when operation 9 is selected. Persist and
+version-pin the behavioral synthesis first. Then release the versioned
+model in a separate packet or successor invocation that names the pinned
+behavioral artifact as a prerequisite. Observed behavior stays immutable;
+model interpretations are separate claims.
 
 Do not pass product goals, feature lists, portfolio hypotheses, solution-led
 personas, or the coordinator's product-fit rationale.
+
+### Coordinator to Synthesizer — progression release
+
+Use only after a version-pinned behavioral artifact exists for this inquiry.
+Pass the pinned artifact reference, the versioned model, and the selected
+progression operation. Honor the routing table: interpret progression from a
+passed customer artifact, then obtain independent criticism of the
+interpretation. Do not reopen or rewrite the behavioral baseline to fit the
+model.
 
 ### Synthesizer to Critic
 
