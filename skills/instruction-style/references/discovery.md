@@ -9,8 +9,15 @@ globs need no prerequisite.
 npx --yes @lousy-agents/cli doctor --format=json --ci > ./doctor-inventory.json
 ```
 
-Write the file **next to the worktree**, not to `/tmp`, which is not writable in
-every sandbox. Delete it when finished.
+Write the file **at the worktree root**, not to `/tmp`, which is not writable in
+every sandbox. Nothing ignores it by default, so deleting it is a required
+Output step, not a courtesy: `rm ./doctor-inventory.json` once the inventory
+and edges have been read.
+
+If the permission layer denies the doctor command, or doctor fails, **say so in
+the report and fall back to the globs below.** A denied doctor is not "doctor
+unavailable, discovery complete"; it is discovery that has not happened yet.
+Never report the surface as enumerated on a run that did not execute.
 
 **Keep `--ci`, and ignore the exit code.** `--ci` means "force non-interactive
 mode — skip elicitation prompts". Without it, in a TTY with no intent artifact,
@@ -22,8 +29,12 @@ Filter it; never read it whole. The output runs to tens of thousands of tokens,
 and reading it raw costs more context than the globbing it replaced:
 
 ```sh
-node -e 'const d=require("./doctor-inventory.json");for(const i of d.inventory)if(["instruction","subagent","agent"].includes(i.constructType))console.log(i.harness,i.constructType,i.path)'
+node -e 'const d=require("./doctor-inventory.json");for(const i of d.inventory)if(["instruction","subagent","agent","skill"].includes(i.constructType))console.log(i.harness,i.constructType,i.path)'
 ```
+
+`skill` is in the filter because a skill's routing `description` is in scope.
+Take only the path from those records and read the frontmatter description;
+the procedure body below it is out of scope.
 
 Fields: `inventory[]` carries `path`, `harness`, `constructType`
 (`instruction`, `skill`, `subagent`, `agent`, `hook`, `mcp-server`) and
@@ -47,25 +58,39 @@ Use these when Node or the network is unavailable, and say in the report that
 discovery was manual and may be incomplete.
 
 ```
-AGENTS.md
-AGENTS.override.md
-CLAUDE.md
+**/AGENTS.md
+**/AGENTS.override.md
+**/CLAUDE.md
 CLAUDE.local.md
 .claude/CLAUDE.md
 .claude/rules/**
 .claude/agents/**
 .claude/commands/**
+.claude/skills/**/SKILL.md
 .github/copilot-instructions.md
 .github/instructions/**/*.instructions.md
 .github/agents/**/*.agent.md
 .github/skills/**/SKILL.md
 .agents/skills/**/SKILL.md
-.opencode/**
-opencode.json
+opencode.json{,c}
+.opencode/opencode.json{,c}
+.opencode/AGENTS.md
+.opencode/agent{,s}/**
+.opencode/command{,s}/**
+.opencode/skill{,s}/**/SKILL.md
 .codex/config.toml
 .codex/agents/**
 .codex/skills/**
 ```
+
+`**/AGENTS.md` and `**/CLAUDE.md` recurse on purpose. A nested
+`packages/*/AGENTS.md` is the scoped mechanism on Codex (working-directory
+chain), OpenCode v2 (injected on read), and Copilot CLI (nested in the path of
+a file being worked on), and a root-only glob misses it. Skip `node_modules/`
+and vendored trees when expanding. The OpenCode entries are named rather than
+`.opencode/**` because that directory also holds plugin `node_modules` and
+other non-instruction files; the `{,s}` alternatives cover v1's singular
+directory names and v2's plural ones.
 
 ## Lock surfaces — grep these before editing
 

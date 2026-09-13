@@ -1,8 +1,8 @@
 ---
 name: instruction-style
-description: Author or revise durable agent-facing instruction prose — AGENTS.md, CLAUDE.md, .github/copilot-instructions.md, .github/instructions/*.instructions.md, OpenCode instructions, Codex and Claude subagent and command files, rules files, specs — so an agent reads the right priority, sees why each constraint exists, and does not apply a rule where it does not fit. Use when asked to clean up, tighten, harden, or standardize instruction files, to settle obligation wording on one closed modal set, to place rules across a hybrid harness set (applyTo, paths, imported cores and thin adapters), to check whether instruction files have drifted from the code and CI they describe, or to review an instruction diff for lost meaning. Do NOT use to optimize a one-off task prompt for immediate execution, to lint a SKILL.md against Agent Skills packaging rules, or to audit a feature specification for implementation defects.
+description: Author or revise durable instruction prose so priority, rationale, and scope survive. Use when asked to clean up, tighten, harden, or standardize AGENTS.md, CLAUDE.md, Copilot, OpenCode, or Codex files, settle a closed modal set, place rules across a hybrid harness, check drift from code and CI, or review an instruction diff for lost meaning. Do NOT use for a one-off task prompt, to lint a SKILL.md, or to audit a feature spec.
 argument-hint: "Path or glob of instruction files to revise (or paste the prose); say 'apply' to write files instead of proposing a diff"
-allowed-tools: Read, Grep, Glob, Bash(npx @lousy-agents/cli doctor*), Bash(git diff*), Bash(git log*), Bash(git show*)
+allowed-tools: Read, Grep, Glob, Bash(npx --yes @lousy-agents/cli doctor*), Bash(npx @lousy-agents/cli doctor*), Bash(rm ./doctor-inventory.json), Bash(git diff*), Bash(git log*), Bash(git show*)
 compatibility: Discovery via `npx @lousy-agents/cli doctor` needs Node.js and network access on first run. Doctor is optional — fallback glob discovery is first-class and carries no prerequisite.
 ---
 
@@ -27,7 +27,9 @@ everywhere). Optimize against those three.
   `.claude/rules/**`.
 - Subagent, command, and agent files across harnesses, plus the routing
   `description` of a skill.
-- Specs, plans, and architecture notes the agent authors.
+- Specs, plans, and architecture notes the agent authors — only when the ask is
+  priority, rationale, or obligation wording. Implementability is a spec audit,
+  not this skill.
 - A diff that rewrote any of the above, when the question is what meaning was lost.
 
 Scope is durable instruction prose. A skill or command **procedure body** — the
@@ -52,18 +54,24 @@ skill's routing `description` is in scope; the rest of its frontmatter is not.
 
 ## Modality: one closed set, declared once
 
-- One word for mandatory, one for recommended, one for plain fact — and no
-  other modal carrying obligation anywhere in the file. Which three words is a
-  house-style choice, not a correctness one; the failure being fixed is a file
-  where `must`, `shall`, `should`, "make sure", and a bare imperative all appear
-  and nothing says which outranks which.
+- One word for mandatory, one for recommended, and plain fact in the present
+  indicative with no modal at all — and no other modal carrying obligation
+  anywhere in the file. Which two words is a house-style choice, not a
+  correctness one; the failure being fixed is a file where `must`, `shall`,
+  `should`, "make sure", and a bare imperative all appear and nothing says
+  which outranks which. `will` is not the plain-fact word: in an instruction
+  file it reads as future tense, so `parses purely in Go` becoming `will parse
+  in Go` turns a description of the code into a roadmap claim.
 - **Detect the file's existing vocabulary and stay inside it.** If a file
   already carries obligation on `MUST`, keep `MUST` and make it consistent.
   Converting a Copilot-owned file, or a shared canonical file that already uses
   `MUST`, over to `shall` fights the house style it lives in and churns a diff
-  for no reader benefit. Pick the incumbent, then close the set around it.
-- Declare the chosen set once, near the top of the file, so a reader never has
-  to infer it.
+  for no reader benefit. Pick the incumbent, then close the set around it. A
+  bare imperative (`Return 503 ...`) on a shared core is a valid incumbent
+  form, not an out-of-set modal to eliminate.
+- Declare the chosen set in the run report, not in the file. Write a legend
+  into the file only when one already exists there or the user asked for one:
+  a banner on an always-loaded file costs every session and churns the diff.
 - Delete hedges attached to real requirements (`try to`, `if possible`,
   `ideally`, `where practical`). An agent reads them literally as permission to
   under-deliver.
@@ -74,7 +82,7 @@ skill's routing `description` is in scope; the rest of its frontmatter is not.
   loaders slice instruction files on their formatting — a heading, a numbered
   step marker, the bold span that follows one — so stripping it breaks the
   build. Emphasis a parser depends on is not emphasis carrying priority. The
-  lock-surface greps are in `references/discovery.md`.
+  lock-surface greps are in `./references/discovery.md`.
 
 ## Every constraint carries its reason
 
@@ -85,6 +93,12 @@ skill's routing `description` is in scope; the rest of its frontmatter is not.
   result`, not `Return 503`.
 - If you cannot state why a rule exists, report it. An unjustifiable rule is a
   removal candidate, not a rule to reformat.
+- A reason you infer rather than find in the file, the code, or the history is
+  a guess. In a proposed diff, list each inferred reason in the report so the
+  reviewer can strike it; under apply, put it in the report as a question and
+  leave the rule bare. An invented purpose that is wrong gets routed on, which
+  is worse than a bare rule — one measured pass wrote nine inferred reasons
+  into a subagent prompt and grew it by a third.
 - **Sweep lists and table cells, not only flowing prose.** A rule living in a
   bullet or a table cell is still a rule, and a pass that rewrites paragraphs
   and skips lists leaves the prohibitions untouched — which is the half where a
@@ -94,45 +108,11 @@ skill's routing `description` is in scope; the rest of its frontmatter is not.
 
 ## Form: match the formalism to the content
 
-**Reference content** — contracts, invariants, error conditions, API behavior,
-and ordered procedures where exactly one sequence is safe. Give this structure,
-and use EARS where a trigger or fault condition needs naming:
-
-- Ubiquitous: The \<actor\> shall \<action\>.
-- Event-driven: When \<trigger\>, the \<actor\> shall \<action\>.
-- State-driven: While \<state\>, the \<actor\> shall \<action\>.
-- Unwanted: If \<fault or condition\>, then the \<actor\> shall \<action\>.
-- Optional: Where \<feature exists\>, the \<actor\> shall \<action\>.
-
-Name the exception when one exists: `If the store errors (not a clean miss),
-then ...`. The value of these templates is that they force you to name the
-trigger, the actor, and the exception. Once those are named, ordinary prose
-carries them equally well — the template is an authoring aid, not a
-comprehension aid.
-
-**Behavioral content** — how to exercise judgment, when to push back, what good
-work looks like, what a role is for. Write this as prose that carries its
-reasons. Do not force it into a requirement template: a disposition expressed
-as a prohibition loses the judgment it was meant to enable. Prefer a positive
-statement of the target over a list of banned outcomes, because a prohibition
-against a failure the agent was not going to make can anchor it toward that
-failure.
-
-Compare. `Do not add comments` is a prohibition that overfires. `Write code
-that reads like the surrounding code: match its comment density, naming, and
-idiom` is the same intent as a disposition, and it generalizes.
-
-Three conversions to refuse outright, because each destroys the judgment it
-was standing in for:
-
-| Leave as prose | Never render as |
-| --- | --- |
-| Be skeptical of a passing suite you did not run | The agent shall be skeptical |
-| Match the surrounding code's taste | The agent shall match taste |
-| Say so in a sentence and continue, when the request looks mistaken | If the request is mistaken, then the agent shall push back |
-
-A role, a taste, and a disposition toward pushing back are not triggers,
-faults, or ordered procedures, so no EARS form fits them.
+Reference content (contracts, invariants, faults, ordered procedures) gets
+structure; use EARS on triggers and faults. Behavioral content — judgment,
+taste, role, push-back — stays prose. Read `./references/form.md` before
+converting any sentence: it holds the templates, the actor-slot rules, and
+the four conversions to refuse.
 
 ## Structure
 
@@ -175,23 +155,11 @@ harness's voice into every other harness that loads the same bytes.
 
 ## What not to remove
 
-A revision pass deletes the highest-value words first unless it is told not to.
-Length is not the target; never justify a deletion by word count. Preserve, and
-restore if a prior pass removed them:
-
-- **Reason clauses**: `so that`, `because`, `otherwise`, `which is why`.
-- **Intent markers**: `deliberately`, `intentionally`, `by design`. These mark a
-  choice an agent shall not "repair", and repairing an intentional design is the
-  most expensive failure mode in a config-heavy repository. They are not
-  qualifiers of degree.
-- **Stance words** that set a role's disposition: `adversarial`, `skeptical`.
-- **Discriminating detail in routing text** — descriptions of skills, tools, and
-  subagents. These are lookup tables, and specifics are what make routing work.
-  Under-description is the common failure here, not over-description.
-- **Defining clauses** that say what a term means. Without them a paragraph that
-  reads as guidance becomes unactionable.
-- **Examples** that pin a format-sensitive output shape.
-- **Prohibitions** against failures that still occur.
+A revision pass deletes the highest-value words first. The keep list — reason
+clauses, intent markers, stance words, manner adverbs, routing discriminators,
+defining clauses, examples, live prohibitions — and the rule that it outranks
+any size figure live in `./references/keep-list.md`. Preserve them; restore
+them if a prior pass removed them.
 
 ## Size and placement
 
@@ -199,13 +167,9 @@ restore if a prior pass removed them:
   harness loads unconditionally — the core, every adapter, every unscoped rules
   file — and judge that one number. Per-file word and line figures are advisory
   and are not a target to hit.
-- **The keep list outranks any size figure.** Rationale, intent markers, and
-  routing discriminators are never what you cut to reach a number. A file over
-  its advisory figure because the excess is rationale is the tradeoff working.
-  Cut derivable reference first, and stop there.
 - One harness enforces a real ceiling rather than a preference: Codex truncates
   the concatenated AGENTS.md chain at `project_doc_max_bytes`, 32 KiB by
-  default. See `references/harness-load.md`.
+  default. See `./references/harness-load.md`.
 - Growth is cheap in a path-scoped file and expensive in an always-loaded one,
   so spend it accordingly. Where the harness supports scoping — Copilot's
   `applyTo`, Claude Code's `.claude/rules/` `paths` — a scoped file carries long
@@ -223,7 +187,7 @@ restore if a prior pass removed them:
 - Move documentation about one command into that command's own file.
 - Place a rule on the **intersection** of the load paths of the harnesses that
   need it. Triggers differ per harness and are version-sensitive: read
-  `references/harness-load.md` before choosing placement.
+  `./references/harness-load.md` before choosing placement.
 
 ## Discovering the prompt surface
 
@@ -231,17 +195,20 @@ Enumerate the surface with a command where you can, because a glob finds the
 harnesses you thought of and misses the one you forgot. Fallback globbing is
 first-class and carries no prerequisite.
 
-Read `references/discovery.md` before this step. It holds the doctor
+Read `./references/discovery.md` before this step. It holds the doctor
 invocation and filter, the full fallback glob list across all four harnesses,
 and the lock-surface greps to run before you strip emphasis or rewrap.
 
-Two rules that hold regardless of method:
+Three rules that hold regardless of method:
 
 - **The inventory is the surface, not the scope.** Most records in any
   repository are skills, and some are owned upstream by a lockfile. Intersect
   the surface with what the invocation and the repository allow.
 - **Discovery is topology, not evaluation.** An empty `findings[]` from any
   tool is not a clean bill of health, and it does not excuse the checks below.
+- **A doctor run that was denied or failed is not discovery.** Say so in the
+  report and fall back to the globs; never report the surface as enumerated
+  on a command that did not execute.
 
 ## Verify the claims, not just the prose
 
@@ -280,16 +247,16 @@ revise. Finding it is cheap here and expensive later.
 1. Read the repository's agent instructions and the target files before editing.
 2. **Inventory what is locked, before the first edit.** Search tests, hooks, and
    loaders for the headings, step markers, asserted phrases, and load-bearing
-   frontmatter keys they match on. The patterns are in `references/discovery.md`.
+   frontmatter keys they match on. The patterns are in `./references/discovery.md`.
    List them up front; a grep before each deletion catches the phrase you
    thought to check and misses the one you did not.
-3. **Discover the prompt surface.** See `references/discovery.md` for both
+3. **Discover the prompt surface.** See `./references/discovery.md` for both
    methods. Intersect the surface with the scope: if the invocation names files
    or a glob, that is the scope; otherwise ask before touching a file the
    repository owns from upstream. Do not invent files.
 4. **Classify each target file** as a shared canonical core, a single-harness
    actor file, or a path-scoped projection, because address and placement both
-   depend on it. Consult `references/harness-load.md` before moving a rule.
+   depend on it. Consult `./references/harness-load.md` before moving a rule.
 5. Run the accuracy pass above. Fix drift in the same change.
 6. Keep existing meaning, authority, and names. Change wording and structure.
 7. **Propose a unified diff. Do not write files unless the invocation says to.**
@@ -307,19 +274,22 @@ revise. Finding it is cheap here and expensive later.
 ## Presenting two or more options
 
 When the task ends in a recommendation rather than a diff, use the option-report
-shape in `references/verification.md`. It is a report to a human: never write it
+shape in `./references/verification.md`. It is a report to a human: never write it
 into an instruction file, and never carry its voice there.
 
 ## Verification
 
 - Obligation inside each file is carried by that file's declared set and no
   other modal. No hedges on requirements, no emphasis substituting for
-  priority. Sweep with
-  `grep -niE '\b(must|has to|need to|ought to|have to)\b'` across every changed
-  file and read each hit, because the count alone over-reports: only a
-  **deontic** use — an obligation on the reader — violates the set. A
-  **descriptive** use, such as "a list that has to be updated in repository
-  settings", states how the world behaves and is not a modal to convert.
+  priority. Sweep each changed file for obligation words **outside its
+  declared triple** — the recipes, one per house style, are in
+  `./references/verification.md`. Never sweep case-insensitively for the
+  declared word itself: that flags every legal `MUST` in a `MUST`-house file,
+  and "closing the set" on those hits deletes valid obligations. Read each
+  hit, because the count alone over-reports: only a **deontic** use — an
+  obligation on the reader — violates the set. A **descriptive** use, such as
+  "a list that has to be updated in repository settings", and a **quoted**
+  use, such as an RFC 2119 key-words paragraph, are not modals to convert.
 - Every prohibition and every non-obvious constraint states its reason.
 - EARS forms appear on trigger and fault conditions, not on dispositions.
 - Reason clauses, intent markers, routing discriminators, and defining clauses
@@ -332,8 +302,11 @@ into an instruction file, and never carry its voice there.
   survives.
 - Every count you report is accompanied by the command that produced it, and a
   before-and-after comparison runs the identical command on both revisions.
-  `references/verification.md` explains why, and how a detector manufactures a
-  defect when it does not.
+  `./references/verification.md` explains why, and how a detector manufactures a
+  defect when it does not. Its before-and-after table also carries a bullets
+  column: a list whose bullet count multiplies while its parents stay the same
+  has been flattened, and the reader has lost which facts belong to which
+  subject.
 - Run the verification once. Do not add further review passes.
 
 ### A negative result is a hypothesis, not a finding
@@ -341,41 +314,35 @@ into an instruction file, and never carry its voice there.
 Your instrument is likelier to be wrong than the artifact. Before reporting
 anything as removed, dead, missing, or miscounted, confirm the absence a second
 time by a different means. Report a defect only when two methods agree.
-`references/verification.md` lists the failure modes that have already produced
+`./references/verification.md` lists the failure modes that have already produced
 false defects against correct files, and why the list cannot be complete.
 
 ## Output
 
-- The requested artifact, or a proposed diff, already in this contract.
+- The requested artifact, or a proposed diff. The contract binds the
+  instruction diff; the report around it stays short and plain, not
+  EARS-formed and not restyled to the set.
 - A short list of what you moved, any rule you could not justify, and any
   factual drift you found.
 - The command beside every number you report, so a reader can rerun it.
+- The before-and-after table from `./references/verification.md` for every
+  changed file — words, bullets, reason clauses, intent markers, manner
+  adverbs, and each modal — produced by one command on both revisions. A drop
+  in a keep-list column is a finding to explain in the report, not a number to
+  leave in the table: a pass that stripped every `deliberately` from a core and
+  reported no count was accepted as a style change.
 - What you could not verify, named plainly. A check you could not run is not a
   check that passed.
+- `./doctor-inventory.json` deleted, if discovery wrote it. Nothing ignores it
+  by default, and a run that leaves it behind hands the user an untracked file
+  to explain.
 - No persona, no process narration.
 
 ## What this contract deliberately omits
 
-Earlier versions carried ASD-STE100 rules: sentence-length caps, a ban on
-unbound qualifiers, a compound-noun limit, a ban on contractions. They are
-omitted on purpose, recorded here so a later pass does not restore them as an
-oversight.
-
-STE100 serves a reader whose English is limited. That is not this reader. Its
-caps cost subordination, and subordination (`so that`, `even though`, `rather
-than`) is where causal reasoning lives. Its qualifier ban cannot tell a
-degree-qualifier like `fast` from an intent marker like `deliberately`, so
-applying it mechanically strips exactly the words in the keep list.
-
-A closed modal set is kept because it fixes misprioritization and costs nothing
-structurally. The contract does not name RFC 2119: that standard's mandatory
-word is `MUST`, and mandating a `MUST` → `shall` rewrite would fight the house
-style of every Copilot-owned and GitHub-scaffolded file it touched. Closing the
-set matters; which words close it does not.
-
-EARS is kept, scoped to triggers, faults, and ordered procedures, because it
-has no slot for a reason — an author who applies it everywhere strips rationale
-as a matter of course.
+STE100 sentence caps, qualifier bans, and an RFC 2119 `MUST` mandate are
+omitted on purpose. The reasons — and why EARS stays scoped to triggers and
+faults — are in `./references/omissions.md`. Do not restore them as an oversight.
 
 ## Applying this contract to itself
 
