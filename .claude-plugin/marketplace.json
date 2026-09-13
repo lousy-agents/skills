@@ -99,6 +99,14 @@
       "keywords": ["ux", "intent", "agency", "onboarding", "consent", "delegation", "design-review"]
     },
     {
+      "name": "customer-strategy-forge",
+      "displayName": "Customer Strategy Forge",
+      "description": "Turn customer evidence into auditable personas, journeys, progression hypotheses, and product-strategy opportunity maps",
+      "source": "./skills/customer-strategy-forge",
+      "category": "planning",
+      "keywords": ["customer-research", "persona", "journey", "segmentation", "product-strategy", "evidence"]
+    },
+    {
       "name": "instruction-style",
       "displayName": "Instruction Style",
       "description": "Author or revise durable agent-facing instruction prose so priority, rationale, and scope survive the edit",
