@@ -24,11 +24,12 @@
     },
     {
       "title": "Code Review & Integrity",
-      "description": "Automated pull request triaging and code quality gatekeeping.",
+      "description": "Automated pull request triaging, code quality gatekeeping, and durable instruction-file revision.",
       "skills": [
         "triaging-pr-reviews",
         "curate-release",
-        "skill-reviewer"
+        "skill-reviewer",
+        "instruction-style"
       ]
     }
   ]

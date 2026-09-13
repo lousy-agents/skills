@@ -97,6 +97,14 @@
       "source": "./skills/designing-for-intent",
       "category": "planning",
       "keywords": ["ux", "intent", "agency", "onboarding", "consent", "delegation", "design-review"]
+    },
+    {
+      "name": "instruction-style",
+      "displayName": "Instruction Style",
+      "description": "Author or revise durable agent-facing instruction prose so priority, rationale, and scope survive the edit",
+      "source": "./instruction-style",
+      "category": "tooling",
+      "keywords": ["instructions", "agents-md", "prose", "modality", "harness"]
     }
   ]
 }
