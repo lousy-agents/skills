@@ -20,6 +20,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
 | [`curate-release`](#curate-release) | Code Review / Release | Rewrites a PR's commits into a coherent release story semantic-release can publish |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
+| [`instruction-style`](#instruction-style) | Tooling / Meta | Revises `AGENTS.md`, `CLAUDE.md`, Copilot, OpenCode, and Codex instruction files so priority, rationale, and scope survive the edit |
 
 ---
 
@@ -146,6 +147,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
 | `curate-release` | At merge time: to curate a PR's commits so the release notes tell a coherent story |
 | `skill-reviewer` | When authoring or updating a `SKILL.md`: a contributor/meta tool, not part of the delivery flow |
+| `instruction-style` | When authoring or revising `AGENTS.md`, `CLAUDE.md`, or another harness instruction file: a contributor/meta tool, not part of the delivery flow |
 
 ---
 
@@ -350,6 +352,25 @@ Audits `SKILL.md` files for correctness, discoverability, and structure. Checks 
 - Debug why an agent isn't discovering or invoking a skill
 - Ensure a skill follows the Agent Skills spec and will work across supported agents
 
+---
+
+### `instruction-style`
+
+**Install:** `npx skills add lousy-agents/skills --skill instruction-style`
+
+Authors or revises durable agent-facing instruction prose — `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, path-scoped `*.instructions.md`, OpenCode instructions, Codex and Claude subagent and command files — so an agent reads the right priority, sees why each constraint exists, and does not apply a rule where it does not fit. Detects the file's incumbent modal vocabulary and closes the set around it rather than imposing one, keeps the reason clauses and intent markers a length-driven pass deletes first, checks instruction claims against the code and CI they describe, and places rules on the intersection of the harnesses' load paths (verified per harness in `references/harness-load.md`). Proposes a diff by default; writes files only on an explicit apply.
+
+**Use when you want to:**
+- Clean up, tighten, harden, or standardize instruction files without losing the rationale they carry
+- Settle obligation wording on one closed modal set per file, in that file's own vocabulary
+- Place a rule across a hybrid harness set (Copilot `applyTo`, Claude `.claude/rules` `paths`, OpenCode v2 nested `AGENTS.md`, Codex directory chains)
+- Check whether instruction files have drifted from the code and CI they describe
+
+**Do NOT use when:**
+- You want a one-off task prompt optimized for immediate execution
+- You want a `SKILL.md` linted against Agent Skills packaging rules (use `skill-reviewer`)
+- You want a feature specification audited for implementation defects (use `spec-auditor`)
+
 ## Install
 
 ```bash
@@ -403,6 +424,7 @@ Install any skill by name:
 /plugin install triaging-pr-reviews@lousy-agents
 /plugin install curate-release@lousy-agents
 /plugin install skill-reviewer@lousy-agents
+/plugin install instruction-style@lousy-agents
 ```
 
 ## Supported Agents
