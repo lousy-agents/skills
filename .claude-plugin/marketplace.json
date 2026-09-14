@@ -113,6 +113,14 @@
       "source": "./instruction-style",
       "category": "tooling",
       "keywords": ["instructions", "agents-md", "prose", "modality", "harness"]
+    },
+    {
+      "name": "code-tidy",
+      "displayName": "Code Tidy",
+      "description": "Tidy PR-scoped files: tests document behavior, production code reads as prose, comments earn their place, no behavior change",
+      "source": "./code-tidy",
+      "category": "code-review",
+      "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise"]
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "name": "code-tidy",
+  "displayName": "Code Tidy",
+  "description": "Tidy PR-scoped files: tests document behavior, production code reads as prose, comments earn their place, no behavior change",
+  "license": "BSD-2-Clause",
+  "repository": "https://github.com/lousy-agents/skills",
+  "homepage": "https://github.com/lousy-agents/skills#readme",
+  "skills": "./",
+  "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise"]
+}
