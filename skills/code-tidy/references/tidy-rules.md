@@ -141,7 +141,7 @@ comment in ordinary application code stays. In protocol, numerical,
 security, and interoperation code, more stay, but only the ones you
 cannot reduce. A comment in a test has the same bar, or a harder one.
 
-Decide every comment in every in-scope file, then mark the file
+Decide every comment in every file in this pass's work set, then mark the file
 `clean`.
 
 ## Ruling required

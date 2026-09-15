@@ -329,7 +329,7 @@ before 4c: diagnose before you transform.
 
    4c. **Structure.** Diagnose first with
        [`./references/solid-diagnostics.md`](./references/solid-diagnostics.md):
-       walk each in-scope production file for the five principles'
+        walk each production file in this pass's work set for the five principles'
        signals, confirm each against the evidence it names (callers,
        tests, `git log`), and Edit every accepted finding into the
        state file's Structure findings section as `location →
@@ -353,8 +353,9 @@ before 4c: diagnose before you transform.
    4d. **Comments.** Use Grep for comment markers in in-scope files.
        Delete by default with Edit. Keep only when both routes
        (refactor, tests) are closed **and** the comment matches a keep
-       condition. Decide every comment in every in-scope file, then
-       Edit that file's scope line in `.cleanup-loop.md` to `clean`.
+        condition. Decide every comment in every file in this pass's
+        work set, then Edit that file's scope line in
+        `.cleanup-loop.md` to `clean`.
 
    4e. **Commit.** At each green point. Use Bash. One concern per
        commit (tests *or* structure *or* comments). Behavior-preserving

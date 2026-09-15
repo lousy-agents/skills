@@ -6,7 +6,7 @@ whether a remedy is warranted, which one, and how to prove it.
 
 ## Rules of engagement
 
-- Diagnose only in-scope production files. Read out-of-scope callers,
+- Diagnose only production files in this pass's work set. Read out-of-scope callers,
   tests, and git history as evidence; edit them only for mechanical
   call-sites.
 - Function length is not a finding. A `switch` is not a finding. An
