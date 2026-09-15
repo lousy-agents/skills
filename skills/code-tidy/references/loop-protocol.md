@@ -39,6 +39,9 @@ before any coach or SOLID work. Skeleton:
 ## Scope
 - path/to/file.ts  todo
 
+## Structure findings
+- none
+
 ## Pending rulings
 - none
 
@@ -66,8 +69,12 @@ Keep these sections, in order:
    pairs, test command, lint command, comment-count method.
 4. **Scope list** — one line per file:
    `path  <todo|in-work|clean|ruling>  [limit/reason]`.
-5. **Pending rulings** — one item per line; empty is `none`.
-6. **Appended reports** — one `### Pass N` block per completed pass,
+5. **Structure findings** — one line per accepted SOLID finding, in
+   the `solid-diagnostics.md` form ending `apply` or `defer
+   (<reason>)`; written before the 4c edits, kept across passes;
+   empty is `none`.
+6. **Pending rulings** — one item per line; empty is `none`.
+7. **Appended reports** — one `### Pass N` block per completed pass,
    holding that pass's Output block verbatim.
 
 ## Re-entrancy
@@ -450,7 +457,9 @@ Duplicate of the SKILL.md Output block.
 - `comments` is in-scope source files only; `before` is the start of
   this pass's SOLID phase.
 - `structure` = number of behavior-preserving commits from step 4c.
-  One structure change = one such commit.
+  One structure change = one such commit. The findings those commits
+  applied, and the ones deferred, are the Structure findings section
+  of the state file.
 - `suite` / `lint` are pass or fail *vs baseline*, not zero-failure.
 - `status`: only `PASS n/5`, `DONE — thorough`, or
   `DONE — max iterations`. Do not invent tokens such as `blocked`.
@@ -470,7 +479,7 @@ Duplicate of the SKILL.md Output block.
   finalize commit is excluded (see Git).
 - `kept comments` lists only non-obvious keeps.
 - `questions` one line each with a recommendation; omit the section if
-  none.
+  none. Every deferred structure finding has a line here.
 
 Narration: one line per completed Work step, ≤10 words. Blockers in
 one line at the time they are found. The person reading can see the

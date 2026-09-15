@@ -135,7 +135,9 @@ One pass. Stop after the report is committed. Load
 Prepare. Load [`./references/coach-phase.md`](./references/coach-phase.md)
 before step 1. Load [`./references/tidy-rules.md`](./references/tidy-rules.md)
 before step 4 (its Framework Orient also governs any test a coach fix
-adds in steps 1–3).
+adds in steps 1–3). Load
+[`./references/solid-diagnostics.md`](./references/solid-diagnostics.md)
+before 4c: diagnose before you transform.
 
 0. **Prepare.** Every blocker below emits the Output block
    (`status PASS 0/5`, one `questions` line naming the blocker) and
@@ -325,12 +327,25 @@ adds in steps 1–3).
        external contract). Do not weaken assertions to reach green.
        Characterization tests before restructuring.
 
-   4c. **Structure.** One behavior-preserving step at a time. Use
-       Edit. Extract until a function reads as prose. Rename. Split a
-       type with two reasons to change. Narrow an interface only when
-       every consumer is in scope. Remove hidden side effects,
-       sentinel/boolean errors, speculative abstractions. Keep
-       intentional seams. After each step use Bash for the smallest
+   4c. **Structure.** Diagnose first with
+       [`./references/solid-diagnostics.md`](./references/solid-diagnostics.md):
+       walk each in-scope production file for the five principles'
+       signals, confirm each against the evidence it names (callers,
+       tests, `git log`), and Edit every accepted finding into the
+       state file's Structure findings section as `location →
+       principle → evidence → consequence → proposed refactoring →
+       validation → apply | defer`. Function length alone and a lone
+       `switch` are not findings. Then apply the `apply` findings and
+       the readability extractions the Structure rules allow, one
+       behavior-preserving step at a time with Edit: extract until a
+       function reads as prose, rename, split a type with two reasons
+       to change, narrow an interface only when every consumer is in
+       scope, remove hidden side effects, sentinel/boolean errors, and
+       speculative abstractions (one implementation, no second use,
+       no test seam); keep a boundary that two consumers or a test
+       already justify. A `defer` finding keeps its line, gets a
+       recommendation under `questions`, and a pending ruling when the
+       ruling list applies. After each step use Bash for the smallest
        covering tests; full suite before each commit. Red vs baseline
        and not quickly fixable → `git checkout -- <file>` or
        `git revert` back to last green commit.
@@ -424,6 +439,10 @@ kept comments (non-obvious only)
 questions
 <one line each, with recommendation; omit if none>
 ```
+
+Deferred structure findings appear under `questions`; the full
+diagnosis, applied and deferred, lives in the state file's Structure
+findings section and ships with the PR.
 
 `DONE — thorough` in PR mode = every scope file is `clean` or
 `ruling`. In branch mode = no `todo` remains across re-invokes; a pass

@@ -61,8 +61,10 @@ a coach Stage-B fix adds in steps 1–3.
 
 ## Structure
 
-One behavior-preserving step at a time. Keep the tests green vs the
-post-coach baseline.
+Diagnose first with `solid-diagnostics.md` (loaded before 4c); the
+transformations below are the remedies it selects, not the
+diagnosis. One behavior-preserving step at a time. Keep the tests
+green vs the post-coach baseline.
 
 - Extract until each function reads as prose. Smallest change that
   gives clarity. A primary goal is to remove the need for a comment.
