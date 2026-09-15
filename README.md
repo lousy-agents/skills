@@ -316,7 +316,7 @@ Guides Go development with tests: smallest failing test first, start from public
 
 Tidies the files a PR or branch changed against its base (the PR's base, or the default branch when no PR exists), or all tracked source when run on the default branch or asked for `whole-repo`: a coach CodeSignal loop first (Stage-B defects may change behavior), then a SOLID tidy with no further behavior change. Tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. The suite and linter stay no worse than the post-coach pass-1 baseline.
 
-**Requires:** [mise](https://mise.jdx.dev/) on PATH (`curl https://mise.run | sh`, or `npm install -g @jdxcode/mise` where npm exists). Coach runs through mise as `github:lousy-agents/coach`, falling back to mise's `go:` backend or a source build where the GitHub API is refused. Works in Claude Code Remote: no `gh` needed (GitHub MCP tools stand in), mise installs from npm, coach resolves through the Go module proxy. Missing mise after one install attempt is a blocker.
+**Requires:** [mise](https://mise.jdx.dev/) on PATH (`curl https://mise.run | sh`, or `npm install -g @jdxcode/mise` where npm exists). Coach is pinned to `github:lousy-agents/coach@v0.6.0`, falling back to mise's `go:` backend at `cmd/coach@v0.6.0` or a source build of tag `v0.6.0` where the GitHub API is refused. Works in Claude Code Remote: no `gh` needed (GitHub MCP tools stand in), mise installs from npm, coach resolves through the Go module proxy. Missing mise after one install attempt is a blocker.
 
 **Use when you want to:**
 - Tidy a PR or a feature branch's diff, or hunt all tracked source with `whole-repo`

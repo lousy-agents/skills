@@ -17,7 +17,7 @@ description: >-
   or to edit AGENTS.md / CLAUDE.md prose (use instruction-style).
 argument-hint: "Optional: PR number, base ref, path glob, 'whole-repo', or 'push' to allow pushing"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
-compatibility: "Requires mise on PATH (curl https://mise.run | sh, or npm install -g @jdxcode/mise where npm exists). Coach runs through mise as github:lousy-agents/coach, falling back to mise's go backend or a source build where the GitHub API is refused. Works in Claude Code Remote without gh (GitHub MCP tools stand in). Missing mise after one install attempt is a blocker."
+compatibility: "Requires mise on PATH (curl https://mise.run | sh, or npm install -g @jdxcode/mise where npm exists). Coach is pinned to github:lousy-agents/coach@v0.6.0, falling back to mise's go backend at cmd/coach@v0.6.0 or a source build of tag v0.6.0 where the GitHub API is refused. Works in Claude Code Remote without gh (GitHub MCP tools stand in). Missing mise after one install attempt is a blocker."
 ---
 
 # Code Tidy
@@ -102,9 +102,11 @@ leaves a dirty tree.
 - Coach-first may change behavior for in-scope Stage-B defects. After
   the SOLID baseline is recorded, production edits are extract / rename
   / narrow / collapse / move only.
-- Do not author `project.json`, layers, or architecture policy. Do not
-  run `--suggest-project-config` or `--prepare-compiler` unless the user
-  asked.
+- Do not run `--prepare-compiler` or TypeScript
+  `--suggest-project-config` (TTY). When no committed project config
+  exists, onboard a create-only `project.json` from observed source
+  prefixes (see coach-phase Tier 2); do not invent prefixes or
+  overwrite an existing file.
 
 ## Prerequisites
 
@@ -115,13 +117,13 @@ leaves a dirty tree.
   blocks the whole skill.
 - **Coach** via mise, first path that runs
   `coach codesignal --help` (details in `./references/coach-phase.md`):
-  `mise exec github:lousy-agents/coach -- coach …`; if the GitHub API
-  is refused (Claude Code Remote answers HTTP 403 for a repository
-  not attached to the session),
+  `mise exec github:lousy-agents/coach@v0.6.0 -- coach …`; if the
+  GitHub API is refused (Claude Code Remote answers HTTP 403 for a
+  repository not attached to the session),
   `MISE_FETCH_REMOTE_VERSIONS_TIMEOUT=60s mise exec
-  "go:github.com/lousy-agents/coach/cmd/coach@latest" -- coach …`
+  "go:github.com/lousy-agents/coach/cmd/coach@v0.6.0" -- coach …`
   through the Go module proxy; else a source build from a scratch
-  clone. If the target language is not Go/TS/TSX, or no path runs,
+  clone of tag `v0.6.0`. If the target language is not Go/TS/TSX, or no path runs,
   skip the coach phase, note it, and still run SOLID. Coach that
   cannot start after mise is present is a skip, not a skill failure.
 - **git** required, with `user.email` set. `gh` optional: when it is
@@ -276,15 +278,19 @@ before 4c: diagnose before you transform.
    in scope or codesignal cannot start; Edit `coach: skipped
    (<reason>)` the same way.
 
-2. **Coach Tier 2 — detect committed project config.** Detect only.
-   Do not write a config. Do not run `--suggest-project-config`
-   unattended. Use Bash against the analyzed revision (`HEAD` after
-   Tier 1): user-named path; `git cat-file -e HEAD:project.json`; a
-   path named in project instructions / CI / README that exists at
-   HEAD (Grep those files for `--project-config`). Uncommitted
-   worktree files are absent. If none, Read `.cleanup-loop.md` then
-   Edit in `coach: project-config absent; tier 3 skipped`. Then go to
-   step 4.
+2. **Coach Tier 2 — detect or onboard project config.** Use Bash
+   against `HEAD` after Tier 1: user-named path;
+   `git cat-file -e HEAD:project.json`; a path named in instructions
+   / CI / README that exists at HEAD. Uncommitted worktree files are
+   absent. If TS is in scope, Bash `--check-project --project-language
+   typescript` (readiness only; do not run `next_actions`). If no
+   committed config, onboard per `./references/coach-phase.md`: Go
+   `--suggest-project-config --output project.json` when `go.mod`
+   exists; otherwise Write a create-only `project.json` with roots
+   plus layers/forbidden imports inferred from tracked source
+   prefixes. Commit that file, then re-detect. If onboard cannot
+   run, Edit `coach: project-config absent; tier 3 skipped` and go
+   to step 4.
 
 3. **Coach Tier 3 — project scan loop.** Only if Tier 2 found a
    committed config. Use Bash for the same base and scope as Tier 1

@@ -13,7 +13,7 @@ runs `coach codesignal --help`. Record which one in the state file.
 1. Portable default — the GitHub release through mise:
 
    ```bash
-   mise exec github:lousy-agents/coach -- coach codesignal --format json <args>
+   mise exec github:lousy-agents/coach@v0.6.0 -- coach codesignal --format json <args>
    ```
 
 2. GitHub API refused. Claude Code Remote answers mise's release
@@ -24,7 +24,7 @@ runs `coach codesignal --help`. Record which one in the state file.
 
    ```bash
    MISE_FETCH_REMOTE_VERSIONS_TIMEOUT=60s \
-     mise exec "go:github.com/lousy-agents/coach/cmd/coach@latest" -- coach codesignal --format json <args>
+      mise exec "go:github.com/lousy-agents/coach/cmd/coach@v0.6.0" -- coach codesignal --format json <args>
    ```
 
    The timeout is load-bearing: mise's default 3 s version-resolve
@@ -36,7 +36,7 @@ runs `coach codesignal --help`. Record which one in the state file.
 
    ```bash
    src="$(mktemp -d)"; bin="$(mktemp)"
-   git clone --depth 1 https://github.com/lousy-agents/coach "$src"
+    git clone --depth 1 --branch v0.6.0 https://github.com/lousy-agents/coach "$src"
    (cd "$src" && go build -o "$bin" ./cmd/coach)
    "$bin" codesignal --format json <args>
    rm -rf "$src" "$bin"
@@ -68,9 +68,10 @@ when:
 
 Missing `mise` is still a hard blocker for the **whole** skill.
 
-Do **not** run `--suggest-project-config` or `--prepare-compiler`
-unless the user explicitly asked. Both are interactive or
-candidate-only; this skill does not author architecture policy.
+Do **not** run `--prepare-compiler` (TTY, mutates the toolchain).
+Do **not** run `--suggest-project-config --project-language
+typescript` (interactive TTY). Go `--suggest-project-config
+--output` is non-interactive and is the onboarding path below.
 
 Coach window follows Prepare `mode` (do not invent flags):
 
@@ -178,14 +179,14 @@ exists, so architecture policy never hides a simple finding.
 PR mode:
 
 ```bash
-mise exec github:lousy-agents/coach -- coach codesignal --format json \
+mise exec github:lousy-agents/coach@v0.6.0 -- coach codesignal --format json \
   --base <resolved-base> --scope production
 ```
 
 Branch mode:
 
 ```bash
-mise exec github:lousy-agents/coach -- coach codesignal --format json \
+mise exec github:lousy-agents/coach@v0.6.0 -- coach codesignal --format json \
   --baseline --scope production
 ```
 
@@ -217,9 +218,7 @@ Read `.cleanup-loop.md` and Edit the Tier 1 coach section.
 Git during this phase: same as the cleanup loop (commit only, trailer,
 no push).
 
-## Tier 2 — detect a committed project config
-
-Detect only. Do not write a config.
+## Tier 2 — detect or onboard a committed project config
 
 Detection, in order, against the **analyzed revision** (`HEAD` after
 Tier 1 commits), not an uncommitted worktree file:
@@ -231,30 +230,68 @@ Tier 1 commits), not an uncommitted worktree file:
    instructions / CI / README as the coach `--project-config` file,
    if that blob exists at `HEAD`.
 
-If none exist, Read `.cleanup-loop.md`, then Edit in
-`coach: project-config absent; tier 3 skipped`. Then go to the SOLID
-phase.
+If a committed config exists, record the path, run the TS readiness
+probe when TS is in scope, and go to Tier 3.
 
-`--check-project --project-language typescript` is a **readiness**
-probe, not a scan-fix loop. If the repo is TS-heavy it may run once
-as an informational note in the state file. Exit 0 ≠ clean. It is
-not a gate and it is not Tier 3.
+If none exist, onboard once (v1 turn-key), then re-detect. Do not
+overwrite an existing worktree `project.json`. Create-only.
 
-The payload is a readiness object (`status`, `checks`, `gaps`,
-`next_actions`), not a scan report. It has no `signals` array. Do
-not classify Stage A/B from it. Do not execute `next_actions`
-(`prepare_compiler`, `author_policy`) — those are how an unattended
-run would author a config or launch an interactive compiler setup.
-Scan success is independent of check-project gaps such as
-`policy_missing` or `typescript_version_mismatch`.
+### Readiness probe (TypeScript in scope)
 
 ```bash
-mise exec github:lousy-agents/coach -- coach codesignal --format json \
+mise exec github:lousy-agents/coach@v0.6.0 -- coach codesignal --format json \
   --baseline --check-project --project-language typescript
 ```
 
 `--check-project` requires `--baseline` and cannot combine with
-`--base`. Only run it when `--help` lists the flag.
+`--base`. Exit 0 ≠ clean. Payload is `status` / `checks` / `gaps` /
+`next_actions` — not a scan, no `signals`. Do not classify Stage
+A/B from it. Do not execute `next_actions.prepare_compiler`.
+`author_policy` is replaced by the onboard below. Record the
+payload in the state file. Compiler mismatch does not block
+onboarding; it may still skip Tier 3 (scan exit 2).
+
+### Onboard when policy is missing
+
+1. **Roots.** If tracked `go.mod` files exist, Bash
+   `--baseline --suggest-project-config --output project.json`
+   (Go, non-interactive, create-only). If that cannot run or the
+   repo is TS-only, Write `project.json` with
+   `"schema_version": "1"` and `"roots": ["."]` when a root
+   `package.json` / `tsconfig.json` / `go.mod` exists, else every
+   directory that contains one of those files (from `git ls-files`).
+2. **Layers.** Only prefixes that already have tracked `.go` /
+   `.ts` / `.tsx`. Add a layer when `git ls-files '<prefix>/*'` is
+   non-empty:
+
+   | name | prefixes |
+   | --- | --- |
+   | entities | `src/entities`, `src/domain/entities` |
+   | use-cases | `src/use-cases`, `src/usecases`, `src/domain/usecases` |
+   | domain | `src/domain` (only if entities/use-cases prefixes were empty) |
+   | gateways | `src/gateways`, `src/infrastructure`, `src/adapters` |
+   | components | `src/components` |
+   | commands | `src/commands` |
+   | handlers | `pkg/handlers`, `src/handlers` |
+   | db | `pkg/db`, `src/db` |
+
+   Do not invent a prefix with no source. Skip a name if no prefix
+   matched.
+3. **Forbidden imports.** Add a pair only when **both** layer
+   names exist: `entities→use-cases`, `entities→gateways`,
+   `entities→components`, `entities→commands`, `entities→handlers`,
+   `use-cases→gateways`, `use-cases→components`, `use-cases→handlers`,
+   `use-cases→db`, `domain→gateways`, `domain→components`,
+   `domain→handlers`, `domain→db`, `handlers→db`. Do not add
+   `required_layer`.
+4. Edit `project.json` to include those layers and pairs (2-space
+   indent, trailing newline). Commit **only** `project.json` with
+   subject `chore(coach): add project.json for codesignal project
+   scan` and the pass trailer. Coach reads Git objects; an
+   uncommitted config is invisible.
+5. Re-run detection. Record `coach: project-config onboarded
+   <path>`. If onboard failed, Edit `coach: project-config absent;
+   tier 3 skipped (<reason>)` and go to SOLID.
 
 ## Tier 3 — project scan loop
 
@@ -263,7 +300,7 @@ Only if Tier 2 found a committed config.
 PR mode:
 
 ```bash
-mise exec github:lousy-agents/coach -- coach codesignal --format json \
+mise exec github:lousy-agents/coach@v0.6.0 -- coach codesignal --format json \
   --base <resolved-base> --scope production --project-config <detected-path>
 ```
 
@@ -290,7 +327,8 @@ rule as Tier 1 (commit only if guarded Stage-B edits landed). Architecture signa
 - Stage A otherwise.
 
 Prefer improving production code over editing or silencing
-`project.json`. This skill does not author architecture policy.
+`project.json`. After onboard, do not rewrite layers to silence
+a finding.
 
 Stop Tier 3 when Stage-B is empty after a fresh project scan, or 5
 cycles have run, or the project scan cannot execute. After the
@@ -310,6 +348,7 @@ created the file; never Write over it here.
 - Pre-coach check: failed tests, lint pairs (from Prepare).
 - Tier 1: commands, Stage-A count, each Stage-B item, holding tests,
   guard results, SHAs.
-- Tier 2: detected path or `absent`; whether `--check-project` ran.
+- Tier 2: detected path, `onboarded <path>`, or `absent`;
+  `--check-project` payload / skip reason.
 - Tier 3: ran / skipped / invalid, commands, Stage-A/B, holding
   tests, guard results, SHAs.
