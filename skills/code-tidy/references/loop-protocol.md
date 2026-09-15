@@ -70,11 +70,13 @@ If Stage-B is already empty, phase 1 is a short scan that records
 
 ## Base ref
 
-Resolve in this order. Record which step won.
+Resolve in this order. Record which step won. First match wins.
 
-1. `gh pr view --json baseRefName -q .baseRefName`
-2. `git symbolic-ref refs/remotes/origin/HEAD`
-3. `main`, then `master`
+1. Invocation-supplied base ref
+2. `gh pr view --json baseRefName -q .baseRefName` (pass the PR number
+   if the invocation gave one)
+3. `git symbolic-ref refs/remotes/origin/HEAD`
+4. `main`, then `master`
 
 Then `git fetch origin <base>`. If `gh` is missing or fails, say so in
 one line and use the git-only path. Do not repair credentials.
@@ -90,6 +92,12 @@ git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"
 Remove `.cleanup-loop.md`. If the invocation supplied a path glob,
 intersect: keep only scope paths that match the glob. Do not add
 files the diff did not touch.
+
+Edit `.cleanup-loop.md` with the result (Write only if the file is
+missing): one line per path as `todo`. Binaries, lockfiles, generated,
+and vendored artifacts are `clean` with the reason already on that
+line. Coach Stage-B only touches paths on this list, plus mechanical
+call-sites a fix requires.
 
 Unit of scope = the whole file. Set `in-work`
 when you start a file. Set `clean` only after every comment in it has a
@@ -176,13 +184,20 @@ report is the count at the start of this pass's SOLID phase.
 
 ## Green
 
-Green = the set of failed tests equals the post-coach pass-1 set, and
-the set of lint `(file, rule-id)` pairs equals that baseline. Compare
-by identity, not totals, not line numbers.
+Green = the set of failed tests equals the recorded post-coach
+baseline, and the set of lint `(file, rule-id)` pairs equals that
+baseline. Compare by identity, not totals, not line numbers.
 
-A red baseline is still green. Do not repair baseline failures. A test
-that fails now and is not in the baseline is yours to repair, from any
-pass.
+If this outer pass's coach tiers landed commits, replace the SOLID
+baseline with the new post-coach set before tests-first. If they
+landed none, reuse the previous post-coach baseline. A newly-passing
+test from a Stage-B fix is not a green failure.
+
+A red baseline is still green. After the baseline is recorded, do not
+repair failures that are in it. A test that fails now and is not in
+the baseline is yours to repair, from any pass. Do not skip SOLID when
+Stage-B remains after the coach cap — list leftovers under `questions`,
+then SOLID.
 
 ## Report fields
 

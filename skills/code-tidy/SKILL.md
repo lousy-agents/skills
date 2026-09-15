@@ -73,8 +73,11 @@ Fail closed. Any of these is a blocker; emit the report and stop.
   create/delete. Revert with `git revert`. Uncommitted work:
   `git checkout -- <file>`. Trailer every commit: `Cleanup-Loop: pass=N`.
 - Do not touch a file whose scope status is already `clean`.
-- Do not repair baseline failures. Repair only regressions this skill
-  introduced.
+- Do not repair baseline failures after 4a records the post-coach
+  set. Before 4a there is no SOLID baseline: coach may land Stage-B
+  defect fixes, including a holding test. After 4a, do not repair
+  failures that are in that recorded set. Repair only regressions
+  this skill introduced after the baseline.
 - Coach-first may change behavior for in-scope Stage-B defects. After
   the SOLID baseline is recorded, production edits are extract / rename
   / narrow / collapse / move only.
@@ -128,8 +131,11 @@ before step 4.
      report → resume N via `git log --grep="Cleanup-Loop: pass=N"`.
    - Scope with Bash:
      `git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"`,
-     minus `.cleanup-loop.md`. Empty → stop. Do **not** record the
-     SOLID baseline yet.
+     minus `.cleanup-loop.md`. Empty → stop. Then Edit `.cleanup-loop.md`
+     (Write only if the file is missing): one line per path as `todo`;
+     binaries, lockfiles, generated, and vendored artifacts already
+     `clean` with reason. Coach Stage-B only touches that list (plus
+     mechanical call-sites). Do **not** record the SOLID baseline yet.
 
 1. **Coach Tier 1 — simple scan loop.** No `--project-config`. Use
    Bash for the portable scan in `./references/coach-phase.md`. Cycle
@@ -146,9 +152,9 @@ before step 4.
    Tier 1): user-named path; `git cat-file -e HEAD:project.json`; a
    path named in project instructions / CI / README that exists at
    HEAD (Grep those files for `--project-config`). Uncommitted
-   worktree files are absent. If none, Write
-   `coach: project-config absent; tier 3 skipped` into the state file
-   and go to step 4.
+    worktree files are absent. If none, Read `.cleanup-loop.md` then
+    Edit in `coach: project-config absent; tier 3 skipped`. Write only
+    when the state file is missing. Then go to step 4.
 
 3. **Coach Tier 3 — project scan loop.** Only if Tier 2 found a
    committed config. Use Bash for the same base and scope as Tier 1
@@ -162,11 +168,15 @@ before step 4.
    [`./references/tidy-rules.md`](./references/tidy-rules.md).
 
    4a. **Baseline.** Use Bash to run the recorded test and lint
-       commands. Write failed tests by full name, lint violations as
-       `(file, rule-id)` pairs, the two commands, and the
-       comment-count method into the state file. Later outer passes
-       compare; never rebuild this pass's baseline. Green = parity
-       with this set, not zero failures.
+       commands. If this pass's coach tiers landed commits, Edit the
+       SOLID baseline in the state file to this post-coach set
+       (failed tests by full name, lint `(file, rule-id)` pairs, the
+       two commands, comment-count method) before 4b. If they landed
+       none, reuse the previous post-coach baseline. A newly-passing
+       test from a Stage-B fix is not a green failure. Do not skip
+       SOLID when Stage-B remains after the coach cap — list leftovers
+       under `questions`, then SOLID. Green = parity with the recorded
+       set, not zero failures.
 
    4b. **Tests first.** Use Read / Grep / Glob on imports, config, and
        nearby tests to identify the framework before any rename or

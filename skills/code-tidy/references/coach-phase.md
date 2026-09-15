@@ -121,7 +121,9 @@ Cycle ≤5:
 `resolve-binary → scan-set → classify Stage A then B → edit in-scope Stage-B paths → commit if HEAD gained a Stage-B fix → same scan-set`
 
 Stop Tier 1 when Stage-B is empty after a fresh simple scan, or 5
-cycles have run, or the simple scan cannot execute.
+cycles have run, or the simple scan cannot execute. Leftover Stage-B
+after the cap does not skip SOLID — list each leftover under
+`questions`, then continue.
 
 Git during this phase: same as the cleanup loop (commit only, trailer,
 no push).

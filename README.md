@@ -16,7 +16,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`designing-for-intent`](#designing-for-intent) | Planning | Reviews a UX/onboarding/consent artifact for intent map, delegation boundary, and agency risks before implementation |
 | [`customer-strategy-forge`](#customer-strategy-forge) | Product Strategy | Turns customer evidence into auditable personas, journeys, progression hypotheses, and opportunity maps |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
-| [`code-tidy`](#code-tidy) | Implementation / Hardening | Tidies PR-scoped files so tests document behavior, production code reads as prose, and comments earn their place, without changing behavior |
+| [`code-tidy`](#code-tidy) | Implementation / Hardening | Tidies PR-scoped files: coach CodeSignal loop first (Stage-B may change behavior), then SOLID tidy with no further behavior change |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript, Go, or Python |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
@@ -314,7 +314,7 @@ Guides Go development with tests: smallest failing test first, start from public
 
 **Install:** `npx skills add lousy-agents/skills --skill code-tidy`
 
-Tidies the files a PR or branch already touched: tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. Behavior does not change. The suite and linter stay no worse than the pass-1 baseline.
+Tidies the files a PR or branch already touched: a coach CodeSignal loop first (Stage-B defects may change behavior), then a SOLID tidy with no further behavior change. Tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. The suite and linter stay no worse than the post-coach pass-1 baseline.
 
 **Requires:** [mise](https://mise.jdx.dev/) on PATH. Coach is invoked with `mise exec github:lousy-agents/coach -- coach ...`. Missing mise is a blocker.
 
