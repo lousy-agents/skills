@@ -51,7 +51,9 @@ Keep these sections, in order:
    step (`prepare`, `coach`, `solid`, `verify`, `done`), `mode` (`pr`
    or `branch`), resolved `base` with its OID and the step that
    produced it (`inferred` when the git-only path chose the default
-   branch), and coach window (`--base <ref>` or `--baseline`).
+   branch), and coach window (`--base <ref>` or `--baseline`). One
+   header only: each pass rewrites it. Edit `step` as each phase
+   starts, so a resumed pass knows where the previous one stopped.
 2. **Coach section** — the pre-coach check (failed tests by full
    name, lint `(file, rule-id)` pairs from Prepare's start-proof
    run); then per tier: commands, Stage-A count, each Stage-B item
@@ -65,18 +67,27 @@ Keep these sections, in order:
 4. **Scope list** — one line per file:
    `path  <todo|in-work|clean|ruling>  [limit/reason]`.
 5. **Pending rulings** — one item per line; empty is `none`.
-6. **Appended reports** — the Output block from each completed pass.
+6. **Appended reports** — one `### Pass N` block per completed pass,
+   holding that pass's Output block verbatim.
 
 ## Re-entrancy
 
 - Missing `.cleanup-loop.md` → this is pass 1. Create it once Prepare
   has passed every blocker.
-- Last entry is a complete report → this pass is N+1.
-- Last entry is a header with no report → resume that N. Reconcile with
-  `git log --grep="Cleanup-Loop: pass=N"` so you do not redo committed
-  work.
-- Last report's status is `DONE — thorough` or `DONE — max
-  iterations` → re-emit that report and stop. Do not start pass N+1.
+- Header says pass N and Reports has a `### Pass N` block → this pass
+  is N+1.
+- Header says pass N and Reports has no `### Pass N` block → an
+  earlier pass stopped before finalize. Resume that N. Reconcile with
+  `git log --grep="Cleanup-Loop: pass=N$"` (anchor the number so
+  `pass=1` does not match `pass=10`) so you do not redo committed
+  work. The header's `step` says where it stopped: copy it to
+  `resumed-from: <step>` before Prepare rewrites `step`.
+- Last report's status is `DONE — max iterations` → re-emit that
+  report and stop. `DONE — thorough` → the same, unless the
+  re-admission scan (Scope) finds a commit without the trailer that
+  touched a scope path since that finalize; then start pass N+1 on
+  the re-admitted paths. Starting over on purpose is a human act:
+  delete `.cleanup-loop.md` in a commit.
 - Cap is 5 outer passes across re-invokes. Pass 5 that is not DONE
   reports `DONE — max iterations`.
 
@@ -91,8 +102,13 @@ If Stage-B is already empty, phase 1 is a short scan that records
 ## Scan window
 
 Detect **PR context** first. First match wins. Record `mode` and
-which step won. Do not switch branches.
+which step won. Do not switch branches. A detached HEAD
+(`git symbolic-ref -q HEAD` fails) is a Prepare blocker before any
+of this: loop commits must land on a branch.
 
+0. Invocation said `whole-repo` → `mode: branch`; stop here. It wins
+   over a PR number or a base ref given in the same invocation; say
+   so in one line.
 1. Invocation PR number or URL —
    `gh pr view <n> --json number,baseRefName,headRefName`. HEAD must
    already be that PR's head; otherwise a blocker.
@@ -103,11 +119,13 @@ which step won. Do not switch branches.
    set.
 5. Git-only path — `gh` is missing, errors, or prints "no pull
    requests found", and no env var applies. Resolve the default
-   branch: `git symbolic-ref -q refs/remotes/origin/HEAD`, else
-   `origin/main`, else `origin/master` (first that
-   `git rev-parse --verify -q` accepts). Then:
-   - the invocation said `whole-repo`, or
-     `git rev-parse --abbrev-ref HEAD` *is* that default branch →
+   branch, first that succeeds: `git symbolic-ref -q
+   refs/remotes/origin/HEAD`; `git remote set-head origin --auto`
+   then the same `symbolic-ref` (needs the remote; failure is
+   tolerated); `origin/main`; `origin/master`; local `main`; local
+   `master` (each via `git rev-parse --verify -q "<ref>^{commit}"`).
+   None → one-line blocker: pass a base ref or `whole-repo`. Then:
+   - `git rev-parse --abbrev-ref HEAD` *is* that default branch →
      `mode: branch`;
    - otherwise → `mode: pr` against the default branch, recorded as
      `base: <resolved> (<oid>, from: inferred)`.
@@ -156,11 +174,22 @@ resolution as an empty diff.
 PR mode:
 
 ```bash
-git diff --name-only "$(git merge-base "$base" HEAD)..HEAD"
+mb="$(git merge-base "$base" HEAD)" || mb=""
+[ -n "$mb" ] || exit 1   # blocker: no merge-base (shallow clone or unrelated history)
+git diff --name-only --diff-filter=d "$mb..HEAD"
 ```
 
-Empty diff → one-line blocker naming the base, Output `PASS 0/5`,
-stop. Tell the user that `whole-repo` hunts the branch instead.
+Check `merge-base` on its own. Substituting a failed `merge-base`
+into the diff yields `..HEAD`, which exits 0 with no output and would
+be misread as an empty diff — the default `actions/checkout`
+(`fetch-depth: 1`) produces exactly that. The blocker line names the
+cause and the remedy (`git fetch --unshallow origin <branch>`, or
+`fetch-depth: 0`).
+
+`--diff-filter=d` drops paths the branch deleted: there is nothing
+at HEAD to tidy. A rename lists only its new path. Empty diff →
+one-line blocker naming the base, Output `PASS 0/5`, stop. Tell the
+user that `whole-repo` hunts the branch instead.
 
 Branch mode:
 
@@ -169,9 +198,10 @@ git ls-files
 ```
 
 Remove `.cleanup-loop.md`. If the invocation supplied a path glob,
-intersect: keep only scope paths that match the glob. In PR mode do
-not add files the diff did not touch. In branch mode do not add
-untracked files.
+intersect: keep only scope paths that match the glob. A glob that
+leaves no path is a one-line blocker naming the glob (`PASS 0/5`),
+never a vacuous `DONE — thorough`. In PR mode do not add files the
+diff did not touch. In branch mode do not add untracked files.
 
 Compute this list before the state file is created or edited, so a
 blocker never leaves a dirty tree.
@@ -196,7 +226,7 @@ progress:
   between passes). Detect it with:
 
   ```bash
-  prev="$(git log --grep="Cleanup-Loop: pass=$((N-1))" -1 --format=%H)"
+  prev="$(git log --grep="Cleanup-Loop: pass=$((N-1))$" -1 --format=%H)"
   git log --invert-grep --grep='Cleanup-Loop: pass=' --name-only --format= "$prev..HEAD"
   ```
 
@@ -217,7 +247,10 @@ Pre-mark before any tidy:
   Do **not** pre-mark `*.schema.ts` or other source that happens
   to encode a schema — that is production code. Changing a
   serialized format or schema *shape* is still a ruling during
-  SOLID / coach; tidying comments in that file is not.
+  SOLID / coach; tidying comments in that file is not. These
+  pre-marked lines are not work: record **one** pending-ruling entry
+  for the group (`config/docs pre-marked ruling — confirm skip`), not
+  one per file, and count them as done for `DONE — thorough`.
 
 Coach Stage-B only touches paths still `todo` / `in-work` on this
 list, plus mechanical call-sites a fix requires. A Stage-B signal on
@@ -291,11 +324,22 @@ Prefer the unit test command named in instructions (`npm test`,
 `go test ./...`). Record the e2e command only when e2e files are in
 scope.
 
+Record the **check** form of each command. A manifest `lint` script
+is often a fixer (`eslint . --fix`, `biome check --write`); bind to
+the tool's `--help` for its report-only form (`--check`, `--no-fix`)
+and record that. A fixer would rewrite tracked source during the
+start-proof run, trip the dirty-tree guard on the next invocation,
+and hide the very violations the baseline must list.
+
 Prove they *start* during Prepare (they launch and produce output). A
 red suite is not a start failure. A command that cannot start is a
-blocker for the whole skill. Keep that run's failed-test names and
-lint pairs as the **pre-coach check**: the coach regression guard in
-`coach-phase.md` compares each Stage-B fix against it.
+blocker for the whole skill. If the run changed the tree anyway
+(`git status --porcelain` is no longer empty), `git checkout --` the
+tracked changes and delete the files it created before continuing;
+the same restore runs before every commit and before finalize. Keep
+that run's failed-test names and lint pairs as the **pre-coach
+check**: the coach regression guard in `coach-phase.md` compares each
+Stage-B fix against it.
 
 Do not record the SOLID baseline until after coach.
 
@@ -335,10 +379,11 @@ the report is the count at the start of this pass's SOLID phase.
   invocation starts from a clean tree and a fresh checkout carries the
   report. The report cannot embed this commit's own SHA, so `commits`
   lists source commits only; the finalize commit is always the last
-  match of `git log --grep="Cleanup-Loop: pass=N"`.
+  match of `git log --grep="Cleanup-Loop: pass=N$"`.
 - No push unless the invocation said `push` / `open the PR`. When it
   did, push after the finalize commit: `git push` to the tracking
-  remote, never `--force`.
+  remote, or `git push origin HEAD` when no upstream is set. Never
+  `--force`.
 - No amend, rebase, squash, reword, force, branch create/delete, PR
   title/body/label/review changes.
 - Remove committed work with `git revert`. Remove uncommitted work with
@@ -360,7 +405,10 @@ Record the SOLID baseline from the post-coach tree when either holds:
 
 - no SOLID baseline exists in the state file yet (pass 1, including
   a pass 1 whose coach phase was skipped or landed nothing);
-- this outer pass's coach tiers landed commits.
+- this outer pass's coach tiers landed commits;
+- Prepare's re-admission scan found non-loop commits since the
+  previous finalize (someone pushed new work; the recorded baseline
+  describes a tree that no longer exists).
 
 Otherwise reuse the recorded post-coach baseline. A newly-passing test
 from a Stage-B fix is not a green failure. The coach regression guard
@@ -385,9 +433,11 @@ Duplicate of the SKILL.md Output block.
 - `suite` / `lint` are pass or fail *vs baseline*, not zero-failure.
 - `status`: only `PASS n/5`, `DONE — thorough`, or
   `DONE — max iterations`. Do not invent tokens such as `blocked`.
-  A Prepare blocker (missing mise, dirty tree, unresolvable base,
-  empty diff, commands that cannot start) still emits this block:
-  `PASS 0/5` and one `questions` line naming the blocker.
+  A Prepare blocker (missing mise, dirty tree, detached HEAD,
+  unresolvable base, no merge-base, empty diff, empty glob, commands
+  that cannot start) still emits this block in chat: `PASS 0/5` and
+  one `questions` line naming the blocker. It is not appended to
+  `.cleanup-loop.md`; a blocker never touches the state file.
   - PR mode: `DONE — thorough` iff every scope file is `clean` or
     `ruling`; else `PASS n/5`.
   - Branch mode: `DONE — thorough` iff no `todo` remains across

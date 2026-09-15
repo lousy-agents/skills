@@ -118,7 +118,12 @@ fix in every tier must clear this guard before it is committed:
 1. Orient on the test framework first (`tidy-rules.md`, Framework
    Orient). Add or extend a behavioral test in the repo's real
    container nodes that holds the corrected behavior. It fails on the
-   defect and passes on the fix. Do not invent nodes.
+   defect and passes on the fix. Do not invent nodes. Put it where
+   the repo already keeps tests for that package or directory — the
+   nearest existing test file, or a new file beside it on the same
+   runner. If the recorded test command cannot exercise that area at
+   all, the item is Ruling required (behavior with no test), not a
+   silent fix.
 2. Run the smallest covering tests, then the full recorded test and
    lint commands.
 3. Compare by identity with the pre-coach check:
@@ -266,10 +271,9 @@ tier, Read `.cleanup-loop.md` and Edit the Tier 3 coach section.
 
 ## After all coach tiers
 
-Record the SOLID baseline on the post-coach tree when none exists
-yet, or when a tier landed commits this pass; otherwise reuse the
-recorded one (`loop-protocol.md`, Green). Then run SOLID. Do not
-re-run coach after SOLID in the same invocation.
+Record or reuse the SOLID baseline exactly as `loop-protocol.md`
+(Green) says; the three record conditions live there, not here. Then
+run SOLID. Do not re-run coach after SOLID in the same invocation.
 
 ## State file per tier
 

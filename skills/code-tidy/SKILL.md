@@ -67,10 +67,14 @@ leaves a dirty tree.
 
 - `mise` missing or not on PATH.
 - Work tree dirty at session start.
+- Detached HEAD (`git symbolic-ref -q HEAD` fails). Commits must land
+  on a branch; check one out first.
 - Test command or lint command cannot *start* (not the same as baseline
   failures).
-- Base ref does not resolve after normalization.
-- Empty diff against the base (`mode: pr`).
+- Base ref does not resolve after normalization, or HEAD has no
+  merge-base with it (shallow clone, unrelated history).
+- Empty diff against the base (`mode: pr`), or a path glob that
+  leaves no scope path.
 - Do not invent test-framework nodes. Detect from imports, config, and
   nearby tests first — also for a holding test a coach fix adds. Go
   repos: consult `go-testable-design` for unit vs acceptance form; do
@@ -130,16 +134,19 @@ adds in steps 1–3).
    - Use Read on `AGENTS.md`, `CLAUDE.md`, and other project
      instructions. If they name a version-manager prelude (`nvm use`,
      `mise install`), run it with Bash before proving test/lint start.
-   - Use Bash `git status --porcelain`; any output including untracked
-     files → one-line blocker (dirty tree).
+   - Use Bash `git symbolic-ref -q HEAD`; failure → one-line blocker
+     (detached HEAD). Then `git status --porcelain`; any output
+     including untracked files → one-line blocker (dirty tree).
    - Invocation args: a PR number/URL requires HEAD to already be that
      PR's head (otherwise a blocker; do not switch branches); a
      supplied base ref forces `mode: pr` against that base;
-     `whole-repo` forces `mode: branch`; a path glob *intersects* the
-     scope, it does not expand it; `push` / `open the PR` is the only
-     push license.
+     `whole-repo` forces `mode: branch` and wins over a PR number or
+     base ref (say so in one line); a path glob *intersects* the
+     scope, it does not expand it; `push` / `open the PR` license the
+     push only — this skill never creates a PR.
    - Detect mode and base with Bash (first match wins; record which
-     step won): (1) invocation PR number/URL via
+     step won): `whole-repo` → `mode: branch`, skip the rest; else
+     (1) invocation PR number/URL via
      `gh pr view <n> --json number,baseRefName,headRefName`;
      (2) invocation-supplied base ref; (3) `gh pr view --json
      number,baseRefName` for the current branch; (4)
@@ -147,9 +154,11 @@ adds in steps 1–3).
      Any of those → `mode: pr`. (5) Git-only, when `gh` is missing,
      errors, or reports no PR: resolve the default branch
      (`git symbolic-ref -q refs/remotes/origin/HEAD`, else
-     `origin/main`, else `origin/master`); if `whole-repo` was asked
-     or HEAD *is* that branch → `mode: branch`; otherwise `mode: pr`
-     against the default branch, recorded as `base: inferred`.
+     `git remote set-head origin --auto`, else `origin/main`,
+     `origin/master`, local `main`, `master`; none → one-line
+     blocker asking for a base ref or `whole-repo`); if HEAD *is*
+     that branch → `mode: branch`; otherwise `mode: pr` against the
+     default branch, recorded as `base: inferred`.
      Missing `gh` is one line of narration, never "no PR" and never a
      blocker; do not repair credentials.
    - Normalize the base in `mode: pr` (details in loop-protocol):
@@ -165,31 +174,47 @@ adds in steps 1–3).
      task runner, CI, package manifest. Several validation commands →
      record all; lint baseline is the union of `(file, rule-id)`
      pairs. Prefer the unit test command; add e2e only when e2e files
-     are in scope. Prove they *start* with Bash; keep that run's
-     failed-test names and lint pairs as the **pre-coach check** (not
-     the SOLID baseline). A command that cannot start → one-line
-     blocker.
-   - Use Read on `.cleanup-loop.md` if it exists. Complete report →
-     this pass is N+1. Header with no report → resume N via
-     `git log --grep="Cleanup-Loop: pass=N"`. Last report status is
-     `DONE — …` → re-emit that report and **stop**; do not start a
-     pass. Missing file → pass 1. Do not write yet.
-   - Scope with Bash. `mode: pr`:
-     `git diff --name-only "$(git merge-base <resolved-base> HEAD)..HEAD"`.
-     Empty → one-line blocker (`empty diff vs <base>; pass whole-repo
-     to hunt the branch`). Do not invent `HEAD~N`. `mode: branch`:
-     `git ls-files`. Both modes: minus `.cleanup-loop.md`; a path glob
-     intersects.
+     are in scope. Record the *check* form of each command (no
+     `--fix` / `--write`; bind to the tool's `--help`). Prove they
+     *start* with Bash; if the run changed the tree, `git checkout --`
+     the tracked changes and delete the files it created before
+     anything else. Keep that run's failed-test names and lint pairs
+     as the **pre-coach check** (not the SOLID baseline). A command
+     that cannot start → one-line blocker.
+   - Use Read on `.cleanup-loop.md` if it exists. The header names
+     pass N; Reports has a `### Pass N` block → this pass is N+1. No
+     `### Pass N` block → resume N via
+     `git log --grep="Cleanup-Loop: pass=N$"` and keep the header's
+     old `step` as `resumed-from`. Last report status is `DONE — …`
+     → re-emit that report and **stop**, unless it is `DONE —
+     thorough` and a commit without the trailer has touched a scope
+     path since that finalize (the re-admission scan below); then
+     start pass N+1. Starting over on purpose means deleting
+     `.cleanup-loop.md` in a commit. Missing file → pass 1. Do not
+     write yet.
+   - Scope with Bash. `mode: pr`: `mb="$(git merge-base <resolved-base> HEAD)"`;
+     a failing `merge-base` is its own one-line blocker (shallow clone
+     or unrelated history — `git fetch --unshallow origin <branch>` or
+     `fetch-depth: 0`), never an empty diff. Then
+     `git diff --name-only --diff-filter=d "$mb..HEAD"` (deleted paths
+     are not scope; a rename lists its new path). Empty → one-line
+     blocker (`empty diff vs <base>; pass whole-repo to hunt the
+     branch`). Do not invent `HEAD~N`. `mode: branch`: `git ls-files`.
+     Both modes: minus `.cleanup-loop.md`; a path glob intersects, and
+     a glob that leaves no path → one-line blocker naming the glob.
    - Only now touch the state file: Write the skeleton if it is
-     missing; otherwise Read, then Edit in this pass's header.
+     missing; otherwise Read, then Edit the single header to this pass
+     (number, start time, `step: prepare`, mode, base, window); Edit
+     `step` again as each later phase starts.
      Reconcile the scope list, do not reset it: keep every existing
      line's status, limit, and reason; add new paths as `todo` —
      binaries, lockfiles, generated, and vendored artifacts already
      `clean` with reason; instruction files (`AGENTS.md`, `CLAUDE.md`,
      …), markdown/docs, license files, dotfiles, static assets,
      JSON/YAML config or workflows, and `*.config.*` already `ruling`
-     with reason (`config/docs — these rules do not apply`). Do not
-     pre-mark `*.schema.ts` — that is production code. Drop lines whose
+     with reason (`config/docs — these rules do not apply`); those
+     pre-marked lines share one pending-ruling entry, not one each.
+     Do not pre-mark `*.schema.ts` — that is production code. Drop lines whose
      path left the scope (note an `in-work` or `ruling` drop under
      `questions`). Re-admit a `clean` path as `todo` only when a commit
      without the `Cleanup-Loop` trailer touched it since the previous
@@ -256,8 +281,10 @@ adds in steps 1–3).
    4a. **Baseline.** Use Bash to run the recorded test and lint
        commands. Record this post-coach set (failed tests by full name,
        lint `(file, rule-id)` pairs, the two commands, comment-count
-       method) in the state file when no SOLID baseline exists yet, or
-       when this pass's coach tiers landed commits. Otherwise reuse the
+       method) in the state file when no SOLID baseline exists yet,
+       when this pass's coach tiers landed commits, or when Prepare
+       found non-loop commits since the previous finalize (the tree
+       the old baseline described is gone). Otherwise reuse the
        recorded post-coach baseline. A newly-passing test from a
        Stage-B fix is not a green failure. Do not skip SOLID when
        Stage-B remains after the coach cap — list leftovers under
@@ -304,21 +331,27 @@ adds in steps 1–3).
    behavior, return to 4b. PR mode: every scope file is `clean` or
    `ruling`. Branch mode: this pass's work set is `clean` or
    `ruling`; other `todo` files may remain. Delete every temporary
-   file. Build the Output block.
+   file and every artifact the suite or linter wrote (untracked →
+   delete; tracked → `git checkout --`) until `git status --porcelain`
+   shows only `.cleanup-loop.md`. Build the Output block.
 
 6. **Finalize + report.** Read `.cleanup-loop.md`, then Edit: append
-   the Output block under Reports and set the header `step: done`.
+   the Output block under Reports as `### Pass N` and set the header
+   `step: done`.
    Bash `git add .cleanup-loop.md` and commit it with subject
    `chore(cleanup-loop): record pass N report` and the trailer — on
    every pass, including one that changed no source file. The
    `commits` field lists source commits only; this finalize commit is
-   found later with `git log --grep="Cleanup-Loop: pass=N" -1`. Bash
-   `git status --porcelain` must be empty; if not, narrate the paths
-   in one line. If the invocation licensed `push`, Bash `git push`
-   (never `--force`) the current branch to its tracking remote. Emit
-   the same Output block in chat. Then **stop**.
+   found later with `git log --grep="Cleanup-Loop: pass=N$" -1`. Bash
+   `git status --porcelain` must be empty; if not, restore as in step
+   5 and narrate the paths in one line. If the invocation licensed
+   `push`, Bash `git push`, or `git push origin HEAD` when no upstream
+   is set; never `--force`. `open the PR` gets the same push and one
+   line saying the PR itself is left to the user. Emit the same Output
+   block in chat. Then **stop**.
 
-Subagents, if available: read-only inventory only (framework
+Subagents, when the harness offers them (none are required):
+read-only inventory only (framework
 detection, comment candidates, test structure, SOLID problems,
 characterization needs). Max one per concern, four total. They return
 `file:line — observation — high|medium|low` and report every
@@ -347,9 +380,10 @@ skip. Full list in
 
 ## Output
 
-Emit this block in chat and append it to `.cleanup-loop.md`. Narration:
-one line per completed Work step, ≤10 words. Blockers in one line at
-the time they are found.
+Emit this block in chat and append it to `.cleanup-loop.md`. A
+Prepare blocker emits it in chat only; the state file is not touched.
+Narration: one line per completed Work step, ≤10 words. Blockers in
+one line at the time they are found.
 
 ```text
 tests    <n> renamed, <n> split, <n> added, <n> deleted
