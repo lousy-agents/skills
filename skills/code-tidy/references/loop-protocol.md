@@ -248,8 +248,10 @@ progress:
   git log --invert-grep --grep='Cleanup-Loop: pass=' --name-only --format= "$prev..HEAD"
   ```
 
-  Write `re-admitted: <sha>` on that line. Nothing else changes a
-  `clean` line.
+  Write `re-admitted: <sha>` on that line, and re-admit the colocated
+  test file of a re-admitted production file (`re-admitted: colocated
+  test of <path>`): tests-first must be able to hold the behavior the
+  foreign commit added. Nothing else changes a `clean` line.
 
 Pre-mark before any tidy:
 
@@ -443,7 +445,8 @@ then SOLID.
 
 Duplicate of the SKILL.md Output block.
 
-- `tests` counts are this pass only.
+- `tests` counts are this pass only, and include a holding test the
+  coach phase added.
 - `comments` is in-scope source files only; `before` is the start of
   this pass's SOLID phase.
 - `structure` = number of behavior-preserving commits from step 4c.

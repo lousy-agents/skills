@@ -241,7 +241,9 @@ adds in steps 1–3).
      path left the scope (note an `in-work` or `ruling` drop under
      `questions`). Re-admit a `clean` path as `todo` only when a commit
      without the `Cleanup-Loop` trailer touched it since the previous
-     pass's finalize commit; write `re-admitted: <sha>` on its line.
+     pass's finalize commit; write `re-admitted: <sha>` on its line,
+     and re-admit its colocated test file the same way so tests-first
+     can hold the new behavior.
      Coach Stage-B only touches `todo` / `in-work` paths on that list
      (plus mechanical call-sites). Do **not** record the SOLID
      baseline yet.
