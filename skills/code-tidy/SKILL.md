@@ -346,10 +346,13 @@ before 4c: diagnose before you transform.
        behavior-preserving step at a time with Edit: extract until a
        function reads as prose, rename, split a type with two reasons
        to change, narrow an interface only when every consumer is in
-       scope, remove hidden side effects, sentinel/boolean errors, and
-       speculative abstractions (one implementation, no second use,
-       no test seam); keep a boundary that two consumers or a test
-       already justify. A `defer` finding keeps its line, gets a
+       scope and never by removing methods from an exported one or
+       changing an exported parameter list (a narrower interface
+       parameter that existing arguments still satisfy is the one
+       compatible narrow), remove hidden side effects, sentinel/boolean
+       errors, and speculative abstractions (one implementation, no
+       second use, no test seam); keep a boundary that two consumers
+       or a test already justify. A `defer` finding keeps its line, gets a
        recommendation under `questions`, and a pending ruling when the
        ruling list applies. After each step use Bash for the smallest
        covering tests; full suite before each commit. Red vs baseline

@@ -32,6 +32,15 @@ whether a remedy is warranted, which one, and how to prove it.
   `defer`: keep the line, put a one-line recommendation under
   `questions`, and add a pending ruling when the ruling list applies.
   A deferred finding never disappears from the record.
+- `apply` never changes a public contract. The one compatible narrow
+  is an exported function's interface parameter replaced by a subset
+  that every existing argument still satisfies. Replacing a parameter
+  with a different kind (a path with an interface, a value with a
+  constructor), adding or removing parameters, or removing methods
+  from an exported interface breaks callers you cannot see → `defer`
+  (public API), even when the in-scope tests still compile.
+- Record every confirmed finding at a location, even when another
+  principle already has one there; say when one remedy serves both.
 - Narrate one line when done: `Diagnose  <n> findings, <n> apply, <n> defer`.
 
 ## Single responsibility
@@ -63,12 +72,13 @@ whether a remedy is warranted, which one, and how to prove it.
 - **Signals:** the same `switch` / `if` chain over a kind repeated in
   several functions, and the history shows each new kind edited all
   of them; a comment saying "add the new case here too".
-- **Evidence:** `git log -p -- <path>` shows two or more commits that
-  each touched the same chain in two or more places for one new
-  variant; the variants have their own tests.
-- **Confirmed when:** the variation is real (present in the tree at
-  least twice) and every addition forces edits across otherwise
-  stable logic.
+- **Evidence:** the same closed set enumerated in two or more places
+  in the tree (grep the kind's constants); `git log -p -- <path>`
+  corroborates when history exists. A squashed or single-commit
+  branch has no history, and that absence is not evidence against.
+- **Confirmed when:** the same set is switched over in two or more
+  places, so one new variant forces edits across otherwise stable
+  logic. The tree is enough; do not wait for history.
 - **Not a violation:** one `switch` in one place; a variation that has
   happened once. Never add an extension point for a variation that
   has not occurred.
@@ -123,7 +133,11 @@ whether a remedy is warranted, which one, and how to prove it.
   implementation.
 - **Not a violation:** a broad implementation consumed through a
   narrow dependency. Width of the type is fine; width of the
-  dependency is the finding.
+  dependency is the finding. Nor is a method the consumer skips
+  because it bypasses that seam (it reads the environment or a file
+  instead): that is the dependency-inversion finding below. Never
+  narrow around a bypass; record the DIP finding and let its remedy
+  decide the interface.
 - **Example (Go):** `type Repo interface { Get; Put; Delete; List;
   Migrate }` consumed by a reader that calls only `Get`. Remedy:
   narrow — declare `type getter interface{ Get(...) }` beside the
@@ -148,7 +162,10 @@ whether a remedy is warranted, which one, and how to prove it.
   policy's signature or behavior.
 - **Not a violation:** an adapter package importing the driver it
   adapts; a `main` that wires concrete types; a small program with one
-  layer.
+  layer; a function that takes a path or writer and does its own file
+  I/O beside an injected collaborator, when its tests already run it
+  with a temp dir — that parameter is a working seam, and replacing it
+  with an interface is a public-API change, not a finding.
 - **Example (Go):** `pricing.Quote` calls `sql.Open` itself. Remedy:
   move the open to the caller and pass the existing `*sql.DB` (a
   move), or take the narrow consumer-owned interface the policy
