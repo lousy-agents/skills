@@ -94,10 +94,20 @@ intersect: keep only scope paths that match the glob. Do not add
 files the diff did not touch.
 
 Edit `.cleanup-loop.md` with the result (Write only if the file is
-missing): one line per path as `todo`. Binaries, lockfiles, generated,
-and vendored artifacts are `clean` with the reason already on that
-line. Coach Stage-B only touches paths on this list, plus mechanical
-call-sites a fix requires.
+missing): one line per path as `todo`. Pre-mark before any tidy:
+
+- `clean` with reason: binaries, lockfiles, generated, vendored.
+- `ruling` with reason `config/docs — these rules do not apply`:
+  instruction files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
+  `copilot-instructions.md`), markdown/docs, JSON/YAML config
+  (`package.json`, `tsconfig.json`, `biome.json`), GitHub workflow
+  YAML, and Dependabot. Do **not** pre-mark `*.schema.ts` or other
+  source that happens to encode a schema — that is production code.
+  Changing a serialized format or schema *shape* is still a ruling
+  during SOLID / coach; tidying comments in that file is not.
+
+Coach Stage-B only touches paths still `todo` / `in-work` on this
+list, plus mechanical call-sites a fix requires.
 
 Unit of scope = the whole file. Set `in-work`
 when you start a file. Set `clean` only after every comment in it has a
@@ -158,8 +168,9 @@ Prefer, in order:
    `^\s*(//|#|/\*|\*)` with the harness search tool, excluding
    lockfiles, generated artifacts, and binaries.
 
-Write the method in one line in the baseline section. `before` in the
-report is the count at the start of this pass's SOLID phase.
+Edit the method into the baseline section as one line (Write only if
+the state file is missing). `before` in the report is the count at
+the start of this pass's SOLID phase.
 
 ## Git
 
@@ -209,9 +220,13 @@ Duplicate of the SKILL.md Output block.
 - `structure` = number of behavior-preserving commits from step 4c.
   One structure change = one such commit.
 - `suite` / `lint` are pass or fail *vs baseline*, not zero-failure.
-- `status`: `PASS n/5` while files remain `todo`; `DONE — thorough`
-  when every scope file is `clean` or `ruling`; `DONE — max iterations`
-  on pass 5 if not thorough.
+- `status`: only `PASS n/5`, `DONE — thorough`, or
+  `DONE — max iterations`. Do not invent tokens such as `blocked`.
+  A Prepare blocker (missing mise, dirty tree, empty scope, commands
+  that cannot start) still emits this block: `PASS 0/5` and one
+  `questions` line naming the blocker. `PASS n/5` while files remain
+  `todo`; `DONE — thorough` when every scope file is `clean` or
+  `ruling`; `DONE — max iterations` on pass 5 if not thorough.
 - `commits` lists SHAs this pass created, one line each.
 - `kept comments` lists only non-obvious keeps.
 - `questions` one line each with a recommendation; omit the section if

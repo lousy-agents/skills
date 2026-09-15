@@ -106,13 +106,15 @@ before step 1. Load [`./references/tidy-rules.md`](./references/tidy-rules.md)
 before step 4.
 
 0. **Prepare.**
-   - Use Bash `command -v mise`; missing mise → stop and print
-     `curl https://mise.run | sh`.
+   - Use Bash `command -v mise`; missing mise → one-line blocker,
+     print `curl https://mise.run | sh`, emit the Output block
+     (`status PASS 0/5`, questions: missing mise), then **stop**.
    - Use Read on `AGENTS.md`, `CLAUDE.md`, and other project
      instructions. If they name a version-manager prelude (`nvm use`,
      `mise install`), run it with Bash before proving test/lint start.
    - Use Bash `git status --porcelain`; any output including untracked
-     files → stop.
+     files → one-line blocker, emit the Output block (`status PASS
+     0/5`, questions: dirty tree), then **stop**.
    - Invocation args: a PR number/URL requires HEAD to already be that
      PR's head (do not switch branches); a supplied base ref wins over
      auto-resolution; a path glob *intersects* the diff, it does not
@@ -125,26 +127,40 @@ before step 4.
      task runner, CI, package manifest. Several validation commands →
      record all; lint baseline is the union of `(file, rule-id)`
      pairs. Prefer the unit test command; add e2e only when e2e files
-     are in scope. Prove they *start* with Bash.
+     are in scope. Prove they *start* with Bash. A command that cannot
+     start → one-line blocker, emit the Output block (`status PASS
+     0/5`, questions: command cannot start), then **stop**.
    - Use Read on `.cleanup-loop.md` if it exists; otherwise Write the
      pass header. Complete report → this pass is N+1. Header with no
      report → resume N via `git log --grep="Cleanup-Loop: pass=N"`.
    - Scope with Bash:
      `git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"`,
-     minus `.cleanup-loop.md`. Empty → stop. Then Edit `.cleanup-loop.md`
-     (Write only if the file is missing): one line per path as `todo`;
-     binaries, lockfiles, generated, and vendored artifacts already
-     `clean` with reason. Coach Stage-B only touches that list (plus
-     mechanical call-sites). Do **not** record the SOLID baseline yet.
+     minus `.cleanup-loop.md`. Empty → one-line blocker, emit the
+     Output block (`status PASS 0/5`, questions: empty scope), then
+     **stop**. Do not invent `HEAD~N`. Otherwise Edit
+     `.cleanup-loop.md` (Write only if the file is missing): one line
+     per path as `todo`; binaries, lockfiles, generated, and vendored
+     artifacts already `clean` with reason; instruction files
+     (`AGENTS.md`, `CLAUDE.md`, …), markdown/docs, and JSON/YAML
+     config or workflows already `ruling` with reason
+     (`config/docs — these rules do not apply`). Do not pre-mark
+     `*.schema.ts` — that is production code. Coach Stage-B only
+     touches that list (plus mechanical call-sites). Do **not**
+     record the SOLID baseline yet.
 
 1. **Coach Tier 1 — simple scan loop.** No `--project-config`. Use
-   Bash for the portable scan in `./references/coach-phase.md`. Cycle
-   ≤5: scan → classify Stage A/B → Edit in-scope Stage-B paths →
-   Bash commit → rescan. Coach reads committed Git objects, not the
-   dirty worktree; an uncommitted fix is invisible. Stop the tier when
-   Stage-B is empty, 5 cycles have run, or the simple scan cannot
-   execute. Skip (do not fail) when no Go/TS/TSX is in scope or
-   codesignal cannot start.
+   Bash for the portable scan in `./references/coach-phase.md`.
+   Stage B = could cause incorrect behavior, a test failure, or a
+   misleading result, on an in-scope path, with a production-code
+   remedy. Cycle ≤5: scan → classify Stage A/B → Edit in-scope
+   Stage-B paths → Bash commit **only if** those edits landed
+   (trailer `Cleanup-Loop: pass=N`) → rescan. Coach reads committed
+   Git objects, not the dirty worktree; an uncommitted fix is
+   invisible. Stop the tier when Stage-B is empty, 5 cycles have
+   run, or the simple scan cannot execute. Then Read
+   `.cleanup-loop.md` and Edit the Tier 1 coach section. Skip (do
+   not fail) when no Go/TS/TSX is in scope or codesignal cannot
+   start; Edit `coach: skipped (<reason>)` the same way.
 
 2. **Coach Tier 2 — detect committed project config.** Detect only.
    Do not write a config. Do not run `--suggest-project-config`
@@ -152,17 +168,19 @@ before step 4.
    Tier 1): user-named path; `git cat-file -e HEAD:project.json`; a
    path named in project instructions / CI / README that exists at
    HEAD (Grep those files for `--project-config`). Uncommitted
-    worktree files are absent. If none, Read `.cleanup-loop.md` then
-    Edit in `coach: project-config absent; tier 3 skipped`. Write only
-    when the state file is missing. Then go to step 4.
+   worktree files are absent. If none, Read `.cleanup-loop.md` then
+   Edit in `coach: project-config absent; tier 3 skipped`. Write only
+   when the state file is missing. Then go to step 4.
 
 3. **Coach Tier 3 — project scan loop.** Only if Tier 2 found a
    committed config. Use Bash for the same base and scope as Tier 1
    plus `--project-config <detected-path>`. Cycle ≤5 with the same
-   Stage A/B bar; Edit production files, not the config. Invalid
-   config is skip-with-reason, not a skill failure. Stop the tier when
+   Stage A/B bar; Edit production files, not the config; Bash
+   commit only if Stage-B edits landed. Invalid config is
+   skip-with-reason, not a skill failure. Stop the tier when
    Stage-B is empty, 5 cycles have run, or the project scan cannot
-   execute.
+   execute. Then Read `.cleanup-loop.md` and Edit the Tier 3 coach
+   section.
 
 4. **SOLID tidy** on the post-coach tree. Details:
    [`./references/tidy-rules.md`](./references/tidy-rules.md).
@@ -181,10 +199,10 @@ before step 4.
    4b. **Tests first.** Use Read / Grep / Glob on imports, config, and
        nearby tests to identify the framework before any rename or
        split. Nest real container nodes so names carry purpose,
-       scenarios, fixtures, controls. Rename tests to behavioral
-       claims. One claim per test. Assert observables, not mock
-       interactions (keep interaction tests that *are* the external
-       contract). Do not weaken assertions to reach green.
+       scenarios, fixtures, controls. Use Edit to rename tests to
+       behavioral claims. One claim per test. Assert observables, not
+       mock interactions (keep interaction tests that *are* the
+       external contract). Do not weaken assertions to reach green.
        Characterization tests before restructuring.
 
    4c. **Structure.** One behavior-preserving step at a time. Use
@@ -201,7 +219,7 @@ before step 4.
        Delete by default with Edit. Keep only when both routes
        (refactor, tests) are closed **and** the comment matches a keep
        condition. Decide every comment in every in-scope file, then
-       mark the file `clean`.
+       Edit that file's scope line in `.cleanup-loop.md` to `clean`.
 
    4e. **Commit.** At each green point. Use Bash. One concern per
        commit (tests *or* structure *or* comments). Behavior-preserving
@@ -211,10 +229,12 @@ before step 4.
 
 5. **Verify + report.** Use Bash to re-run suite and lint vs baseline.
    Use Bash `git diff` on production files: SOLID edits are
-   extract/rename/narrow/collapse/move only. Intent of the PR in one
-   sentence from the tests. Every scope file is `clean` or `ruling`.
-   No temp files. Emit the report in chat **and** Read
-   `.cleanup-loop.md` then Edit to append the report. Then **stop**.
+   extract/rename/narrow/collapse/move only. Intent in one sentence
+   from the tests: Bash `gh pr view` for title/body if available,
+   else infer from the base diff (say so). Every scope file is
+   `clean` or `ruling`. No temp files. Emit the report in chat
+   **and** Read `.cleanup-loop.md` then Edit to append the report.
+   Then **stop**.
 
 Subagents, if available: read-only inventory only (framework
 detection, comment candidates, test structure, SOLID problems,
@@ -224,7 +244,8 @@ commit, or decide to keep/delete a comment.
 
 ## Ruling required
 
-Record and skip. Full list in
+Record with Edit on `.cleanup-loop.md` under pending rulings, and
+skip. Full list in
 [`./references/tidy-rules.md`](./references/tidy-rules.md).
 
 - Public API / cross-service interface / serialized format / schema.

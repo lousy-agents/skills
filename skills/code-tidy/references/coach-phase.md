@@ -30,8 +30,9 @@ flags. Bind every flag you add to that help text.
 
 ## Skip, do not fail
 
-Write `coach: skipped (<reason>)` into `.cleanup-loop.md` and continue
-to SOLID when:
+Read `.cleanup-loop.md` if it exists, then Edit in
+`coach: skipped (<reason>)`. Write only when the file is missing.
+Continue to SOLID when:
 
 - no Go/TS/TSX file is in the scope list
 - codesignal cannot start after mise is present
@@ -85,10 +86,12 @@ Commit a Stage-B fix before the next scan or coach will not see it.
   over silencing the scanner.
 - Style, naming, unsupported-language diagnostics, informational
   coverage, and metric/density rules (`complexity.*`, density-gated
-  `structure.*`) → stay Stage A unless `why_it_matters` names a
-  concrete incorrect behavior, test failure, or misleading result.
-  Do not empty Stage A for its own sake. SOLID may still extract
-  those functions later.
+  `structure.*`) → stay Stage A. Generic "harder to follow / easy
+  to miss an edge case" text in `why_it_matters` is still Stage A.
+  Promote to Stage B only when `why_it_matters` names a specific
+  incorrect result, a failing test, or a misleading output on a
+  named path. Do not empty Stage A for its own sake. SOLID may
+  still extract those functions later.
 - Stage B whose only fix changes a public contract, a schema, or
   layer policy → Ruling required, do not fix.
 - Out-of-scope Stage-B paths → do not edit. List them Stage A-only
@@ -107,9 +110,11 @@ mise exec github:lousy-agents/coach -- coach codesignal --format json \
 Also run `--scope all` when the production scan's
 `summary.files_analyzed` is 0, or the user asked for all. A tests-only
 diff often analyzes 0 production files; `--scope all` is how coach
-sees the test files. SOLID still tidies test files that are in the
-git scope even when coach `--scope production` excluded them
-(`coverage.excluded` reason `test_only`).
+sees the test files. If `--scope all` is also 0, record
+`coach: no analyzable files in diff` and continue to SOLID. Do
+**not** fall through to `--baseline`. SOLID still tidies test files
+that are in the git scope even when coach `--scope production`
+excluded them (`coverage.excluded` reason `test_only`).
 
 `--project-language` without `--project-config` is a silent no-op on
 a scan (coach default language is `go`). Do not add it in Tier 1
@@ -118,12 +123,13 @@ Go/TS/TSX paths from the diff.
 
 Cycle ≤5:
 
-`resolve-binary → scan-set → classify Stage A then B → edit in-scope Stage-B paths → commit if HEAD gained a Stage-B fix → same scan-set`
+`resolve-binary → scan-set → classify Stage A then B → edit in-scope Stage-B paths → commit only if those edits landed → same scan-set`
 
-Stop Tier 1 when Stage-B is empty after a fresh simple scan, or 5
-cycles have run, or the simple scan cannot execute. Leftover Stage-B
-after the cap does not skip SOLID — list each leftover under
-`questions`, then continue.
+Do not commit a no-op cycle. Stop Tier 1 when Stage-B is empty after
+a fresh simple scan, or 5 cycles have run, or the simple scan cannot
+execute. Leftover Stage-B after the cap does not skip SOLID — list
+each leftover under `questions`, then continue. After the tier,
+Read `.cleanup-loop.md` and Edit the Tier 1 coach section.
 
 Git during this phase: same as the cleanup loop (commit only, trailer,
 no push).
@@ -142,8 +148,9 @@ Tier 1 commits), not an uncommitted worktree file:
    instructions / CI / README as the coach `--project-config` file,
    if that blob exists at `HEAD`.
 
-If none exist, write `coach: project-config absent; tier 3 skipped`
-and go to the SOLID phase.
+If none exist, Read `.cleanup-loop.md` if it exists, then Edit in
+`coach: project-config absent; tier 3 skipped`. Write only when the
+file is missing. Then go to the SOLID phase.
 
 `--check-project --project-language typescript` is a **readiness**
 probe, not a scan-fix loop. If the repo is TS-heavy it may run once
@@ -182,7 +189,8 @@ Invalid config (not at the analyzed revision, not JSON, schema
 failure): coach exits 2 with `project_config_invalid` and writes no
 report. Record the reason and continue to SOLID.
 
-Cycle ≤5, same Stage A/B bar as Tier 1. Architecture signals
+Cycle ≤5, same Stage A/B bar and commit rule as Tier 1 (commit only
+if Stage-B edits landed). Architecture signals
 (`architecture.layer_violation`, `architecture.layer_bypass`,
 `schema_version` `"2"`) enter the same classification:
 
@@ -197,7 +205,8 @@ Prefer improving production code over editing or silencing
 `project.json`. This skill does not author architecture policy.
 
 Stop Tier 3 when Stage-B is empty after a fresh project scan, or 5
-cycles have run, or the project scan cannot execute.
+cycles have run, or the project scan cannot execute. After the
+tier, Read `.cleanup-loop.md` and Edit the Tier 3 coach section.
 
 ## After all coach tiers
 
@@ -205,6 +214,9 @@ Record the pass-1 test/lint baseline on the post-coach tree. Then run
 SOLID. Do not re-run coach after SOLID in the same invocation.
 
 ## State file per tier
+
+Read `.cleanup-loop.md`, then Edit the matching section. Write only
+when the file is missing.
 
 - Tier 1: commands, Stage-A count, each Stage-B item, SHAs.
 - Tier 2: detected path or `absent`; whether `--check-project` ran.
