@@ -45,8 +45,12 @@ Do **not** run `--suggest-project-config` or `--prepare-compiler`
 unless the user explicitly asked. Both are interactive or
 candidate-only; this skill does not author architecture policy.
 
-`--baseline` (whole-repo) only when the user asked to tidy the whole
-repo. Default remains `--base <resolved-base>`.
+Coach window follows Prepare `mode` (do not invent flags):
+
+- **`mode: pr`** — `--base <resolved-base>`. Do not switch to
+  `--baseline` because the PR diff analyzed 0 files.
+- **`mode: branch`** — `--baseline`. This is the whole-branch hunt.
+  Do not invent `HEAD~N`.
 
 ## JSON consume path
 
@@ -92,6 +96,10 @@ Commit a Stage-B fix before the next scan or coach will not see it.
   incorrect result, a failing test, or a misleading output on a
   named path. Do not empty Stage A for its own sake. SOLID may
   still extract those functions later.
+- `state.hidden_input_mutation`: Stage B only when an **exported**
+  function mutates a caller-owned argument. A private helper that
+  `.push`es onto a same-class accumulator stays Stage A; SOLID 4c
+  may still return a copy.
 - Stage B whose only fix changes a public contract, a schema, or
   layer policy → Ruling required, do not fix.
 - Out-of-scope Stage-B paths → do not edit. List them Stage A-only
@@ -102,16 +110,25 @@ Commit a Stage-B fix before the next scan or coach will not see it.
 No `--project-config`. This tier must run even when a project config
 exists, so architecture policy never hides a simple finding.
 
+PR mode:
+
 ```bash
 mise exec github:lousy-agents/coach -- coach codesignal --format json \
   --base <resolved-base> --scope production
 ```
 
+Branch mode:
+
+```bash
+mise exec github:lousy-agents/coach -- coach codesignal --format json \
+  --baseline --scope production
+```
+
 Also run `--scope all` when the production scan's
 `summary.files_analyzed` is 0, or the user asked for all. A tests-only
-diff often analyzes 0 production files; `--scope all` is how coach
+PR often analyzes 0 production files; `--scope all` is how coach
 sees the test files. If `--scope all` is also 0, record
-`coach: no analyzable files in diff` and continue to SOLID. Do
+`coach: no analyzable files` and continue to SOLID. In PR mode do
 **not** fall through to `--baseline`. SOLID still tidies test files
 that are in the git scope even when coach `--scope production`
 excluded them (`coverage.excluded` reason `test_only`).
@@ -177,10 +194,15 @@ mise exec github:lousy-agents/coach -- coach codesignal --format json \
 
 Only if Tier 2 found a committed config.
 
+PR mode:
+
 ```bash
 mise exec github:lousy-agents/coach -- coach codesignal --format json \
   --base <resolved-base> --scope production --project-config <detected-path>
 ```
+
+Branch mode: same flags with `--baseline` instead of `--base`. Do
+not combine `--base` and `--baseline`.
 
 Add `--project-language typescript` when the config or the in-scope
 set is TypeScript **and** `--help` lists that flag.

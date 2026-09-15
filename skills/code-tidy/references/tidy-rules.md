@@ -152,7 +152,7 @@ item in this pass or a later pass until a ruling comes.
   tests and the PR description say nothing or do not agree.
 - A test that looks incorrect.
 - Behavior with no test and no clear requirement.
-- A refactor that needs changes to files far outside the PR set.
+- A refactor that needs changes to files far outside the scope list.
 - An interface to narrow when a consumer is not in scope.
 - A requirement with two readings that give very different designs.
 - A change to performance-sensitive, security-sensitive, or

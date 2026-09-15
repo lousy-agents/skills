@@ -5,8 +5,9 @@ Prepare. One invocation = one outer pass, then stop.
 
 ## State file
 
-Path: `.cleanup-loop.md` at the repository root. Track it with the PR.
-The reviewer deletes it at merge. Do not gitignore it.
+Path: `.cleanup-loop.md` at the repository root. Track it with the
+branch (and the PR, when one exists). The reviewer deletes it at
+merge. Do not gitignore it.
 
 Write the pass header before any work. Skeleton:
 
@@ -16,6 +17,8 @@ Write the pass header before any work. Skeleton:
 ## Pass 1
 - started: 2026-09-14T12:00:00Z
 - step: prepare
+- mode: pr
+- window: --base origin/main
 
 ## Coach
 - tier 1: (commands / Stage-A count / Stage-B items / SHAs)
@@ -40,7 +43,9 @@ Write the pass header before any work. Skeleton:
 
 Keep these sections, in order:
 
-1. **Pass header** — pass number, start time (ISO-8601), current step.
+1. **Pass header** — pass number, start time (ISO-8601), current
+   step, `mode` (`pr` or `branch`), and coach window (`--base
+   <ref>` or `--baseline`).
 2. **Coach section** — per tier: commands, Stage-A count, each
    Stage-B item (path, rule, severity, confidence), Stage-A-only
    items with reason, files edited, SHAs; or
@@ -68,30 +73,52 @@ A later re-invoke repeats Prepare → Coach tiers → SOLID → report.
 If Stage-B is already empty, phase 1 is a short scan that records
 `coach: clean` and falls through to another SOLID pass.
 
-## Base ref
+## Scan window
 
-Resolve in this order. Record which step won. First match wins.
+Detect **PR context** first. First match wins. Record `mode` and
+which step won. Do not switch branches.
 
-1. Invocation-supplied base ref
-2. `gh pr view --json baseRefName -q .baseRefName` (pass the PR number
-   if the invocation gave one)
-3. `git symbolic-ref refs/remotes/origin/HEAD`
-4. `main`, then `master`
+1. Invocation PR number or URL — `gh pr view <n> --json number,baseRefName`.
+   HEAD must already be that PR's head.
+2. `gh pr view --json number,baseRefName` for the current branch.
+3. `$GITHUB_EVENT_NAME` is `pull_request` and `$GITHUB_BASE_REF` is
+   set.
+4. Invocation-supplied base ref (forces PR mode against that base
+   even when no GitHub PR exists).
 
-Then `git fetch origin <base>`. If `gh` is missing or fails, say so in
-one line and use the git-only path. Do not repair credentials.
+`gh pr view` printing "no pull requests found" is `mode: branch`,
+not a `gh` failure. If `gh` is missing or errors, say so in one
+line and continue with the git-only / env path. Do not repair
+credentials.
 
-No PR → same formula against the default branch.
+- **`mode: pr`** — resolve base from the matching step, then
+  `git fetch origin <base>`. Coach uses `--base <base>`. Scope is
+  the PR (or supplied-base) diff.
+- **`mode: branch`** — no GitHub PR and no supplied base. Coach uses
+  `--baseline`. Scope is all tracked files on the current branch.
+  Do not invent `HEAD~N`. Do not stop because
+  `merge-base origin/<default> HEAD` is empty.
 
 ## Scope
+
+PR mode:
 
 ```bash
 git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"
 ```
 
+Empty PR diff → one-line blocker, Output `PASS 0/5`, stop.
+
+Branch mode:
+
+```bash
+git ls-files
+```
+
 Remove `.cleanup-loop.md`. If the invocation supplied a path glob,
-intersect: keep only scope paths that match the glob. Do not add
-files the diff did not touch.
+intersect: keep only scope paths that match the glob. In PR mode do
+not add files the diff did not touch. In branch mode do not add
+untracked files.
 
 Edit `.cleanup-loop.md` with the result (Write only if the file is
 missing): one line per path as `todo`. Pre-mark before any tidy:
@@ -99,12 +126,16 @@ missing): one line per path as `todo`. Pre-mark before any tidy:
 - `clean` with reason: binaries, lockfiles, generated, vendored.
 - `ruling` with reason `config/docs — these rules do not apply`:
   instruction files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
-  `copilot-instructions.md`), markdown/docs, JSON/YAML config
-  (`package.json`, `tsconfig.json`, `biome.json`), GitHub workflow
-  YAML, and Dependabot. Do **not** pre-mark `*.schema.ts` or other
-  source that happens to encode a schema — that is production code.
-  Changing a serialized format or schema *shape* is still a ruling
-  during SOLID / coach; tidying comments in that file is not.
+  `copilot-instructions.md`), markdown/docs, license files
+  (`LICENSE`, `COPYING`, `NOTICE`), dotfiles (`.editorconfig`,
+  `.npmrc`, `.nvmrc`), static assets (`public/`, images, `.svg`),
+  JSON/YAML config (`package.json`, `tsconfig.json`, `biome.json`),
+  GitHub workflow YAML, Dependabot, and `*.config.*`
+  (`astro.config.mjs`, `playwright.config.ts`, `vitest.config.ts`).
+  Do **not** pre-mark `*.schema.ts` or other source that happens
+  to encode a schema — that is production code. Changing a
+  serialized format or schema *shape* is still a ruling during
+  SOLID / coach; tidying comments in that file is not.
 
 Coach Stage-B only touches paths still `todo` / `in-work` on this
 list, plus mechanical call-sites a fix requires.
@@ -112,7 +143,22 @@ list, plus mechanical call-sites a fix requires.
 Unit of scope = the whole file. Set `in-work`
 when you start a file. Set `clean` only after every comment in it has a
 decision and the other rules agree. Set `ruling` when an open ruling
-blocks it. A pass ends when no file is `todo`.
+blocks it. DONE across re-invokes is when no file is `todo`.
+
+### Branch-mode work set (this pass)
+
+Whole-branch scope is often dozens of source files. One invocation
+still does one pass, then stops. SOLID this pass only on:
+
+1. Paths named in this pass's coach signals (any stage) that are
+   still `todo` / `in-work`, plus colocated tests.
+2. If coach named none: at most 8 remaining `todo` source files,
+   highest comment count first.
+
+Leave every other `todo` file `todo`. Do not mark it `clean`.
+Report `PASS n/5` with remaining `todo` count in `questions` if
+the list is not empty. PR mode is unchanged: walk the whole PR
+scope.
 
 Do not touch a file already marked `clean`.
 
@@ -131,8 +177,9 @@ already in this PR must explain each snapshot difference.
 
 ### Large files
 
-If full tidy would ~2× the PR with low-value changes, do the high-value
-part only. Record the limit on that file's scope line.
+If full tidy would ~2× the PR (or, in branch mode, swamp the pass
+with low-value changes), do the high-value part only. Record the
+limit on that file's scope line.
 
 ## Test and lint commands
 
@@ -222,9 +269,9 @@ Duplicate of the SKILL.md Output block.
 - `suite` / `lint` are pass or fail *vs baseline*, not zero-failure.
 - `status`: only `PASS n/5`, `DONE — thorough`, or
   `DONE — max iterations`. Do not invent tokens such as `blocked`.
-  A Prepare blocker (missing mise, dirty tree, empty scope, commands
-  that cannot start) still emits this block: `PASS 0/5` and one
-  `questions` line naming the blocker. `PASS n/5` while files remain
+  A Prepare blocker (missing mise, dirty tree, empty PR diff,
+  commands that cannot start) still emits this block: `PASS 0/5`
+  and one `questions` line naming the blocker. `PASS n/5` while files remain
   `todo`; `DONE — thorough` when every scope file is `clean` or
   `ruling`; `DONE — max iterations` on pass 5 if not thorough.
 - `commits` lists SHAs this pass created, one line each.

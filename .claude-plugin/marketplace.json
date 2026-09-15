@@ -117,7 +117,7 @@
     {
       "name": "code-tidy",
       "displayName": "Code Tidy",
-      "description": "Tidy PR-scoped files: coach CodeSignal loop first (Stage-B defects may change behavior), then SOLID tidy with no further behavior change. Tests document behavior, comments earn their place",
+      "description": "Tidy a PR's files, or all tracked source on the current branch when no PR exists: coach CodeSignal loop first (Stage-B defects may change behavior), then SOLID tidy with no further behavior change. Tests document behavior, comments earn their place",
       "source": "./code-tidy",
       "category": "code-review",
       "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise"]

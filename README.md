@@ -16,7 +16,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`designing-for-intent`](#designing-for-intent) | Planning | Reviews a UX/onboarding/consent artifact for intent map, delegation boundary, and agency risks before implementation |
 | [`customer-strategy-forge`](#customer-strategy-forge) | Product Strategy | Turns customer evidence into auditable personas, journeys, progression hypotheses, and opportunity maps |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
-| [`code-tidy`](#code-tidy) | Implementation / Hardening | Tidies PR-scoped files: coach CodeSignal loop first (Stage-B may change behavior), then SOLID tidy with no further behavior change |
+| [`code-tidy`](#code-tidy) | Implementation / Hardening | Tidies a PR's files, or all tracked source on the current branch when no PR exists: coach first (Stage-B may change behavior), then SOLID with no further behavior change |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript, Go, or Python |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
@@ -148,7 +148,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `designing-for-intent` | Before implementation, independent of whether a spec exists yet: reviewing a UX/onboarding/consent artifact for intent and agency risk |
 | `customer-strategy-forge` | Before product commitments: auditing customer evidence, developing customer artifacts, or mapping passed needs and journeys to product opportunities |
 | `go-testable-design` | During implementation: to write Go code test-first and design testable boundaries |
-| `code-tidy` | During or after implementation, before review: tidy the files this branch already touched. |
+| `code-tidy` | During or after implementation, before review: tidy the PR diff, or all tracked source on the current branch when no PR exists. |
 | `rugged-evil-tester` | During or after implementation: to harden new code against adversarial inputs |
 | `mutation-hunter` | During or after implementation: to audit whether your test suite would catch real regressions |
 | `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
@@ -314,12 +314,12 @@ Guides Go development with tests: smallest failing test first, start from public
 
 **Install:** `npx skills add lousy-agents/skills --skill code-tidy`
 
-Tidies the files a PR or branch already touched: a coach CodeSignal loop first (Stage-B defects may change behavior), then a SOLID tidy with no further behavior change. Tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. The suite and linter stay no worse than the post-coach pass-1 baseline.
+Tidies a PR's files when a PR exists, or all tracked source on the current branch when none does: a coach CodeSignal loop first (Stage-B defects may change behavior), then a SOLID tidy with no further behavior change. Tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. The suite and linter stay no worse than the post-coach pass-1 baseline.
 
 **Requires:** [mise](https://mise.jdx.dev/) on PATH. Coach is invoked with `mise exec github:lousy-agents/coach -- coach ...`. Missing mise is a blocker.
 
 **Use when you want to:**
-- Tidy a PR or run a cleanup loop on the current branch diff
+- Tidy a PR, or hunt the current branch when no PR exists
 - Prune comments to the ones that cite a real constraint, spec, or inexpressible invariant
 - Make tests document behavior with the repository's existing test runner
 - Extract and rename until functions read as prose, without speculative abstractions

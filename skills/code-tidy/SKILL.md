@@ -1,7 +1,8 @@
 ---
 name: code-tidy
 description: >-
-  Tidy files already in a PR or branch diff: run a coach refactor loop first,
+  Tidy a PR's files, or all tracked source on the current branch when no
+  PR exists: run a coach refactor loop first,
   then prune comments to the ones that earn their place, make tests document
   behavior with the repo's real container nodes, and restructure production
   code to read as prose under SOLID without speculative abstraction. Coach
@@ -21,26 +22,28 @@ compatibility: Requires mise on PATH. Coach is invoked as `mise exec github:lous
 
 # Code Tidy
 
-One invocation does one outer pass on the files a PR or branch already
-touched, then emits the report and **stops**. An external loop re-invokes
-up to 5 times. Coach runs first (Stage-B defects may change behavior).
-SOLID tidy runs second against a post-coach baseline and does not change
-behavior.
+One invocation does one outer pass, then emits the report and
+**stops**. An external loop re-invokes up to 5 times. In a PR, the
+pass is the PR diff. With no PR, the pass is all tracked source on
+the current branch. Coach runs first (Stage-B defects may change
+behavior). SOLID tidy runs second against a post-coach baseline and
+does not change behavior.
 
 ## When to Use
 
 - The user asks to tidy a PR, run a cleanup loop, prune comments,
   code-tidy, make tests document the behavior, extract until functions
   read as prose, or apply the comment keep-bar.
-- A PR or branch diff exists and the ask is cleanup of files already
-  touched, after feature work and before review.
+- A PR exists: cleanup of files that PR already touched, after
+  feature work and before review.
+- No PR exists: hunt issues across tracked source on the current
+  branch (coach `--baseline`), not invent a `HEAD~N` range.
 - Leftover comments, unstructured tests, or SOLID noise are the problem.
 
 ## When NOT to Use
 
-- Empty scope against the base ref — stop. Do not invent a
-  historical range (`HEAD~N`) or tidy the whole repo unless the user
-  asked for whole-repo.
+- Empty PR diff — stop. Do not invent a historical range (`HEAD~N`).
+  Non-PR runs are whole-branch; that is not an empty-scope stop.
 - Dirty work tree at start — stop and report.
 - The user wants new behavior, a bugfix, or a public API change as the
   *ask*. Coach Stage-B may still land a defect it finds; that is not a
@@ -60,7 +63,7 @@ Fail closed. Any of these is a blocker; emit the report and stop.
 - Work tree dirty at session start.
 - Test command or lint command cannot *start* (not the same as baseline
   failures).
-- Empty scope.
+- Empty PR diff (PR mode only).
 - Do not invent test-framework nodes. Detect from imports, config, and
   nearby tests first. Go repos: consult `go-testable-design` for unit vs
   acceptance form; do not switch vehicles.
@@ -116,13 +119,21 @@ before step 4.
      files → one-line blocker, emit the Output block (`status PASS
      0/5`, questions: dirty tree), then **stop**.
    - Invocation args: a PR number/URL requires HEAD to already be that
-     PR's head (do not switch branches); a supplied base ref wins over
-     auto-resolution; a path glob *intersects* the diff, it does not
-     expand scope; `push` / `open the PR` is the only push license.
-   - Resolve base with Bash, first match wins: invocation base;
-     `gh pr view --json baseRefName -q .baseRefName` (pass the PR
-     number if given); `git symbolic-ref refs/remotes/origin/HEAD`;
-     `main` / `master`. Then `git fetch origin <base>`.
+     PR's head (do not switch branches); a supplied base ref forces
+     PR mode against that base; a path glob *intersects* the scope,
+     it does not expand it; `push` / `open the PR` is the only push
+     license.
+   - Detect scan window with Bash (first match wins, record it):
+     invocation PR number/URL; `gh pr view --json number,baseRefName`;
+     `$GITHUB_EVENT_NAME` = `pull_request` with `$GITHUB_BASE_REF`;
+      invocation-supplied base ref. Any of those → `mode: pr`. Else
+      `mode: branch`. Do not switch branches. `gh pr view` with
+      "no pull requests found" is `mode: branch`, not a failure.
+      If `gh` is missing or errors, say so in one line and use the
+      git-only path.
+   - If `mode: pr`: resolve base (invocation base, else PR
+     `baseRefName`, else `GITHUB_BASE_REF`), then
+     `git fetch origin <base>`.
    - Discover test + lint commands with Read / Grep on instructions,
      task runner, CI, package manifest. Several validation commands →
      record all; lint baseline is the union of `(file, rule-id)`
@@ -133,23 +144,27 @@ before step 4.
    - Use Read on `.cleanup-loop.md` if it exists; otherwise Write the
      pass header. Complete report → this pass is N+1. Header with no
      report → resume N via `git log --grep="Cleanup-Loop: pass=N"`.
-   - Scope with Bash:
-     `git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"`,
-     minus `.cleanup-loop.md`. Empty → one-line blocker, emit the
-     Output block (`status PASS 0/5`, questions: empty scope), then
-     **stop**. Do not invent `HEAD~N`. Otherwise Edit
-     `.cleanup-loop.md` (Write only if the file is missing): one line
-     per path as `todo`; binaries, lockfiles, generated, and vendored
-     artifacts already `clean` with reason; instruction files
-     (`AGENTS.md`, `CLAUDE.md`, …), markdown/docs, and JSON/YAML
-     config or workflows already `ruling` with reason
+   - Scope with Bash. `mode: pr`:
+     `git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"`.
+     Empty → one-line blocker, emit the Output block (`status PASS
+     0/5`, questions: empty PR diff), then **stop**. Do not invent
+     `HEAD~N`. `mode: branch`: `git ls-files` — hunt the current
+     branch; do not treat an empty merge-base diff as a stop. Both
+     modes: minus `.cleanup-loop.md`; a path glob intersects. Then
+     Edit `.cleanup-loop.md` (Write only if the file is missing): one
+     line per path as `todo`; binaries, lockfiles, generated, and
+     vendored artifacts already `clean` with reason; instruction
+     files (`AGENTS.md`, `CLAUDE.md`, …), markdown/docs, license
+     files, dotfiles, static assets, JSON/YAML config or workflows,
+     and `*.config.*` already `ruling` with reason
      (`config/docs — these rules do not apply`). Do not pre-mark
      `*.schema.ts` — that is production code. Coach Stage-B only
      touches that list (plus mechanical call-sites). Do **not**
      record the SOLID baseline yet.
 
 1. **Coach Tier 1 — simple scan loop.** No `--project-config`. Use
-   Bash for the portable scan in `./references/coach-phase.md`.
+   Bash for the portable scan in `./references/coach-phase.md`
+   (`--base <pr-base>` in PR mode, `--baseline` in branch mode).
    Stage B = could cause incorrect behavior, a test failure, or a
    misleading result, on an in-scope path, with a production-code
    remedy. Cycle ≤5: scan → classify Stage A/B → Edit in-scope
@@ -184,6 +199,12 @@ before step 4.
 
 4. **SOLID tidy** on the post-coach tree. Details:
    [`./references/tidy-rules.md`](./references/tidy-rules.md).
+   In `mode: branch`, this pass's SOLID work set is bounded —
+   coach-named paths this pass (any stage) plus colocated tests;
+   if coach named none, at most 8 remaining `todo` source files
+   (highest comment count first). Other `todo` files stay `todo`.
+   Do not mark them `clean`. PR mode still walks the whole PR
+   scope.
 
    4a. **Baseline.** Use Bash to run the recorded test and lint
        commands. If this pass's coach tiers landed commits, Edit the
@@ -230,9 +251,12 @@ before step 4.
 5. **Verify + report.** Use Bash to re-run suite and lint vs baseline.
    Use Bash `git diff` on production files: SOLID edits are
    extract/rename/narrow/collapse/move only. Intent in one sentence
-   from the tests: Bash `gh pr view` for title/body if available,
-   else infer from the base diff (say so). Every scope file is
-   `clean` or `ruling`. No temp files. Emit the report in chat
+   from the tests: Bash `gh pr view` for title/body if available
+   (PR mode), else infer from the tests on this branch (say so).
+   PR mode: every scope file is `clean` or `ruling`. Branch mode:
+   this pass's work set is `clean` or `ruling`; other `todo` files
+   may remain. No temp files. Emit the
+   report in chat
    **and** Read `.cleanup-loop.md` then Edit to append the report.
    Then **stop**.
 
@@ -253,7 +277,7 @@ skip. Full list in
   are silent.
 - A test that looks incorrect.
 - Behavior with no test and no clear requirement.
-- Refactor that needs files far outside the PR set.
+- Refactor that needs files far outside the scope list.
 - Interface narrow when a consumer is out of scope.
 - Two readings of a requirement that imply different designs.
 - Perf / security / concurrency-sensitive change that can regress.
