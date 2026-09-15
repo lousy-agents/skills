@@ -1,7 +1,8 @@
 # Loop protocol
 
 Re-entrancy, state file, git, scope, baseline, and report. Load this at
-Prepare. One invocation = one outer pass, then stop.
+Prepare. One invocation = one outer pass, then commit the report and
+stop.
 
 ## State file
 
@@ -9,7 +10,8 @@ Path: `.cleanup-loop.md` at the repository root. Track it with the
 branch (and the PR, when one exists). The reviewer deletes it at
 merge. Do not gitignore it.
 
-Write the pass header before any work. Skeleton:
+Write the pass header after every Prepare blocker has passed and
+before any coach or SOLID work. Skeleton:
 
 ```markdown
 # Cleanup loop
@@ -18,10 +20,12 @@ Write the pass header before any work. Skeleton:
 - started: 2026-09-14T12:00:00Z
 - step: prepare
 - mode: pr
+- base: origin/main (a1b2c3d, from: gh pr view)
 - window: --base origin/main
 
 ## Coach
-- tier 1: (commands / Stage-A count / Stage-B items / SHAs)
+- pre-coach check: failed-tests: none; lint-violations: none
+- tier 1: (commands / Stage-A count / Stage-B items / holding tests / SHAs)
 - tier 2: absent
 - tier 3: skipped
 
@@ -44,11 +48,15 @@ Write the pass header before any work. Skeleton:
 Keep these sections, in order:
 
 1. **Pass header** — pass number, start time (ISO-8601), current
-   step, `mode` (`pr` or `branch`), and coach window (`--base
-   <ref>` or `--baseline`).
-2. **Coach section** — per tier: commands, Stage-A count, each
-   Stage-B item (path, rule, severity, confidence), Stage-A-only
-   items with reason, files edited, SHAs; or
+   step (`prepare`, `coach`, `solid`, `verify`, `done`), `mode` (`pr`
+   or `branch`), resolved `base` with its OID and the step that
+   produced it (`inferred` when the git-only path chose the default
+   branch), and coach window (`--base <ref>` or `--baseline`).
+2. **Coach section** — the pre-coach check (failed tests by full
+   name, lint `(file, rule-id)` pairs from Prepare's start-proof
+   run); then per tier: commands, Stage-A count, each Stage-B item
+   (path, rule, severity, confidence), the holding test each fix
+   added, Stage-A-only items with reason, files edited, SHAs; or
    `coach: skipped (<reason>)`. Tier 2 records the detected path or
    `absent`, and whether `--check-project` ran.
 3. **SOLID pass-1 baseline** — written **after** all coach tiers:
@@ -61,13 +69,20 @@ Keep these sections, in order:
 
 ## Re-entrancy
 
-- Missing `.cleanup-loop.md` → this is pass 1. Create it.
+- Missing `.cleanup-loop.md` → this is pass 1. Create it once Prepare
+  has passed every blocker.
 - Last entry is a complete report → this pass is N+1.
 - Last entry is a header with no report → resume that N. Reconcile with
   `git log --grep="Cleanup-Loop: pass=N"` so you do not redo committed
   work.
+- Last report's status is `DONE — thorough` or `DONE — max
+  iterations` → re-emit that report and stop. Do not start pass N+1.
 - Cap is 5 outer passes across re-invokes. Pass 5 that is not DONE
   reports `DONE — max iterations`.
+
+Every pass ends with a finalize commit that carries the appended
+report (see Git). That is why a re-invoke starts from a clean tree
+and why a fresh checkout of the branch contains every report.
 
 A later re-invoke repeats Prepare → Coach tiers → SOLID → report.
 If Stage-B is already empty, phase 1 is a short scan that records
@@ -78,36 +93,74 @@ If Stage-B is already empty, phase 1 is a short scan that records
 Detect **PR context** first. First match wins. Record `mode` and
 which step won. Do not switch branches.
 
-1. Invocation PR number or URL — `gh pr view <n> --json number,baseRefName`.
-   HEAD must already be that PR's head.
-2. `gh pr view --json number,baseRefName` for the current branch.
-3. `$GITHUB_EVENT_NAME` is `pull_request` and `$GITHUB_BASE_REF` is
+1. Invocation PR number or URL —
+   `gh pr view <n> --json number,baseRefName,headRefName`. HEAD must
+   already be that PR's head; otherwise a blocker.
+2. Invocation-supplied base ref. Forces `mode: pr` against that base
+   even when a GitHub PR targeting another branch exists.
+3. `gh pr view --json number,baseRefName` for the current branch.
+4. `$GITHUB_EVENT_NAME` is `pull_request` and `$GITHUB_BASE_REF` is
    set.
-4. Invocation-supplied base ref (forces PR mode against that base
-   even when no GitHub PR exists).
+5. Git-only path — `gh` is missing, errors, or prints "no pull
+   requests found", and no env var applies. Resolve the default
+   branch: `git symbolic-ref -q refs/remotes/origin/HEAD`, else
+   `origin/main`, else `origin/master` (first that
+   `git rev-parse --verify -q` accepts). Then:
+   - the invocation said `whole-repo`, or
+     `git rev-parse --abbrev-ref HEAD` *is* that default branch →
+     `mode: branch`;
+   - otherwise → `mode: pr` against the default branch, recorded as
+     `base: <resolved> (<oid>, from: inferred)`.
 
-`gh pr view` printing "no pull requests found" is `mode: branch`,
-not a `gh` failure. If `gh` is missing or errors, say so in one
-line and continue with the git-only / env path. Do not repair
-credentials.
+Missing or failing `gh` is one line of narration and never a blocker.
+Do not repair credentials. Never map "gh is missing" to "no PR
+exists": a feature branch without `gh` still diffs against the
+default branch, so coach Stage-B stays capped to that diff.
 
-- **`mode: pr`** — resolve base from the matching step, then
-  `git fetch origin <base>`. Coach uses `--base <base>`. Scope is
-  the PR (or supplied-base) diff.
-- **`mode: branch`** — no GitHub PR and no supplied base. Coach uses
-  `--baseline`. Scope is all tracked files on the current branch.
-  Do not invent `HEAD~N`. Do not stop because
-  `merge-base origin/<default> HEAD` is empty.
+- **`mode: pr`** — normalize the base (below). Coach uses
+  `--base <resolved-base>`. Scope is the merge-base diff.
+- **`mode: branch`** — only on the default branch or when asked for
+  `whole-repo`. Coach uses `--baseline`. Scope is all tracked files
+  on the current branch. Do not invent `HEAD~N`.
+
+### Base normalization
+
+The invocation and `gh` hand you a *ref*, not necessarily a remote
+branch name. Fetch by branch, resolve to one verified ref, and use
+that ref everywhere.
+
+```bash
+ref="<as supplied or detected>"
+branch="${ref#refs/remotes/origin/}"
+branch="${branch#refs/heads/}"
+branch="${branch#origin/}"
+git fetch origin "$branch" 2>/dev/null || true   # no remote copy is not fatal yet
+if git rev-parse --verify -q "origin/$branch^{commit}" >/dev/null; then
+  base="origin/$branch"
+elif git rev-parse --verify -q "$ref^{commit}" >/dev/null; then
+  base="$ref"                                     # local branch, tag, or SHA
+else
+  base=""                                         # blocker: base ref does not resolve
+fi
+```
+
+`main` and `origin/main` therefore select the same base. An empty
+`base` is a Prepare blocker: one line, Output `PASS 0/5`, no edits,
+stop. Record `base: <base> (<oid from git rev-parse --short>, from:
+<step>)` in the pass header and reuse `$base` verbatim for
+`git merge-base` and for coach `--base`. Do not treat a failed
+resolution as an empty diff.
 
 ## Scope
 
 PR mode:
 
 ```bash
-git diff --name-only "$(git merge-base origin/<base> HEAD)..HEAD"
+git diff --name-only "$(git merge-base "$base" HEAD)..HEAD"
 ```
 
-Empty PR diff → one-line blocker, Output `PASS 0/5`, stop.
+Empty diff → one-line blocker naming the base, Output `PASS 0/5`,
+stop. Tell the user that `whole-repo` hunts the branch instead.
 
 Branch mode:
 
@@ -120,8 +173,37 @@ intersect: keep only scope paths that match the glob. In PR mode do
 not add files the diff did not touch. In branch mode do not add
 untracked files.
 
-Edit `.cleanup-loop.md` with the result (Write only if the file is
-missing): one line per path as `todo`. Pre-mark before any tidy:
+Compute this list before the state file is created or edited, so a
+blocker never leaves a dirty tree.
+
+### Reconcile, never reset
+
+On pass 1, Write the skeleton and list every scope path as `todo`,
+with the pre-marks below. On every later pass, Read the state file
+and Edit the Scope section by reconciling membership while preserving
+progress:
+
+- A path already on the list keeps its status (`todo`, `in-work`,
+  `clean`, `ruling`), its limit, and its reason. Never rewrite an
+  existing line back to `todo`.
+- A path new to the scope is added as `todo` (or pre-marked).
+- A path that left the scope is dropped from the list. If it was
+  `in-work` or `ruling`, say so under `questions`. Its pending ruling
+  stays in Pending rulings.
+- The one permitted invalidation: a `clean` path returns to `todo`
+  when a commit **without** the `Cleanup-Loop` trailer touched it
+  since the previous pass's finalize commit (someone pushed new work
+  between passes). Detect it with:
+
+  ```bash
+  prev="$(git log --grep="Cleanup-Loop: pass=$((N-1))" -1 --format=%H)"
+  git log --invert-grep --grep='Cleanup-Loop: pass=' --name-only --format= "$prev..HEAD"
+  ```
+
+  Write `re-admitted: <sha>` on that line. Nothing else changes a
+  `clean` line.
+
+Pre-mark before any tidy:
 
 - `clean` with reason: binaries, lockfiles, generated, vendored.
 - `ruling` with reason `config/docs — these rules do not apply`:
@@ -138,7 +220,9 @@ missing): one line per path as `todo`. Pre-mark before any tidy:
   SOLID / coach; tidying comments in that file is not.
 
 Coach Stage-B only touches paths still `todo` / `in-work` on this
-list, plus mechanical call-sites a fix requires.
+list, plus mechanical call-sites a fix requires. A Stage-B signal on
+a `clean` or `ruling` path, or outside the invocation glob, is listed
+under `questions` and left alone.
 
 Unit of scope = the whole file. Set `in-work`
 when you start a file. Set `clean` only after every comment in it has a
@@ -148,19 +232,27 @@ blocks it. DONE across re-invokes is when no file is `todo`.
 ### Branch-mode work set (this pass)
 
 Whole-branch scope is often dozens of source files. One invocation
-still does one pass, then stops. SOLID this pass only on:
+still does one pass, then stops. Select the SOLID work set in this
+order:
 
-1. Paths named in this pass's coach signals (any stage) that are
-   still `todo` / `in-work`, plus colocated tests.
-2. If coach named none: at most 8 remaining `todo` source files,
-   highest comment count first.
+1. **Eligible coach set**: paths named in this pass's coach signals
+   (any stage) that are still `todo` / `in-work` **and** inside the
+   invocation glob, plus their colocated tests. Filter by status and
+   glob first; `clean`, `ruling`, and out-of-glob paths never count.
+2. **Fallback**: if that eligible set is empty — whether coach named
+   nothing, or named only paths the filter removed — at most 8
+   remaining `todo` source files, highest comment count first.
+
+A persistent Stage-A signal on a `clean` file must not starve the
+fallback: `a.ts clean` with a signal and `b.ts todo` selects `b.ts`.
 
 Leave every other `todo` file `todo`. Do not mark it `clean`.
-Report `PASS n/5` with remaining `todo` count in `questions` if
+Report `PASS n/5` with the remaining `todo` count in `questions` if
 the list is not empty. PR mode is unchanged: walk the whole PR
 scope.
 
-Do not touch a file already marked `clean`.
+Do not touch a file already marked `clean` unless Prepare re-admitted
+it.
 
 Files not in scope: change them only for mechanical call-site updates
 a rename or extraction makes necessary.
@@ -201,7 +293,9 @@ scope.
 
 Prove they *start* during Prepare (they launch and produce output). A
 red suite is not a start failure. A command that cannot start is a
-blocker for the whole skill.
+blocker for the whole skill. Keep that run's failed-test names and
+lint pairs as the **pre-coach check**: the coach regression guard in
+`coach-phase.md` compares each Stage-B fix against it.
 
 Do not record the SOLID baseline until after coach.
 
@@ -215,9 +309,8 @@ Prefer, in order:
    `^\s*(//|#|/\*|\*)` with the harness search tool, excluding
    lockfiles, generated artifacts, and binaries.
 
-Edit the method into the baseline section as one line (Write only if
-the state file is missing). `before` in the report is the count at
-the start of this pass's SOLID phase.
+Edit the method into the baseline section as one line. `before` in
+the report is the count at the start of this pass's SOLID phase.
 
 ## Git
 
@@ -229,13 +322,30 @@ the start of this pass's SOLID phase.
   ```
 
   Do not use `git commit --amend`.
-- No push unless the invocation said `push` / `open the PR`.
+- **Finalize commit, every pass.** After the report is appended to
+  `.cleanup-loop.md` and the header says `step: done`:
+
+  ```bash
+  git add -- .cleanup-loop.md
+  git commit -m "$(printf 'chore(cleanup-loop): record pass %s report\n\nCleanup-Loop: pass=%s\n' "$N" "$N")"
+  git status --porcelain   # must print nothing
+  ```
+
+  Do this even when the pass changed no source file, so the next
+  invocation starts from a clean tree and a fresh checkout carries the
+  report. The report cannot embed this commit's own SHA, so `commits`
+  lists source commits only; the finalize commit is always the last
+  match of `git log --grep="Cleanup-Loop: pass=N"`.
+- No push unless the invocation said `push` / `open the PR`. When it
+  did, push after the finalize commit: `git push` to the tracking
+  remote, never `--force`.
 - No amend, rebase, squash, reword, force, branch create/delete, PR
   title/body/label/review changes.
 - Remove committed work with `git revert`. Remove uncommitted work with
   `git checkout -- <file>`.
 - One concern per SOLID commit: tests *or* structure *or* comments.
-  Coach Stage-B commits are their own concern.
+  Coach Stage-B commits are their own concern; each carries the fix
+  and the holding test that proves it.
 - State-file updates may ride any commit.
 - A characterization test may share the commit with the refactor it
   permits, if a separate commit would make the suite weaker for a time.
@@ -246,10 +356,16 @@ Green = the set of failed tests equals the recorded post-coach
 baseline, and the set of lint `(file, rule-id)` pairs equals that
 baseline. Compare by identity, not totals, not line numbers.
 
-If this outer pass's coach tiers landed commits, replace the SOLID
-baseline with the new post-coach set before tests-first. If they
-landed none, reuse the previous post-coach baseline. A newly-passing
-test from a Stage-B fix is not a green failure.
+Record the SOLID baseline from the post-coach tree when either holds:
+
+- no SOLID baseline exists in the state file yet (pass 1, including
+  a pass 1 whose coach phase was skipped or landed nothing);
+- this outer pass's coach tiers landed commits.
+
+Otherwise reuse the recorded post-coach baseline. A newly-passing test
+from a Stage-B fix is not a green failure. The coach regression guard
+already rejected any fix that introduced a failure, so a refreshed
+baseline never legitimizes a coach regression.
 
 A red baseline is still green. After the baseline is recorded, do not
 repair failures that are in it. A test that fails now and is not in
@@ -269,12 +385,18 @@ Duplicate of the SKILL.md Output block.
 - `suite` / `lint` are pass or fail *vs baseline*, not zero-failure.
 - `status`: only `PASS n/5`, `DONE — thorough`, or
   `DONE — max iterations`. Do not invent tokens such as `blocked`.
-  A Prepare blocker (missing mise, dirty tree, empty PR diff,
-  commands that cannot start) still emits this block: `PASS 0/5`
-  and one `questions` line naming the blocker. `PASS n/5` while files remain
-  `todo`; `DONE — thorough` when every scope file is `clean` or
-  `ruling`; `DONE — max iterations` on pass 5 if not thorough.
-- `commits` lists SHAs this pass created, one line each.
+  A Prepare blocker (missing mise, dirty tree, unresolvable base,
+  empty diff, commands that cannot start) still emits this block:
+  `PASS 0/5` and one `questions` line naming the blocker.
+  - PR mode: `DONE — thorough` iff every scope file is `clean` or
+    `ruling`; else `PASS n/5`.
+  - Branch mode: `DONE — thorough` iff no `todo` remains across
+    re-invokes. A pass that finished only its work set and left other
+    `todo` files is `PASS n/5` with the remaining count under
+    `questions`. Never mark unvisited files `clean` to reach DONE.
+  - `DONE — max iterations` on pass 5 if not thorough.
+- `commits` lists source SHAs this pass created, one line each. The
+  finalize commit is excluded (see Git).
 - `kept comments` lists only non-obvious keeps.
 - `questions` one line each with a recommendation; omit the section if
   none.

@@ -31,7 +31,8 @@ acceptance suite that already uses another runner. Do not switch
 vehicles.
 
 A stdlib-testing Go repo must not grow Ginkgo (or any other) nodes.
-That is issue #18 / PR #27.
+That is issue #18 / PR #27. The same Orient governs the holding test
+a coach Stage-B fix adds in steps 1–3.
 
 ## Tests first
 

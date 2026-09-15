@@ -30,9 +30,9 @@ flags. Bind every flag you add to that help text.
 
 ## Skip, do not fail
 
-Read `.cleanup-loop.md` if it exists, then Edit in
-`coach: skipped (<reason>)`. Write only when the file is missing.
-Continue to SOLID when:
+Read `.cleanup-loop.md` (Prepare already created it), then Edit in
+`coach: skipped (<reason>)`. Never Write over it. Continue to SOLID
+when:
 
 - no Go/TS/TSX file is in the scope list
 - codesignal cannot start after mise is present
@@ -49,8 +49,10 @@ Coach window follows Prepare `mode` (do not invent flags):
 
 - **`mode: pr`** — `--base <resolved-base>`. Do not switch to
   `--baseline` because the PR diff analyzed 0 files.
-- **`mode: branch`** — `--baseline`. This is the whole-branch hunt.
-  Do not invent `HEAD~N`.
+- **`mode: branch`** — `--baseline`. This is the whole-branch hunt,
+  chosen only on the default branch or when the user asked for
+  `whole-repo`. A feature branch without `gh` is still `mode: pr`
+  against the default branch. Do not invent `HEAD~N`.
 
 ## JSON consume path
 
@@ -103,7 +105,38 @@ Commit a Stage-B fix before the next scan or coach will not see it.
 - Stage B whose only fix changes a public contract, a schema, or
   layer policy → Ruling required, do not fix.
 - Out-of-scope Stage-B paths → do not edit. List them Stage A-only
-  with reason `out of scope`.
+  with reason `out of scope`. The same applies to a Stage-B path whose
+  scope status is `clean` or `ruling`, or that falls outside the
+  invocation glob: list it under `questions` and leave it alone.
+
+## Regression guard
+
+Prepare's start-proof run recorded the **pre-coach check**: failed
+tests by full name and lint `(file, rule-id)` pairs. Every Stage-B
+fix in every tier must clear this guard before it is committed:
+
+1. Orient on the test framework first (`tidy-rules.md`, Framework
+   Orient). Add or extend a behavioral test in the repo's real
+   container nodes that holds the corrected behavior. It fails on the
+   defect and passes on the fix. Do not invent nodes.
+2. Run the smallest covering tests, then the full recorded test and
+   lint commands.
+3. Compare by identity with the pre-coach check:
+   - a failed test or lint pair that is **not** in the check set →
+     repair it now, or `git checkout -- <files>` the fix and its test.
+     Never commit it, never wait for 4a to "baseline" it.
+   - a test that was failing in the check set and now passes because
+     of the fix → accepted; remove it from the check set.
+4. Commit the fix and its holding test together. The check set after
+   that commit is the guard for the next fix.
+
+Counterexample this guard exists for: coach edit clears a signal but
+breaks `TestUnrelatedBehavior`; without the guard 4a would record that
+failure as baseline and SOLID would be forbidden to repair it. With the
+guard the fix is repaired or reverted before any commit.
+
+Record each holding test and check result under the tier's line in
+the state file.
 
 ## Tier 1 — simple scan loop
 
@@ -140,9 +173,10 @@ Go/TS/TSX paths from the diff.
 
 Cycle ≤5:
 
-`resolve-binary → scan-set → classify Stage A then B → edit in-scope Stage-B paths → commit only if those edits landed → same scan-set`
+`resolve-binary → scan-set → classify Stage A then B → edit in-scope Stage-B paths → regression guard per fix → commit only if guarded edits landed → same scan-set`
 
-Do not commit a no-op cycle. Stop Tier 1 when Stage-B is empty after
+Do not commit a no-op cycle, and do not commit a fix that failed the
+regression guard. Stop Tier 1 when Stage-B is empty after
 a fresh simple scan, or 5 cycles have run, or the simple scan cannot
 execute. Leftover Stage-B after the cap does not skip SOLID — list
 each leftover under `questions`, then continue. After the tier,
@@ -165,9 +199,9 @@ Tier 1 commits), not an uncommitted worktree file:
    instructions / CI / README as the coach `--project-config` file,
    if that blob exists at `HEAD`.
 
-If none exist, Read `.cleanup-loop.md` if it exists, then Edit in
-`coach: project-config absent; tier 3 skipped`. Write only when the
-file is missing. Then go to the SOLID phase.
+If none exist, Read `.cleanup-loop.md`, then Edit in
+`coach: project-config absent; tier 3 skipped`. Then go to the SOLID
+phase.
 
 `--check-project --project-language typescript` is a **readiness**
 probe, not a scan-fix loop. If the repo is TS-heavy it may run once
@@ -211,8 +245,8 @@ Invalid config (not at the analyzed revision, not JSON, schema
 failure): coach exits 2 with `project_config_invalid` and writes no
 report. Record the reason and continue to SOLID.
 
-Cycle ≤5, same Stage A/B bar and commit rule as Tier 1 (commit only
-if Stage-B edits landed). Architecture signals
+Cycle ≤5, same Stage A/B bar, same regression guard, and same commit
+rule as Tier 1 (commit only if guarded Stage-B edits landed). Architecture signals
 (`architecture.layer_violation`, `architecture.layer_bypass`,
 `schema_version` `"2"`) enter the same classification:
 
@@ -232,14 +266,19 @@ tier, Read `.cleanup-loop.md` and Edit the Tier 3 coach section.
 
 ## After all coach tiers
 
-Record the pass-1 test/lint baseline on the post-coach tree. Then run
-SOLID. Do not re-run coach after SOLID in the same invocation.
+Record the SOLID baseline on the post-coach tree when none exists
+yet, or when a tier landed commits this pass; otherwise reuse the
+recorded one (`loop-protocol.md`, Green). Then run SOLID. Do not
+re-run coach after SOLID in the same invocation.
 
 ## State file per tier
 
-Read `.cleanup-loop.md`, then Edit the matching section. Write only
-when the file is missing.
+Read `.cleanup-loop.md`, then Edit the matching section. Prepare
+created the file; never Write over it here.
 
-- Tier 1: commands, Stage-A count, each Stage-B item, SHAs.
+- Pre-coach check: failed tests, lint pairs (from Prepare).
+- Tier 1: commands, Stage-A count, each Stage-B item, holding tests,
+  guard results, SHAs.
 - Tier 2: detected path or `absent`; whether `--check-project` ran.
-- Tier 3: ran / skipped / invalid, commands, Stage-A/B, SHAs.
+- Tier 3: ran / skipped / invalid, commands, Stage-A/B, holding
+  tests, guard results, SHAs.
