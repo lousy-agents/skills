@@ -30,7 +30,8 @@
         "triaging-pr-reviews",
         "curate-release",
         "skill-reviewer",
-        "instruction-style"
+        "instruction-style",
+        "code-tidy"
       ]
     }
   ]
