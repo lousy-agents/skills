@@ -110,15 +110,31 @@ of this: loop commits must land on a branch.
    over a PR number or a base ref given in the same invocation; say
    so in one line.
 1. Invocation PR number or URL —
-   `gh pr view <n> --json number,baseRefName,headRefName`. HEAD must
-   already be that PR's head; otherwise a blocker.
+   `gh pr view <n> --json number,baseRefName,headRefName`, or the
+   GitHub MCP tool `pull_request_read` (method `get`: `head.ref`,
+   `base.ref`) when the harness offers that instead of `gh`. HEAD
+   must already be that PR's head; otherwise a blocker.
 2. Invocation-supplied base ref. Forces `mode: pr` against that base
    even when a GitHub PR targeting another branch exists.
-3. `gh pr view --json number,baseRefName` for the current branch.
+3. The current branch's open PR: `gh pr view --json
+   number,baseRefName`, or the GitHub MCP tool `list_pull_requests`
+   with `state: open` and `head: <owner>:<branch>`, owner and repo
+   parsed from `git remote get-url origin` — only when that URL is on
+   github.com. Exactly one open PR → its `base.ref`.
 4. `$GITHUB_EVENT_NAME` is `pull_request` and `$GITHUB_BASE_REF` is
    set.
-5. Git-only path — `gh` is missing, errors, or prints "no pull
-   requests found", and no env var applies. Resolve the default
+5. `$CLAUDE_CODE_BASE_REF` is set, names a branch other than HEAD's,
+   and resolves in this repository after `git fetch origin <ref>`.
+   Claude Code Remote sets it to the branch the session was forked
+   from, which is the natural base of the session's work branch. It
+   is session-scoped, not repo-scoped: in any other checkout (a
+   scratch repo, a second clone) it names a branch that does not
+   exist there — ignore it in one line, never block on it. Equal to
+   HEAD's branch → ignore it too (a session started on a PR branch
+   has that PR found by step 3).
+6. Git-only path — no PR found by `gh` or MCP (`gh` missing, erroring,
+   or printing "no pull requests found"), and no env var applies.
+   Resolve the default
    branch, first that succeeds: `git symbolic-ref -q
    refs/remotes/origin/HEAD`; `git remote set-head origin --auto`
    then the same `symbolic-ref` (needs the remote; failure is
@@ -131,8 +147,10 @@ of this: loop commits must land on a branch.
      `base: <resolved> (<oid>, from: inferred)`.
 
 Missing or failing `gh` is one line of narration and never a blocker.
-Do not repair credentials. Never map "gh is missing" to "no PR
-exists": a feature branch without `gh` still diffs against the
+Do not repair credentials. Claude Code Remote has no `gh` and no
+`GITHUB_*` event vars but exposes the GitHub MCP tools; use them in
+steps 1 and 3 exactly as you would `gh`. Never map "gh is missing" to
+"no PR exists": a feature branch without `gh` still diffs against the
 default branch, so coach Stage-B stays capped to that diff.
 
 - **`mode: pr`** — normalize the base (below). Coach uses

@@ -17,7 +17,7 @@ description: >-
   or to edit AGENTS.md / CLAUDE.md prose (use instruction-style).
 argument-hint: "Optional: PR number, base ref, path glob, 'whole-repo', or 'push' to allow pushing"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
-compatibility: Requires mise on PATH. Coach is invoked as `mise exec github:lousy-agents/coach -- coach ...`. Missing mise is a blocker.
+compatibility: "Requires mise on PATH (curl https://mise.run | sh, or npm install -g @jdxcode/mise where npm exists). Coach runs through mise as github:lousy-agents/coach, falling back to mise's go backend or a source build where the GitHub API is refused. Works in Claude Code Remote without gh (GitHub MCP tools stand in). Missing mise after one install attempt is a blocker."
 ---
 
 # Code Tidy
@@ -65,10 +65,11 @@ Fail closed. Any of these is a blocker; emit the report and stop. A
 Prepare blocker fires before the state file is written, so it never
 leaves a dirty tree.
 
-- `mise` missing or not on PATH.
+- `mise` still missing after the one install attempt in Prepare.
 - Work tree dirty at session start.
-- Detached HEAD (`git symbolic-ref -q HEAD` fails). Commits must land
-  on a branch; check one out first.
+- Detached HEAD (`git symbolic-ref -q HEAD` fails), or no git identity
+  (`git config user.email` empty). Commits must land on a branch
+  under a name; fix that first.
 - Test command or lint command cannot *start* (not the same as baseline
   failures).
 - Base ref does not resolve after normalization, or HEAD has no
@@ -107,15 +108,25 @@ leaves a dirty tree.
 
 ## Prerequisites
 
-- **mise** required. Install hint: `curl https://mise.run | sh` then
-  `eval "$(mise activate <shell>)"`. Missing mise blocks the whole
-  skill.
-- **Coach** via mise:
-  `mise exec github:lousy-agents/coach -- coach codesignal --help`
-  must run. If the target language is not Go/TS/TSX, skip the coach
-  phase, note it, and still run SOLID. Coach that cannot start after
-  mise is present is a skip, not a skill failure.
-- **git** required. `gh` optional; git-only fallback is mandatory.
+- **mise** required. Install: `curl https://mise.run | sh` then
+  `eval "$(mise activate <shell>)"`, or `npm install -g @jdxcode/mise`
+  where npm is on PATH (Claude Code Remote ships Node, not mise).
+  Prepare makes that npm attempt once; mise still missing afterwards
+  blocks the whole skill.
+- **Coach** via mise, first path that runs
+  `coach codesignal --help` (details in `./references/coach-phase.md`):
+  `mise exec github:lousy-agents/coach -- coach …`; if the GitHub API
+  is refused (Claude Code Remote answers HTTP 403 for a repository
+  not attached to the session),
+  `MISE_FETCH_REMOTE_VERSIONS_TIMEOUT=60s mise exec
+  "go:github.com/lousy-agents/coach/cmd/coach@latest" -- coach …`
+  through the Go module proxy; else a source build from a scratch
+  clone. If the target language is not Go/TS/TSX, or no path runs,
+  skip the coach phase, note it, and still run SOLID. Coach that
+  cannot start after mise is present is a skip, not a skill failure.
+- **git** required, with `user.email` set. `gh` optional: when it is
+  missing and the harness offers GitHub MCP tools (Claude Code
+  Remote), those stand in for PR lookup; otherwise the git-only path.
 
 ## Procedure
 
@@ -129,13 +140,16 @@ adds in steps 1–3).
 0. **Prepare.** Every blocker below emits the Output block
    (`status PASS 0/5`, one `questions` line naming the blocker) and
    **stops** before `.cleanup-loop.md` is written or changed.
-   - Use Bash `command -v mise`; missing mise → one-line blocker,
-     print `curl https://mise.run | sh`.
+   - Use Bash `command -v mise`; missing → if `command -v npm`
+     succeeds, Bash `npm install -g @jdxcode/mise` once, say so in one
+     line, re-check; still missing → one-line blocker printing both
+     install hints.
    - Use Read on `AGENTS.md`, `CLAUDE.md`, and other project
      instructions. If they name a version-manager prelude (`nvm use`,
      `mise install`), run it with Bash before proving test/lint start.
    - Use Bash `git symbolic-ref -q HEAD`; failure → one-line blocker
-     (detached HEAD). Then `git status --porcelain`; any output
+     (detached HEAD). `git config user.email` empty → one-line blocker
+     (no git identity). Then `git status --porcelain`; any output
      including untracked files → one-line blocker (dirty tree).
    - Invocation args: a PR number/URL requires HEAD to already be that
      PR's head (otherwise a blocker; do not switch branches); a
@@ -147,12 +161,21 @@ adds in steps 1–3).
    - Detect mode and base with Bash (first match wins; record which
      step won): `whole-repo` → `mode: branch`, skip the rest; else
      (1) invocation PR number/URL via
-     `gh pr view <n> --json number,baseRefName,headRefName`;
-     (2) invocation-supplied base ref; (3) `gh pr view --json
-     number,baseRefName` for the current branch; (4)
-     `$GITHUB_EVENT_NAME` = `pull_request` with `$GITHUB_BASE_REF`.
-     Any of those → `mode: pr`. (5) Git-only, when `gh` is missing,
-     errors, or reports no PR: resolve the default branch
+     `gh pr view <n> --json number,baseRefName,headRefName`, or GitHub
+     MCP `pull_request_read` (`get`) when the harness offers that
+     instead of `gh` (Claude Code Remote); (2) invocation-supplied
+     base ref; (3) the current branch's open PR: `gh pr view --json
+     number,baseRefName`, or GitHub MCP `list_pull_requests` with
+     `state: open` and `head: <owner>:<branch>` (owner/repo from
+     `git remote get-url origin`, only when that is a GitHub URL);
+     (4) `$GITHUB_EVENT_NAME` = `pull_request` with
+     `$GITHUB_BASE_REF`; (5) `$CLAUDE_CODE_BASE_REF` (the branch a
+     Claude Code Remote session forked from) when it names a branch
+     other than HEAD's **and** resolves in this repository after
+     `git fetch origin <ref>`; otherwise ignore it in one line — it is
+     session-scoped, not repo-scoped. Any of those → `mode: pr`.
+     (6) Git-only, when neither `gh` nor MCP finds a PR and no env
+     var applies: resolve the default branch
      (`git symbolic-ref -q refs/remotes/origin/HEAD`, else
      `git remote set-head origin --auto`, else `origin/main`,
      `origin/master`, local `main`, `master`; none → one-line
@@ -325,9 +348,9 @@ adds in steps 1–3).
 5. **Verify.** Use Bash to re-run suite and lint vs baseline. Use Bash
    `git diff` on production files: every SOLID edit is an
    extract/rename/narrow/collapse/move; revert one that is not. State
-   the intent in one sentence from the tests: Bash `gh pr view` for
-   title/body if available (PR mode), else infer from the tests on
-   this branch and say so. If you cannot state it and the diff added
+   the intent in one sentence from the tests: Bash `gh pr view`, or
+   GitHub MCP `pull_request_read`, for title/body if available (PR
+   mode), else infer from the tests on this branch and say so. If you cannot state it and the diff added
    behavior, return to 4b. PR mode: every scope file is `clean` or
    `ruling`. Branch mode: this pass's work set is `clean` or
    `ruling`; other `todo` files may remain. Delete every temporary

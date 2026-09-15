@@ -7,23 +7,50 @@ Coach has no Stage A/B. Classification is ours.
 
 ## Invoke
 
-Portable default:
+Resolve the binary once per invocation: the first path below that
+runs `coach codesignal --help`. Record which one in the state file.
 
-```bash
-mise exec github:lousy-agents/coach -- coach codesignal --format json <args>
-```
+1. Portable default — the GitHub release through mise:
 
-Source-build **only** when `./cmd/coach` exists in cwd:
+   ```bash
+   mise exec github:lousy-agents/coach -- coach codesignal --format json <args>
+   ```
 
-```bash
-scratch="$(mktemp)"
-mise exec -- go build -o "$scratch" ./cmd/coach
-"$scratch" codesignal --format json <args>
-rm -f "$scratch"
-```
+2. GitHub API refused. Claude Code Remote answers mise's release
+   lookup with HTTP 403 (`GitHub access to this repository is not
+   enabled for this session`) for a repository that is not attached
+   to the session. Use mise's Go backend, which resolves through the
+   Go module proxy and never calls the GitHub API:
 
-Delete the scratch binary on every exit path. Do not call
-`go build ./cmd/coach` in a repo that is not coach.
+   ```bash
+   MISE_FETCH_REMOTE_VERSIONS_TIMEOUT=60s \
+     mise exec "go:github.com/lousy-agents/coach/cmd/coach@latest" -- coach codesignal --format json <args>
+   ```
+
+   The timeout is load-bearing: mise's default 3 s version-resolve
+   window times out behind the remote proxy; 60 s installs in about
+   30 s.
+
+3. Source build from a scratch clone — anonymous git reads are served
+   even where the API is not:
+
+   ```bash
+   src="$(mktemp -d)"; bin="$(mktemp)"
+   git clone --depth 1 https://github.com/lousy-agents/coach "$src"
+   (cd "$src" && go build -o "$bin" ./cmd/coach)
+   "$bin" codesignal --format json <args>
+   rm -rf "$src" "$bin"
+   ```
+
+   Use the Go on PATH, else `mise exec go@latest -- go build …`.
+
+Dogfood **only** when `./cmd/coach` exists in cwd (the repository *is*
+coach): `mise exec -- go build -o "$(mktemp)" ./cmd/coach` and use
+that binary. Do not call `go build ./cmd/coach` in any other repo.
+
+Delete every scratch clone and binary on every exit path. If none of
+the paths runs, coach is skipped (`coach: skipped (<reason>)`) and
+SOLID still runs.
 
 Read `<binary> codesignal --help` once per invocation. Do not invent
 flags. Bind every flag you add to that help text.
