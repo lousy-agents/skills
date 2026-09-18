@@ -49,7 +49,20 @@ jobs:
           done
           exit $fail
 
+      # Skill discovery looks under .github/skills/, .claude/skills/, and
+      # .agents/skills/ and lists only real directories. This repo keeps
+      # canonical skills in skills/ with .github/skills -> ../skills as a
+      # symlink, which discovery does not follow — so without materializing
+      # a real tree, lint reports "No skill(s) found" and code-tidy is never
+      # gated. Dual path: edit skills/<name>/; CI copies into .github/skills
+      # for the lint job only (checkout is disposable).
+      - name: Materialize skills for lint discovery
+        run: |
+          rm -f .github/skills
+          cp -a skills .github/skills
+
       - name: Lint with lousy-agents
         uses: zpratt/lousy-agents@99bd67b5eec8ec829b6e0fb3b5c9d7a5bdb8b37f  # v5.14.2
         with:
           github_token: ${{ github.token }}
+          skills: "true"
