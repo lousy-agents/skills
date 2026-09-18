@@ -113,6 +113,14 @@
       "source": "./instruction-style",
       "category": "tooling",
       "keywords": ["instructions", "agents-md", "prose", "modality", "harness"]
+    },
+    {
+      "name": "code-tidy",
+      "displayName": "Code Tidy",
+      "description": "Tidy the files a PR or branch changed against its base, or all tracked source on the default branch or with whole-repo: coach CodeSignal loop first (Stage-B defects may change behavior), then SOLID tidy with no further behavior change. Tests document behavior, comments earn their place",
+      "source": "./code-tidy",
+      "category": "development",
+      "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise", "quality", "lifecycle"]
     }
   ]
 }

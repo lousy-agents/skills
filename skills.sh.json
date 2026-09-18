@@ -24,6 +24,13 @@
       ]
     },
     {
+      "title": "Implementation & Quality",
+      "description": "Lifecycle tidy and quality skills that restructure and clean code after feature work and before review — not pure review triage.",
+      "skills": [
+        "code-tidy"
+      ]
+    },
+    {
       "title": "Code Review & Integrity",
       "description": "Automated pull request triaging, code quality gatekeeping, and durable instruction-file revision.",
       "skills": [
