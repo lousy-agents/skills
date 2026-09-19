@@ -16,7 +16,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`designing-for-intent`](#designing-for-intent) | Planning | Reviews a UX/onboarding/consent artifact for intent map, delegation boundary, and agency risks before implementation |
 | [`customer-strategy-forge`](#customer-strategy-forge) | Product Strategy | Turns customer evidence into auditable personas, journeys, progression hypotheses, and opportunity maps |
 | [`go-testable-design`](#go-testable-design) | Implementation | Guides Go development with TDD: small tests first, public behavior, IO at the edges |
-| [`code-tidy`](#code-tidy) | Implementation / Hardening | Tidies the files a PR or branch changed against its base (all tracked source on the default branch or with `whole-repo`): coach first (Stage-B may change behavior), then SOLID with no further behavior change |
+| [`code-tidy`](#code-tidy) | Implementation / Hardening | Tidies the files a PR or branch changed against its base (all tracked source on the default branch or with `whole-repo`): autonomous coach-first Stage-B refactor by default, then SOLID with no further behavior change |
 | [`rugged-evil-tester`](#rugged-evil-tester) | Testing / Hardening | Generates adversarial, security, and chaos tests for TypeScript code |
 | [`mutation-hunter`](#mutation-hunter) | Testing / Hardening | Finds test coverage gaps by running mutation testing on TypeScript, Go, or Python |
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
@@ -314,13 +314,13 @@ Guides Go development with tests: smallest failing test first, start from public
 
 **Install:** `npx skills add lousy-agents/skills --skill code-tidy`
 
-Tidies the files a PR or branch changed against its base (the PR's base, or the default branch when no PR exists), or all tracked source when run on the default branch or asked for `whole-repo`: a coach CodeSignal loop first (Stage-B defects may change behavior), then a SOLID tidy with no further behavior change. Tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. The suite and linter stay no worse than the post-coach pass-1 baseline.
+Tidies the files a PR or branch changed against its base (the PR's base, or the default branch when no PR exists), or all tracked source when run on the default branch or asked for `whole-repo`: an autonomous coach CodeSignal loop first (Stage-B defect fixes on by default; may change behavior), then a SOLID tidy with no further behavior change. Tests become the documentation, production code is extracted and renamed until it reads as prose, comments are deleted unless they earn their place. The suite and linter stay no worse than the post-coach pass-1 baseline.
 
 **Requires:** a usable coach on **PATH**, or [mise](https://mise.jdx.dev/) to fetch one. Mise is only needed when no usable PATH coach exists — a preprovisioned coach is used as-is. Otherwise mise fetches the pinned coach version (`github:lousy-agents/coach@v0.6.0`, or the repository's `mise.toml` / `mise.lock` pin), falling back to the `go:` backend at `cmd/coach@v0.6.0` or a source build of that tag where the GitHub API is refused. No coach and no mise after one install attempt is a blocker.
 
 **Acquisition is fail-closed.** Only a PATH coach and a cosign-verified release archive run unquestioned; every fetch rank below them resolves a mutable tag and is refused unless the invocation says `allow-unverified-coach`. So in an environment with no preinstalled coach and no `cosign` — the default in Claude Code Remote — the coach phase is skipped with a reason and SOLID still runs; pass `allow-unverified-coach` to let the mise ladder fetch one. Claude Code Remote needs no `gh` either: GitHub MCP tools stand in for PR lookup, and coach resolves through the Go module proxy.
 
-**Stage-B gate:** a coach Stage-B fix can change behavior, so it needs `allow-behavior-fix`. Without it the skill classifies Stage-B findings, lists them under `questions`, and edits nothing. The SOLID pass is behavior-preserving either way, and `DONE — thorough` after a Stage-B commit must disclose that behavior may have changed and name those SHAs. Prepare blockers report `status BLOCKED`, never `PASS 0/5`.
+**Stage-B default:** coach Stage-B production edits are on by default (may change behavior; prefer fixing production code over silencing; regression guard + holding test before each Stage-B commit). Opt out with `solid-only` / `no-behavior-change` / prune-comments-only — then classify Stage-B, list under `questions`, and run SOLID/comments only. Legacy `allow-behavior-fix` / `allow-behavior-change` is a redundant alias for the default. The SOLID pass is behavior-preserving either way. Reports lead with Stage-B fixed/remaining/SHAs; `DONE — thorough` is forbidden from comment deletes while Stage-B remains, and after a Stage-B commit must disclose that behavior may have changed and name those SHAs. Prepare blockers report `status BLOCKED`, never `PASS 0/5`.
 
 **Use when you want to:**
 - Tidy a PR or a feature branch's diff, or hunt all tracked source with `whole-repo`
@@ -328,7 +328,7 @@ Tidies the files a PR or branch changed against its base (the PR's base, or the 
 - Make tests document behavior with the repository's existing test runner
 - Extract and rename until functions read as prose, without speculative abstractions
 
-**Do NOT use to:** write new features, author new Go tests (`go-testable-design`; Stage-B holding/characterization tests with `allow-behavior-fix` are the exception), rewrite history (`curate-release`), triage review comments (`triaging-pr-reviews`), or edit instruction-file prose (`instruction-style`).
+**Do NOT use to:** write new features, author new Go tests (`go-testable-design`; Stage-B holding/characterization tests on the default coach-loop are the exception), rewrite history (`curate-release`), triage review comments (`triaging-pr-reviews`), or edit instruction-file prose (`instruction-style`).
 
 **Outputs:** commits on the current branch with a `Cleanup-Loop: pass=N` trailer, a `.cleanup-loop.md` state file that ships with the PR and is committed at the end of every pass, and a fixed report block. One invocation does one pass and stops.
 

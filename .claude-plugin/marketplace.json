@@ -117,10 +117,10 @@
     {
       "name": "code-tidy",
       "displayName": "Code Tidy",
-      "description": "Tidy the files a PR or branch changed against its base, or all tracked source on the default branch or with whole-repo: coach CodeSignal loop first (Stage-B defects may change behavior), then SOLID tidy with no further behavior change. Tests document behavior, comments earn their place",
+      "description": "Tidy the files a PR or branch changed against its base, or all tracked source on the default branch or with whole-repo: autonomous coach-first Stage-B refactor by default (may change behavior), then SOLID tidy with no further behavior change. Opt out with solid-only / no-behavior-change / prune-comments-only. Tests document behavior, comments earn their place",
       "source": "./code-tidy",
       "category": "development",
-      "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise", "quality", "lifecycle"]
+      "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise", "quality", "lifecycle", "coach-first", "Stage-B", "solid-only"]
     }
   ]
 }
