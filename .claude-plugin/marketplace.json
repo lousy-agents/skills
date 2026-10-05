@@ -115,6 +115,14 @@
       "keywords": ["instructions", "agents-md", "prose", "modality", "harness"]
     },
     {
+      "name": "optimize-prompt-loop",
+      "displayName": "Optimize Prompt Loop",
+      "description": "Turn a fuzzy or overly broad request into a concise task prompt fitted to the current model, agent harness, and effort level",
+      "source": "./optimize-prompt-loop",
+      "category": "tooling",
+      "keywords": ["prompts", "prompt-engineering", "optimization", "model-aware", "harness", "rubric"]
+    },
+    {
       "name": "code-tidy",
       "displayName": "Code Tidy",
       "description": "Tidy the files a PR or branch changed against its base, or all tracked source on the default branch or with whole-repo: autonomous coach-first Stage-B refactor by default (may change behavior), then SOLID tidy with no further behavior change. Opt out with solid-only / no-behavior-change / prune-comments-only. Tests document behavior, comments earn their place",
