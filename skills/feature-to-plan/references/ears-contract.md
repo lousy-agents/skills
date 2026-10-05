@@ -1,18 +1,10 @@
 # EARS Contract
 
-> This is the canonical EARS Contract. Load it to draft or review criteria in an artifact that another skill owns: a spec file, a GitHub issue, or a refined epic.
+> The `feature-to-plan` skill loads this file before drafting acceptance criteria in Phase 1. Every criterion, Open Question, and verification item in the plan follows it.
 >
-> Copies of the block between the markers live in other skills, so each skill still works when installed without `to-ears`. The copies are byte-for-byte identical:
+> The block below is a verbatim copy of the canonical contract in the `to-ears` skill. This copy exists so `feature-to-plan` still works when installed without `to-ears`. When `to-ears` is installed, delegate drafting and review to it in Embedded mode. This block stays binding either way.
 >
-> - `feature-to-plan/references/ears-contract.md`
-> - `issue-refine-loop/references/epic-structure.md`
->
-> `tests/test_ears_contract_sync.py` fails CI when any copy differs from this file. The same test checks that `spec-auditor/scripts/spec_audit_lint.py` agrees with this block on the vague-term list and on which opening keywords count as EARS. To change the contract, edit this file and every copy in the same PR.
->
-> The contract covers only the minimum every consumer must enforce. The full method lives elsewhere in this skill: how to pick a pattern, the review checklists, the failure modes, and how to derive tests.
->
-> - [`authoring.md`](./authoring.md) — choosing patterns, review checklists, failure modes.
-> - [`test-derivation.md`](./test-derivation.md) — deriving tests from criteria.
+> In the `lousy-agents/skills` repository, `tests/test_ears_contract_sync.py` fails CI if this copy drifts from the canonical one.
 
 <!-- ears-contract:begin -->
 **EARS Contract v1.** This block is copied verbatim from the `to-ears` skill's `references/ears-contract.md`, so the skill that carries it still works when installed alone. Do not edit this copy by itself.

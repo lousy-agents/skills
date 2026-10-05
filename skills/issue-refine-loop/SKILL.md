@@ -181,7 +181,7 @@ Each section gets one verdict — `present` or `missing` — plus the stated cou
 | 1 | Problem Statement | 2+ sentences naming the problem and its consequence, with no proposed solution | sentences |
 | 2 | Personas | A table with 1+ row, each row naming a role (not a person) and an explicit Positive/Negative/Neutral impact | rows |
 | 3 | Value Assessment | An explicit primary value type with a reason; secondary optional | value types |
-| 4 | User Stories | 1+ story in As-a / I-want / so-that form, **and every story carries 1+ acceptance criterion in an EARS pattern**, and 1+ criterion across the section covers an error or unwanted condition | stories, EARS criteria, error criteria |
+| 4 | User Stories | 1+ story in As-a / I-want / so-that form, **and every story carries 1+ acceptance criterion in an EARS pattern**, and 1+ criterion across the section covers an error or unwanted condition. `[non-EARS]` criteria and criteria whose unwanted condition is `[TBD]` do not count (see the rubric in full) | stories, EARS criteria, error criteria |
 | 5 | Design | All four present: components affected with concrete paths; dependencies; data model or state changes (or an explicit "none"); 1+ Mermaid diagram | components, dependencies, diagrams |
 | 6 | Tasks | 1+ task, each with a title and either the full six-part anatomy or a link to a child issue that carries it | tasks |
 | 7 | Out of Scope | 1+ explicit exclusion | exclusions |
@@ -295,8 +295,8 @@ full-graph `### Child issues created` table.
 
 | State | Condition | Actions |
 | --- | --- | --- |
-| `refined` | All eight rubric sections `present`, no Blocker or High finding remains, **and** the manifest gate above passes | `set_labels` → remove `refining` and `needs-refine` (and the `unrefined` alias if present), add `refined` |
-| `needs-human-input` | Rounds exhausted, or an ambiguity no assumption can safely resolve | Write every remaining Blocker/High finding into the body's Open Questions **with its severity**; `set_labels` → remove `refining` and `needs-refine` (and the `unrefined` alias if present), add `needs-human-input`. **Never apply `refined`.** |
+| `refined` | All eight rubric sections `present`, no Blocker or High finding remains (any `[TBD …]` clause and any Blocker or High Open Question counts as one), **and** the manifest gate above passes | `set_labels` → remove `refining` and `needs-refine` (and the `unrefined` alias if present), add `refined` |
+| `needs-human-input` | Rounds exhausted, or an ambiguity no assumption can safely resolve, including a `[TBD …]` clause or Blocker/High Open Question that only a human can decide | Write every remaining Blocker/High finding into the body's Open Questions **with its severity**; `set_labels` → remove `refining` and `needs-refine` (and the `unrefined` alias if present), add `needs-human-input`. **Never apply `refined`.** |
 | `aborted` | No write surface, unresolved repository, closed issue, or any stop-and-ask condition | Leave the issue unchanged beyond comments already posted. Do not add or remove labels beyond removing `refining` if this run set it. |
 
 **Epic labels.** Canonical lifecycle `needs-refine` → `refining` → `refined`, plus terminal

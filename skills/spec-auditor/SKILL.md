@@ -1,6 +1,6 @@
 ---
 name: spec-auditor
-description: Adversarially review feature specifications, implementation plans, GitHub issues, PRDs, or EARS-format specs before coding. Use when the user asks to audit, critique, stress-test, validate, review for ambiguity, find contradictions, identify gaps, harden acceptance criteria, prepare a spec for Codex, GitHub Copilot, Claude, or another coding agent, or produce a structured flaw list for a spec-improvement loop.
+description: Adversarially review feature specifications, implementation plans, GitHub issues, PRDs, or EARS-format specs before coding. Use when the user asks to audit, critique, stress-test, validate, review for ambiguity, find contradictions, identify gaps, harden acceptance criteria, prepare a spec for Codex, GitHub Copilot, Claude, or another coding agent, or produce a structured flaw list for a spec-improvement loop. For drafting, converting, or reviewing individual EARS criteria without auditing a whole spec, use to-ears.
 argument-hint: "Path to a spec, PRD, GitHub issue, or plan to audit (or paste the spec text); optionally request JSON output"
 allowed-tools: Read, Grep, Glob, Bash
 ---
@@ -107,7 +107,7 @@ When the user asks for machine-readable output, use the JSON schema in `./refere
 
 ## Optional Static Lint Script
 
-Use `./scripts/spec_audit_lint.py` only when the runtime can read local files and run Python. It performs deterministic checks for required sections, per-story acceptance criteria, EARS-like phrasing, prematurely completed checkboxes (drafts should use unchecked `[ ]`), placeholder markers, weak language, Mermaid diagram types, and task structure.
+Use `./scripts/spec_audit_lint.py` only when the runtime can read local files and run Python. It performs deterministic checks for required sections, per-story acceptance criteria, EARS-like phrasing, prematurely completed checkboxes (drafts should use unchecked `[ ]`; an answered `OQ-n` question may be `[x]`), placeholder markers, weak language, Mermaid diagram types, task structure, and the criterion-to-task trace.
 
 What it does and does not treat as spec content:
 

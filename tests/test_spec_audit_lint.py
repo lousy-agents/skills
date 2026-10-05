@@ -1118,6 +1118,69 @@ class EarsContractTests(unittest.TestCase):
         self.assertFalse(has_title(lint(spec), "Potentially ambiguous term: safe"))
 
 
+class EarsContractEdgeTests(unittest.TestCase):
+    """Edge cases found by adversarial review of the contract changes."""
+
+    def test_only_non_ears_criteria_do_not_crash_the_lint(self):
+        spec = variant(STORY_2_CRITERIA, "#### Acceptance Criteria\n\n- Records use RFC 5424. [non-EARS: data format] [src: #1]\n")
+        spec = variant(STORY_1_CRITERIA, "#### Acceptance Criteria\n\n- Links use base64url tokens. [non-EARS: data format] [src: #1]\n", spec)
+        findings = lint(spec)  # raised ZeroDivisionError before the fix
+        self.assertFalse(has_title(findings, "No acceptance criteria bullets found"))
+        self.assertFalse(has_title(findings, "Most acceptance criteria are not EARS-like"))
+
+    def test_only_non_ears_criteria_exit_zero_from_the_cli(self):
+        spec = variant(STORY_2_CRITERIA, "#### Acceptance Criteria\n\n- Records use RFC 5424. [non-EARS: data format] [src: #1]\n")
+        spec = variant(STORY_1_CRITERIA, "#### Acceptance Criteria\n\n- Links use base64url tokens. [non-EARS: data format] [src: #1]\n", spec)
+        with spec_file(spec) as path:
+            result = subprocess.run([sys.executable, str(SCRIPT), str(path)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_bold_and_source_style_ids_are_stripped(self):
+        for prefix in ("**AC-1.2**:", "**AC-1.2:**", "R7:", "FR1:", "SYS_REQ_4:", "ac-1.3:"):
+            with self.subTest(prefix=prefix):
+                self.assertTrue(lint_module.is_ears_like(f"- {prefix} When a reset completes, the system shall log it."))
+
+    def test_a_prose_label_is_not_mistaken_for_an_id(self):
+        self.assertFalse(lint_module.is_ears_like("- Note: When a reset completes, the system shall log it."))
+
+    def test_a_bold_id_is_traced_like_a_plain_one(self):
+        spec = variant("- AC-2.1: When a reset completes", "- **AC-2.1**: When a reset completes", CONTRACT_SPEC)
+        self.assertEqual([f for f in lint(spec) if f.category == "Traceability"], [])
+
+    def test_fail_safe_and_unsafe_do_not_match_safe(self):
+        spec = variant(
+            "- When a reset completes, the system shall write an audit record.",
+            "- When a reset completes, the system shall use the fail-safe path and reject unsafe input.",
+        )
+        self.assertFalse(has_title(lint(spec), "Potentially ambiguous term: safe"))
+
+    def test_an_answered_open_question_may_be_checked(self):
+        spec = variant(
+            "## Tasks",
+            "### Open Questions\n\n- [x] OQ-1 (High; question): Expiry window? Decided: 60 minutes.\n\n## Tasks",
+        )
+        self.assertFalse(has_title(lint(spec), "Completed checkbox in draft spec"))
+
+    def test_a_checked_task_box_is_still_flagged(self):
+        spec = variant("- [ ] The endpoint returns `202`", "- [x] The endpoint returns `202`")
+        self.assertTrue(has_title(lint(spec), "Completed checkbox in draft spec"))
+
+    def test_a_nested_bullet_under_a_criterion_is_not_an_unlabeled_criterion(self):
+        spec = variant(
+            "- AC-2.1: When a reset completes, the system shall write an audit record. [src: #47]",
+            "- AC-2.1: When a reset completes, the system shall write an audit record. [src: #47]\n"
+            "  - The record includes the actor id.",
+            CONTRACT_SPEC,
+        )
+        self.assertFalse(has_title(lint(spec), "Criterion has no ID while others do"))
+
+    def test_missing_tasks_section_is_not_repeated_as_uncited_criteria(self):
+        spec = variant("## Tasks", "## Work", CONTRACT_SPEC)
+        findings = lint(spec)
+        self.assertTrue(has_title(findings, "Missing required section: Tasks"))
+        self.assertFalse(has_title(findings, "Criterion not cited by any task"))
+
+
 class CriterionTraceTests(unittest.TestCase):
     """Two-way trace between `AC-<story>.<n>` criteria and the tasks citing them."""
 

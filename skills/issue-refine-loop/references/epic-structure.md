@@ -14,14 +14,15 @@ Three sources define "refined". They govern different things.
 | `feature-to-plan/references/spec-format.md` | **Format**: persona template, value assessment, task anatomy, Mermaid diagram requirements | Authoritative for format |
 | `to-ears/references/ears-contract.md` (mirrored verbatim below) | **Acceptance criteria**: EARS patterns, criterion IDs and provenance, Open Question entries, verification tagging | Authoritative for criteria; the gold-standard epic does not override it |
 
-**Precedence rule:** where the two disagree on presentation — for example whether personas are a
+**Precedence rule:** where the structure source and the format source disagree on presentation — for example whether personas are a
 table or a per-persona template block — the gold-standard epic wins, and the run states in its
 closing comment that it followed the epic over the format reference for that element.
 
 The reference epic used to derive the section list below is
 [`lousy-agents/coach#97`](https://github.com/lousy-agents/coach/issues/97) (*epic: Coach API
 Platform — Baseline Scan*), read directly for this skill. Its personas are a table, which matches
-`spec-format.md`, so no conflict is currently outstanding.
+`spec-format.md`, so no conflict is currently outstanding. It predates criterion IDs and provenance
+tags. Those come from the EARS Contract, which the gold-standard epic does not override.
 
 **On first run against a new repository**, re-derive structure from that repository's own best
 refined epic when one exists, using this deterministic search order — the section set below is the
@@ -70,7 +71,7 @@ allowed only when the target repository has an established convention; never dro
 ### Dependencies
 ### Data Model Changes
 ### Diagrams
-### Terms and States                                <- include when criteria use defined states or thresholds
+### Terms and States                                <- include when criteria use defined states or thresholds (skill addition)
 ### Decisions                                       <- include when the epic settles a trade-off
 ### Open Questions
 
@@ -97,6 +98,8 @@ Notes drawn from the reference epic:
   settled a trade-off; omit it when nothing was decided.
 - The epic closes with a provenance footer stating where the body came from and what review it
   passed.
+- `### Terms and States` is a skill addition that supports the EARS Contract, not an element derived
+  from the reference epic. Include it when criteria name states or thresholds that need a definition.
 - `## Issue Graph Manifest` is a v1 addition to this skill, not a structural element re-derived from
   any repository's gold-standard epic. An older reference epic — including the one used to derive
   the section list above — predates this section and won't contain it; treat that absence as
@@ -125,6 +128,15 @@ impact is implied rather than stated, or when a persona is a named individual.
 form; **every** story carries at least one acceptance criterion in an EARS pattern; and at least one
 criterion across the whole section covers an error or unwanted condition. `missing` when any story
 has zero EARS criteria, or when every criterion describes only the happy path.
+
+Three counting rules keep two runs on the same body in agreement:
+- A `[non-EARS: …]` criterion is not an EARS criterion.
+- An error criterion counts when its unwanted condition is written out, whether tagged `[src]` or
+  `[inferred]`. A `[TBD …]` inside its *response* does not disqualify it, because the `refined` gate
+  catches that TBD separately.
+- A criterion whose unwanted *condition* is itself `[TBD …]` does not count. Do not invent an error
+  criterion to pass the row. An open error behavior stays an Open Question, and the row stays
+  `missing` until a human resolves it.
 
 **5. Design** — `present` when all four hold: components affected are listed with concrete
 repository paths; dependencies are listed (external services, libraries, or sibling work);
@@ -157,15 +169,23 @@ check mandatory.
 ## EARS Acceptance Criteria
 
 The block below is a verbatim copy of the EARS Contract owned by the `to-ears` skill. When `to-ears`
-is installed, use it (Embedded mode) to draft and review criteria during Phase 4. Otherwise apply
-this block directly. In an unattended run nobody can confirm an inference, so an inferred criterion
-keeps its `[inferred: OQ-n]` tag and its Open Question. Never upgrade one to `[src: …]` on your own
-authority. A User Stories section whose only error criterion is `[TBD …]` still shows the gap
-honestly, and row 4 scores it as `missing` until a human resolves it. Do not invent an error
-criterion to pass the row.
+is installed, call it in Embedded mode during Phase 4: `draft` to write criteria, `review` for
+findings, `test map` for child Verification. Otherwise apply this block directly.
+
+- **Inferences stay open within a run.** Criteria are drafted in Phase 4, after the Phase 3 approval
+  point, so nobody confirms an inference inside the loop. An inferred criterion keeps its
+  `[inferred: OQ-n]` tag and its Open Question; never upgrade it to `[src: …]` on your own authority.
+  A human resolves it on the issue afterward.
+- **Rubric row 4** follows the counting rules in the rubric above.
+- **The `refined` gate** treats any remaining `[TBD …]` clause, and any Blocker or High Open
+  Question, as a remaining Blocker or High finding. A finding that only a human decision can fix
+  goes straight to `needs-human-input`; do not spend loop rounds trying to fix it.
+- **Legacy epics.** An epic refined before criteria carried IDs gets IDs and provenance tags on its
+  next run. A legacy criterion with no traceable source becomes `[inferred]`. That can move the epic
+  from `refined` to `needs-human-input`, which is the honest outcome.
 
 <!-- ears-contract:begin -->
-**EARS Contract v1.** The `to-ears` skill (`references/ears-contract.md`) holds the canonical copy of this block. Each consuming skill keeps a verbatim copy, so it still works when installed alone. `tests/test_ears_contract_sync.py` fails CI when a copy drifts, so change every copy in the same PR.
+**EARS Contract v1.** This block is copied verbatim from the `to-ears` skill's `references/ears-contract.md`, so the skill that carries it still works when installed alone. Do not edit this copy by itself.
 
 When `to-ears` is installed, use it to draft and review criteria and to derive tests from them. Either way, this block is the minimum every consumer enforces.
 
@@ -195,12 +215,15 @@ Choose the pattern from the behavior. Identify the response first, then what act
 - Once anything cites an ID, never renumber it.
 - When the source has its own identifiers, keep them and record the mapping.
 
-Provenance tags:
+Each criterion ends with exactly one provenance tag:
 
 - `[src: <issue #, doc path, or "user">]`: the source states it, or the user confirmed it.
-- `[inferred: OQ-<n>]`: the agent's interpretation. It is not settled until OQ-<n> is answered.
-- `[TBD: <decision needed> — OQ-<n>]`: written inline in place of an undecided value or clause.
-- `[non-EARS: <reason>]`: a rare exception for content that no pattern fits, such as a data format. Never use it for a vague criterion.
+- `[inferred: OQ-<n>]`: the agent's interpretation, grounded in evidence it can cite, such as the source's wording or an existing repo convention. It is not settled until OQ-<n> is answered.
+
+Two markers can appear in addition to that tag. Neither one replaces it.
+
+- `[TBD: <decision needed> — OQ-<n>]`: written inline, in place of a value or clause that no evidence supports.
+- `[non-EARS: <reason>]`: placed just before the provenance tag. It is a rare exception for content that no pattern fits, such as a data format. Never use it for a vague criterion.
 
 Examples:
 
@@ -229,17 +252,28 @@ Examples:
    - repeated or concurrent events
    - logging, alerting, and fallback
 
-   Give each relevant prompt a disposition: covered (`AC-…`), out of scope (with a reason), or unresolved (`OQ-…`). The sweep prompts investigation. It does not license writing criteria.
+   Give each relevant prompt a disposition:
+   - covered (`AC-…`)
+   - confirmed by the user (a criterion tagged `[src: user]`)
+   - out of scope (with a reason, listed with the artifact's exclusions)
+   - unresolved (`OQ-…`)
+
+   The sweep prompts investigation. It does not license writing criteria.
 8. **EARS shape is not quality.** A well-formed sentence can still be vague, wrong, compound, or untestable. Review meaning, not form.
 
-**Open questions.** Write each as `- [ ] OQ-<n> (<severity>; question | assumption): <text> — affects: AC-…, Task …; decision needed from: <role>`.
+**Open questions.** Write each as `- [ ] OQ-<n> (<severity>; question | assumption): <text> — affects: AC-…, Task …; decision needed from: <role>`. When a question is answered, mark it `[x]` and record the decision inline.
 
 Severity levels:
 
-- **Blocker:** an agent could build the wrong thing, or cannot verify completion.
-- **High:** likely failure, such as serious ambiguity, a contradiction, or an untestable criterion.
-- **Medium:** may cause rework.
-- **Low:** affects clarity only.
+- **Blocker:** the work is not safely implementable. An agent could build the wrong thing, or cannot verify completion.
+- **High:** likely implementation failure: serious ambiguity, a contradiction between sections, a missing dependency, or an untestable criterion.
+- **Medium:** a gap that may cause rework or inconsistent implementation.
+- **Low:** clarity or hygiene, unlikely to block implementation.
+
+Two rules set minimum severities:
+
+- A `[TBD …]` that leaves a criterion with no decidable expected result makes its OQ at least **High**.
+- An `[inferred …]` assumption's OQ is at least **Medium**.
 
 **Verification.** Each criterion has an oracle: a setup, a stimulus, and an observable expected result.
 

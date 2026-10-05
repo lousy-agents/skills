@@ -2,7 +2,7 @@
 
 > The `feature-to-plan` skill loads this reference when the user wants a multi-turn collaborative walkthrough — phrases like "walk me through writing a spec", "let's design this feature together" — or when Phase 1 surfaces more than ~3 substantive ambiguities and a single-shot draft would be lossy.
 >
-> When invoked from the skill's Phase 1, follow this flow until the user approves the outline, then return control. This reference owns the **conversation**; the skill's Phase 2, Phase 3, and Create Gate own the **compose / validate / create** steps for whichever target was resolved.
+> When invoked from the skill's Phase 1, follow this flow until the outline is ready, then return control to the skill's Approval Gate. That gate is the one approval. This reference owns the **conversation**; the skill's Phase 2, Phase 3, and Create Gate own the **compose / validate / create** steps for whichever target was resolved.
 
 ## Posture
 

@@ -18,7 +18,11 @@ Known limitations:
 - Finding ids (`SL-001`, ...) are run-local ordinals, not stable identifiers.
   They shift whenever the document or the check set changes.
 - Criterion trace checks follow only the EARS Contract's `AC-<story>.<n>` scheme.
-  A source's own identifiers are stripped for EARS detection but not traced.
+  A source's own identifiers (any leading token containing a digit, optionally
+  bold, ending in a colon: `R7:`, `SYS_REQ_4:`, `**AC-1.2**:`) are stripped for
+  EARS detection but not traced.
+- Vague-term matching is a word match: "secure cookie" is still flagged, while
+  "fail-safe" and "unsafe" are not.
 """
 
 from __future__ import annotations
@@ -135,9 +139,16 @@ FLOWCHART_RE = re.compile(r"^(?:flowchart|graph)\s+(?:TB|TD|BT|LR|RL)\b", re.IGN
 SEQUENCE_RE = re.compile(r"^sequenceDiagram\b", re.IGNORECASE)
 # A leading criterion identifier such as `AC-2.1:` or a source's own `SYS-REQ-4:`.
 # Stripped before EARS detection so an ID never makes a criterion look non-EARS.
-CRITERION_ID_PREFIX_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:[-.][A-Z0-9]+)+:\s+")
+# Requiring a digit keeps prose labels such as `Note:` from being mistaken for an ID.
+_ID_TOKEN = r"[A-Za-z][A-Za-z0-9_.-]*\d[A-Za-z0-9_.-]*"
+CRITERION_ID_PREFIX_RE = re.compile(
+    rf"^(?:\*\*{_ID_TOKEN}\*\*:|\*\*{_ID_TOKEN}:\*\*|{_ID_TOKEN}:)\s+"
+)
 # The EARS Contract's own scheme, the one tasks cite and the trace checks follow.
 AC_ID_RE = re.compile(r"\bAC-\d+\.\d+\b")
+DEFINED_AC_RE = re.compile(r"(?:\*\*)?(AC-\d+\.\d+)(?:\*\*:|:(?:\*\*)?)")
+# An answered Open Question stays in the list marked `[x]`, per the EARS Contract.
+RESOLVED_OQ_RE = re.compile(r"\[[xX]\]\s+(?:\*\*)?OQ-\d+\b")
 NON_EARS_TAG = "[non-ears:"
 
 
@@ -373,7 +384,10 @@ def lint_todo_markers(doc: Doc) -> List[Finding]:
 
 
 def lint_ambiguous_terms(doc: Doc) -> List[Finding]:
-    term_pattern = re.compile(r"\b(" + "|".join(re.escape(t) for t in AMBIGUOUS_TERMS) + r")\b", re.IGNORECASE)
+    # `(?<!-)` keeps compounds such as "fail-safe" from matching "safe".
+    term_pattern = re.compile(
+        r"(?<!-)\b(" + "|".join(re.escape(t) for t in AMBIGUOUS_TERMS) + r")\b(?!-)", re.IGNORECASE
+    )
     found: List[Finding] = []
     for idx, line in doc.prose():
         stripped = line.strip()
@@ -454,12 +468,7 @@ def lint_criteria_sections(doc: Doc) -> List[Finding]:
                     )
                 )
 
-    if total == 0 and not any(
-        is_declared_non_ears(line)
-        for heading in acceptance_headings(doc)
-        for _, line in doc.prose_in(doc.span(heading))
-        if BULLET_RE.match(line)
-    ):
+    if total == 0 and not any(is_declared_non_ears(line) for _, line in criterion_bullets(doc)):
         found.append(
             finding(
                 Severity.HIGH,
@@ -470,7 +479,7 @@ def lint_criteria_sections(doc: Doc) -> List[Finding]:
                 "Add acceptance criteria for each user story using EARS-style syntax.",
             )
         )
-    elif ears_like / total < 0.5:
+    elif total and ears_like / total < 0.5:
         found.append(
             finding(
                 Severity.MEDIUM,
@@ -504,9 +513,11 @@ def lint_criterion_trace(doc: Doc) -> List[Finding]:
     found: List[Finding] = []
     for idx, line in criterion_bullets(doc):
         text = re.sub(r"^\s*[-*]\s+(\[.\]\s+)?", "", line).strip()
-        match = re.match(r"(AC-\d+\.\d+):", text)
+        match = DEFINED_AC_RE.match(text)
         if not match:
-            unlabeled.append((idx, line))
+            # A nested bullet elaborates the criterion above it; it is not a criterion.
+            if not line[:1].isspace():
+                unlabeled.append((idx, line))
             continue
         ident = match.group(1)
         if ident in defined:
@@ -540,11 +551,14 @@ def lint_criterion_trace(doc: Doc) -> List[Finding]:
 
     task_like = [h for h in doc.headings if TASK_TITLE_RE.match(h.raw_title)]
     section = doc.find_section("Tasks", level=2, ignore=task_like)
+    if section is None:
+        # The missing `## Tasks` section is already a High finding; an "uncited"
+        # finding per criterion would only repeat it.
+        return found
     cited: dict[str, int] = {}
-    if section is not None:
-        for idx, line in doc.prose_in(section):
-            for ident in AC_ID_RE.findall(line):
-                cited.setdefault(ident, idx)
+    for idx, line in doc.prose_in(section):
+        for ident in AC_ID_RE.findall(line):
+            cited.setdefault(ident, idx)
 
     found.extend(
         finding(
@@ -663,7 +677,7 @@ def lint_checkboxes(doc: Doc) -> List[Finding]:
             "Use unchecked `[ ]` boxes in draft specs; implementers should mark completion.",
         )
         for idx, line in doc.prose()
-        if CHECKED_BOX_RE.search(line)
+        if CHECKED_BOX_RE.search(line) and not RESOLVED_OQ_RE.search(line)
     ]
 
 

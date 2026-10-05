@@ -105,7 +105,7 @@ Run the sweep for every story or requirement group before drafting is finished. 
 Record a disposition for each prompt that applies:
 - **covered**: name the `AC-…` IDs.
 - **confirmed by the user**: write a criterion tagged `[src: user]`.
-- **out of scope**: add it to the artifact's Out of Scope list with a reason.
+- **out of scope**: add it, with a reason, to the artifact's Out of Scope list. In a standalone run, add it to the exclusions in output section 3.
 - **unresolved**: open an OQ.
 
 Put a one-line summary in the story notes, for example: `Omission sweep: invalid token → AC-1.3; mail outage → OQ-2; concurrency → out of scope (single-use tokens)`.

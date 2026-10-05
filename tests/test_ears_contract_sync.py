@@ -23,10 +23,16 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILLS = REPO_ROOT / "skills"
 CANONICAL = SKILLS / "to-ears" / "references" / "ears-contract.md"
 MIRRORS = [
-    SKILLS / "feature-to-plan" / "references" / "spec-format.md",
+    SKILLS / "feature-to-plan" / "references" / "ears-contract.md",
     SKILLS / "issue-refine-loop" / "references" / "epic-structure.md",
 ]
+# Files that once carried their own EARS tables and must not grow one back.
+FORMER_TABLE_HOMES = [
+    *MIRRORS,
+    SKILLS / "feature-to-plan" / "references" / "spec-format.md",
+]
 LINT_SCRIPT = SKILLS / "spec-auditor" / "scripts" / "spec_audit_lint.py"
+AUDIT_RUBRIC = SKILLS / "spec-auditor" / "references" / "audit-rubric.md"
 
 BEGIN = "<!-- ears-contract:begin -->"
 END = "<!-- ears-contract:end -->"
@@ -99,7 +105,7 @@ class ContractMirrorTests(unittest.TestCase):
         # The pre-contract tables listed a sixth "Complex" pattern and an
         # "is enabled" Optional template. Either reappearing means a stale copy
         # was pasted back beside the contract.
-        for mirror in MIRRORS:
+        for mirror in FORMER_TABLE_HOMES:
             text = mirror.read_text(encoding="utf-8")
             with self.subTest(mirror=str(mirror.relative_to(REPO_ROOT))):
                 self.assertNotIn("| Complex ", text)
@@ -121,6 +127,11 @@ class LintAgreesWithContractTests(unittest.TestCase):
         lint_openers = {opener.strip() for opener in self.lint.EARS_STARTS}
         missing = contract_openers(self.block) - lint_openers
         self.assertEqual(missing, set(), f"lint EARS_STARTS lacks contract openers: {sorted(missing)}")
+
+    def test_audit_rubric_names_every_contract_vague_term(self):
+        rubric = AUDIT_RUBRIC.read_text(encoding="utf-8").lower()
+        missing = [t for t in contract_vague_terms(self.block) if t not in rubric]
+        self.assertEqual(missing, [], "spec-auditor's Pass 3 must check the contract's full vague-term list")
 
     def test_contract_examples_read_as_ears_to_the_lint(self):
         examples = re.findall(r"^- `(- AC-[^`]+)`$", self.block, re.M)

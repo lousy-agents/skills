@@ -1,7 +1,7 @@
 # Spec Format Reference
 
 > The `feature-to-plan` skill loads this reference during Phase 2 (Compose) to build the plan body for either target: a spec file or one new GitHub issue. It contains:
-> - the EARS Contract, mirrored verbatim from the `to-ears` skill
+> - a pointer to the EARS Contract (in `ears-contract.md`, mirrored verbatim from the `to-ears` skill)
 > - the user story format
 > - the persona template
 > - the value assessment table
@@ -29,7 +29,10 @@ Before writing or modifying a spec:
 
 When reviewing a spec:
 
-1. Verify every acceptance criterion against the EARS Contract below. Check its meaning, not just its shape: one obligation, a named component, an observable response, an accurate provenance tag, and no invented value.
+1. Verify every acceptance criterion against the EARS Contract in `ears-contract.md`. Check its meaning, not just its shape: one obligation, a named component, an observable response, an accurate provenance tag, and no invented value.
+   - **Intent:** did any rewrite add a trigger, precondition, exclusion, or behavior the source lacks, or drop an exception?
+   - **Trace:** is every criterion cited by a task, and is every verification item tagged with criterion IDs or labeled?
+   - **Diagrams:** do they agree with the criteria?
 2. Check that personas are explicitly named with impact described
 3. Confirm design aligns with the repo's engineering guidance
 4. Identify any missing error states or edge cases
@@ -37,106 +40,17 @@ When reviewing a spec:
 
 ## EARS Acceptance Criteria
 
-The block below is a verbatim copy of the EARS Contract owned by the `to-ears` skill.
+Acceptance criteria follow the EARS Contract in [`ears-contract.md`](./ears-contract.md). It covers:
+- the five patterns and their combinations
+- the `AC-<story>.<n>` line format
+- provenance tags and `[TBD …]` markers
+- the binding rules, including never inventing values
+- the omission sweep
+- the Open Question format and severity
+- verification tagging
+- the vague-term list
 
-- **When `to-ears` is installed:** call it in Embedded mode to draft and review each story's criteria. It also covers pattern choice, the review checklists, and test derivation.
-- **When it is not installed:** apply this block directly.
-
-In both cases the block is binding.
-
-<!-- ears-contract:begin -->
-**EARS Contract v1.** The `to-ears` skill (`references/ears-contract.md`) holds the canonical copy of this block. Each consuming skill keeps a verbatim copy, so it still works when installed alone. `tests/test_ears_contract_sync.py` fails CI when a copy drifts, so change every copy in the same PR.
-
-When `to-ears` is installed, use it to draft and review criteria and to derive tests from them. Either way, this block is the minimum every consumer enforces.
-
-**Patterns.** Each criterion uses one of five patterns, or one of the combinations listed below the table.
-
-| Pattern | Template | Use when |
-| --- | --- | --- |
-| Ubiquitous | The `<system>` shall `<response>`. | The response is required at all times within the system's scope. Do not use it just because the source named no trigger. |
-| Event-driven | When `<optional precondition>` `<trigger>`, the `<system>` shall `<response>`. | A wanted event at the system boundary activates the response. |
-| Unwanted behavior | If `<optional precondition>` `<unwanted condition>`, then the `<system>` shall `<response>`. | A fault, invalid or unexpected input, misuse, or dependency failure needs a response. A boundary value of wanted behavior is not unwanted behavior. |
-| State-driven | While `<state>`, the `<system>` shall `<response>`. `During` may replace `While`. | The response is required for as long as a defined runtime state holds. |
-| Optional feature | Where `<feature>` is included, the `<system>` shall `<response>`. | The response applies only to product variants or deployments that include the feature. A runtime mode or flag state is a state, so use `While` for it. |
-
-Combinations keep the clause order Where → While → When/If:
-
-- `While <state>, when <trigger>, the <system> shall …`
-- `While <state>, if <unwanted condition>, then the <system> shall …`
-- `Where <feature> is included, when <trigger>, the <system> shall …`
-
-Split a combination into linked criteria when it stops being easy to parse.
-
-Choose the pattern from the behavior. Identify the response first, then what activates it. Never choose a pattern because a word such as "if" or "when" appears in the source text.
-
-**Criterion line.** Write each criterion as `- AC-<story>.<n>: <EARS sentence> [<provenance>]`.
-
-- IDs are unique within the artifact.
-- Once anything cites an ID, never renumber it.
-- When the source has its own identifiers, keep them and record the mapping.
-
-Provenance tags:
-
-- `[src: <issue #, doc path, or "user">]`: the source states it, or the user confirmed it.
-- `[inferred: OQ-<n>]`: the agent's interpretation. It is not settled until OQ-<n> is answered.
-- `[TBD: <decision needed> — OQ-<n>]`: written inline in place of an undecided value or clause.
-- `[non-EARS: <reason>]`: a rare exception for content that no pattern fits, such as a data format. Never use it for a vague criterion.
-
-Examples:
-
-- `- AC-2.1: If a reset link is presented more than 60 minutes after it was issued, then the reset service shall reject it with HTTP 410. [src: #47]`
-- `- AC-2.2: When a reset completes, the reset service shall send a confirmation email to the account holder. [inferred: OQ-2]`
-- `- AC-2.3: While the mail provider is unavailable, the reset service shall retry delivery for [TBD: retry window — OQ-3]. [src: #47]`
-
-**Binding rules.**
-
-1. **Never invent.** Add no value, threshold, trigger, precondition, exclusion, or behavior that the source or the user did not establish.
-   - To make a criterion testable, mark the gap with `[TBD …]` and escalate it. Never fill in a plausible number.
-   - Current code behavior is evidence of what exists, not of what is intended.
-2. **One obligation per criterion.** Name the responding system or component the same way every time. Do not write "it", and do not switch subjects between lines.
-3. **The response is observable.** State units, inclusive or exclusive boundaries, time windows, and the recipient or surface whenever they change the expected result. A vague term (see the list below) needs a measurable definition or a `[TBD …]`.
-4. **A positive rule does not imply its negation.** "When an authorized device connects, … allow" says nothing about unauthorized devices.
-   - Write the complement only when a source or the user establishes it. Otherwise open an OQ.
-   - A `shall not` criterion needs a decidable pass/fail check.
-5. **State behavior, not design,** unless the design is an approved constraint. An internal flag or log line is not the user-visible outcome unless it is the agreed proxy for it.
-6. **Keep applicability in the criterion.** A condition that changes when a criterion applies belongs in the criterion, not in surrounding notes or prose.
-7. **Sweep for omissions before drafting is finished.** Check each of these:
-   - invalid, unauthorized, or malformed input
-   - missing, stale, or corrupt data
-   - dependency failure
-   - startup, degraded, recovery, and shutdown states
-   - boundaries
-   - repeated or concurrent events
-   - logging, alerting, and fallback
-
-   Give each relevant prompt a disposition: covered (`AC-…`), out of scope (with a reason), or unresolved (`OQ-…`). The sweep prompts investigation. It does not license writing criteria.
-8. **EARS shape is not quality.** A well-formed sentence can still be vague, wrong, compound, or untestable. Review meaning, not form.
-
-**Open questions.** Write each as `- [ ] OQ-<n> (<severity>; question | assumption): <text> — affects: AC-…, Task …; decision needed from: <role>`.
-
-Severity levels:
-
-- **Blocker:** an agent could build the wrong thing, or cannot verify completion.
-- **High:** likely failure, such as serious ambiguity, a contradiction, or an untestable criterion.
-- **Medium:** may cause rework.
-- **Low:** affects clarity only.
-
-**Verification.** Each criterion has an oracle: a setup, a stimulus, and an observable expected result.
-
-Cover these cases for each pattern:
-
-- **Event-driven:** the response occurs when the trigger fires with preconditions held, and does not occur without the trigger.
-- **Unwanted behavior:** induce the condition and check the mitigation.
-- **State-driven:** the response holds during the state. Also cover entering and leaving the state.
-- **Optional feature:** the response in a configuration that includes the feature.
-- **Combinations:** the response is withheld when an applicability condition is false, where the spec states that behavior.
-
-Tag each verification item with the criterion IDs it exercises. Otherwise label it `(exploratory)`, `(structural)`, or `(gate)`; use `(gate)` for repo-wide lint and test commands.
-
-A passing suite or a coverage number does not show that a criterion is met.
-
-**Vague terms.** appropriate, as needed, better, easy, efficient, fast, handle, improve, intuitive, normally, optimize, quickly, robust, safe, seamless, secure, simple, sufficient, support, unacceptable, user-friendly
-<!-- ears-contract:end -->
+The templates below show only where those elements go in the spec.
 
 ## User Story Format
 
