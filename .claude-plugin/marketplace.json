@@ -118,7 +118,7 @@
       "name": "optimize-prompt-loop",
       "displayName": "Optimize Prompt Loop",
       "description": "Turn a fuzzy or overly broad request into a concise task prompt fitted to the current model, agent harness, and effort level",
-      "source": "./optimize-prompt-loop",
+      "source": "./skills/optimize-prompt-loop",
       "category": "tooling",
       "keywords": ["prompts", "prompt-engineering", "optimization", "model-aware", "harness", "rubric"]
     },
