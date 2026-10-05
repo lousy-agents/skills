@@ -1016,5 +1016,150 @@ class ReportContractTests(unittest.TestCase):
         self.assertNotIn("line None", out)
 
 
+# The baseline rewritten in EARS Contract form: every criterion carries an
+# `AC-<story>.<n>:` ID and a provenance tag, and the one task cites all three.
+CONTRACT_SPEC = (
+    BASELINE.replace(
+        "- When the account holder requests a reset, the system shall send a signed link.",
+        "- AC-1.1: When the account holder requests a reset, the system shall send a signed link. [src: #47]",
+        1,
+    )
+    .replace(
+        "- If the link is older than one hour, the system shall reject it with `410`.",
+        "- AC-1.2: If the link is older than one hour, the system shall reject it with `410`. [src: #47]",
+        1,
+    )
+    .replace(
+        "- When a reset completes, the system shall write an audit record.",
+        "- AC-2.1: When a reset completes, the system shall write an audit record. [src: #47]",
+        1,
+    )
+    .replace(
+        "- Reject more than five requests per hour per address.",
+        "- AC-1.1, AC-1.2, AC-2.1",
+        1,
+    )
+)
+
+
+class EarsContractTests(unittest.TestCase):
+    """The lint follows the EARS Contract owned by skills/to-ears."""
+
+    def test_contract_fixture_differs_from_baseline(self):
+        self.assertNotEqual(CONTRACT_SPEC, BASELINE)
+        self.assertEqual(CONTRACT_SPEC.count("AC-1.1"), 2)
+
+    def test_a_criterion_id_prefix_does_not_make_a_criterion_non_ears(self):
+        self.assertEqual(matching(lint(CONTRACT_SPEC), "may not be EARS-like"), [])
+
+    def test_an_id_prefix_on_a_non_ears_sentence_is_still_flagged(self):
+        spec = variant(
+            "- AC-2.1: When a reset completes, the system shall write an audit record. [src: #47]",
+            "- AC-2.1: Audit records get written. [src: #47]",
+            CONTRACT_SPEC,
+        )
+        self.assertTrue(has_title(lint(spec), "may not be EARS-like"))
+
+    def test_a_source_identifier_prefix_is_also_stripped(self):
+        self.assertTrue(lint_module.is_ears_like("- SYS-REQ-4.2: While a runner is offline, the scheduler shall queue jobs."))
+
+    def test_during_is_accepted_as_the_state_driven_alias(self):
+        spec = variant(
+            "- When a reset completes, the system shall write an audit record.",
+            "- During maintenance mode, the system shall write an audit record.",
+        )
+        self.assertEqual(matching(lint(spec), "may not be EARS-like"), [])
+
+    def test_a_declared_non_ears_criterion_is_not_flagged(self):
+        spec = variant(
+            "- When a reset completes, the system shall write an audit record.",
+            "- Audit records use the RFC 5424 field layout. [non-EARS: data format]",
+        )
+        self.assertEqual(matching(lint(spec), "may not be EARS-like"), [])
+
+    def test_a_declared_non_ears_criterion_still_counts_as_a_criterion(self):
+        spec = variant(
+            "- When a reset completes, the system shall write an audit record.",
+            "- Audit records use the RFC 5424 field layout. [non-EARS: data format]",
+        )
+        findings = lint(spec)
+        self.assertFalse(has_title(findings, "Story has no acceptance criteria"))
+        self.assertFalse(has_title(findings, "Empty acceptance criteria section"))
+
+    def test_an_undeclared_non_ears_criterion_is_still_flagged(self):
+        spec = variant(
+            "- When a reset completes, the system shall write an audit record.",
+            "- Audit records use the RFC 5424 field layout.",
+        )
+        self.assertTrue(has_title(lint(spec), "may not be EARS-like"))
+
+    def test_a_tbd_marker_inside_a_criterion_is_flagged_as_unresolved(self):
+        spec = variant(
+            "an audit record. [src: #47]",
+            "an audit record within [TBD: write-latency bound — OQ-3]. [src: #47]",
+            CONTRACT_SPEC,
+        )
+        self.assertTrue(has_title(lint(spec), "Unresolved placeholder marker"))
+
+    def test_contract_vague_terms_are_flagged(self):
+        for term in ("quickly", "secure", "safe", "normally", "sufficient", "unacceptable"):
+            with self.subTest(term=term):
+                spec = variant(
+                    "- When a reset completes, the system shall write an audit record.",
+                    f"- When a reset completes, the system shall {term} write an audit record.",
+                )
+                self.assertTrue(has_title(lint(spec), f"Potentially ambiguous term: {term}"))
+
+    def test_unsafe_does_not_match_safe(self):
+        spec = variant(
+            "- When a reset completes, the system shall write an audit record.",
+            "- When a reset completes, the system shall reject unsafe redirect targets.",
+        )
+        self.assertFalse(has_title(lint(spec), "Potentially ambiguous term: safe"))
+
+
+class CriterionTraceTests(unittest.TestCase):
+    """Two-way trace between `AC-<story>.<n>` criteria and the tasks citing them."""
+
+    def test_fully_traced_contract_spec_has_no_trace_findings(self):
+        self.assertEqual([f for f in lint(CONTRACT_SPEC) if f.category == "Traceability"], [])
+
+    def test_spec_without_ids_produces_no_trace_findings(self):
+        self.assertEqual([f for f in lint(BASELINE) if f.category == "Traceability"], [])
+
+    def test_uncited_criterion_is_reported(self):
+        spec = variant("- AC-1.1, AC-1.2, AC-2.1", "- AC-1.1, AC-1.2", CONTRACT_SPEC)
+        findings = matching(lint(spec), "Criterion not cited by any task")
+        self.assertEqual([f.title for f in findings], ["Criterion not cited by any task: AC-2.1"])
+        self.assertEqual(findings[0].severity, lint_module.Severity.MEDIUM)
+
+    def test_task_citing_an_unknown_id_is_reported(self):
+        spec = variant("- AC-1.1, AC-1.2, AC-2.1", "- AC-1.1, AC-1.2, AC-2.1, AC-9.9", CONTRACT_SPEC)
+        self.assertTrue(has_title(lint(spec), "Task cites an unknown criterion ID: AC-9.9"))
+
+    def test_duplicate_criterion_id_is_reported(self):
+        spec = variant("- AC-2.1: When a reset completes", "- AC-1.1: When a reset completes", CONTRACT_SPEC)
+        self.assertTrue(has_title(lint(spec), "Duplicate criterion ID: AC-1.1"))
+
+    def test_mixed_id_and_unlabeled_criteria_reports_the_unlabeled_one(self):
+        spec = variant("- AC-2.1: When a reset completes", "- When a reset completes", CONTRACT_SPEC)
+        findings = lint(spec)
+        self.assertTrue(has_title(findings, "Criterion has no ID while others do"))
+
+    def test_a_citation_inside_a_fenced_example_does_not_count(self):
+        spec = variant(
+            "- AC-1.1, AC-1.2, AC-2.1",
+            "- AC-1.1, AC-1.2\n\n```text\nAC-2.1\n```",
+            CONTRACT_SPEC,
+        )
+        self.assertTrue(has_title(lint(spec), "Criterion not cited by any task: AC-2.1"))
+
+    def test_trace_findings_never_raise_the_exit_code(self):
+        spec = variant("- AC-1.1, AC-1.2, AC-2.1", "- AC-1.1", CONTRACT_SPEC)
+        trace = [f for f in lint(spec) if f.category == "Traceability"]
+        self.assertTrue(trace)
+        self.assertTrue(all(f.severity != lint_module.Severity.HIGH for f in trace))
+
+
 if __name__ == "__main__":
     unittest.main()

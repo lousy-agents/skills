@@ -10,6 +10,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | Skill | Phase | Description |
 | --- | --- | --- |
 | [`feature-to-plan`](#feature-to-plan) | Planning | Converts feature requests and issues into an EARS spec file or one new GitHub issue |
+| [`to-ears`](#to-ears) | Planning | Drafts, reviews, and test-maps EARS requirements without inventing behavior; owns the EARS Contract the planning skills share |
 | [`issue-refine-loop`](#issue-refine-loop) | Planning | Rewrites a GitHub issue, then splits it into session-sized children with only real blockers |
 | [`spec-auditor`](#spec-auditor) | Planning / Hardening | Adversarially audits specs, PRDs, issues, and plans before coding starts |
 | [`plan-to-graph`](#plan-to-graph) | Planning | Converts specs, master plans, and GitHub epics into GitHub sub-issue dependency graphs |
@@ -46,7 +47,7 @@ For agentic software engineers, the value is not simply "more prompts." Each ski
 - **Author one new GitHub issue** — `feature-to-plan` (ask it to keep the plan on GitHub) → `issue-refine-loop` **or** `plan-to-graph` if the tasks are already session-sized
 - **Rewrite an issue that already exists** — [`issue-refine-loop`](#issue-refine-loop)
 
-`feature-to-plan` **creates** a new artifact. `issue-refine-loop` **rewrites** an existing issue in place. `plan-to-graph` **fans out** an approved task list. When both authoring skills are installed, `issue-refine-loop` uses `feature-to-plan`'s format rules for EARS and task anatomy. It does not read or write the spec file.
+`feature-to-plan` **creates** a new artifact. `issue-refine-loop` **rewrites** an existing issue in place. `plan-to-graph` **fans out** an approved task list. When both authoring skills are installed, `issue-refine-loop` uses `feature-to-plan`'s format rules for task anatomy. All three skills that write or check criteria (`feature-to-plan`, `issue-refine-loop`, `spec-auditor`) share one EARS Contract owned by [`to-ears`](#to-ears). `issue-refine-loop` does not read or write the spec file.
 
 ```
                         ┌─ spec file ──► spec-auditor ──► plan-to-graph ──┐
@@ -64,7 +65,7 @@ Requires an issue number or URL — it will not create the issue from a freeform
 npx skills add lousy-agents/skills --skill issue-refine-loop --skill feature-to-plan
 ```
 
-`feature-to-plan` is optional on this path. Install it too if you want the shared format skill present — `issue-refine-loop` prefers it for EARS and task anatomy — or if you need it to **create** the starting issue from a freeform idea first.
+`feature-to-plan` is optional on this path. Install it if you want the shared format skill present (`issue-refine-loop` prefers it for task anatomy), or if you need it to **create** the starting issue from a freeform idea first. Add `--skill to-ears` to use the full EARS method for drafting and reviewing criteria. Without it, the contract copy inside `issue-refine-loop` applies.
 
 > *"Refine issue #47"*
 > *"Use issue-refine-loop on https://github.com/owner/repo/issues/162"*
@@ -114,7 +115,7 @@ Invoke it in your agent:
 **Install all three at once:**
 
 ```bash
-npx skills add lousy-agents/skills --skill feature-to-plan --skill spec-auditor --skill plan-to-graph
+npx skills add lousy-agents/skills --skill feature-to-plan --skill to-ears --skill spec-auditor --skill plan-to-graph
 ```
 
 > **Prerequisite:** `plan-to-graph` requires a resolvable target repository and a way to create native sub-issues and blocking relationships: authenticated [`gh`](https://cli.github.com/) with `gh issue create --parent` and `gh issue edit --add-blocked-by`, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent or lacks those flags. The skill checks this before it creates anything and stops if neither works.
@@ -142,6 +143,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | Skill | When in the lifecycle |
 | --- | --- |
 | `feature-to-plan` | Before implementation begins: when you want a spec file or one new GitHub issue from an idea or seed |
+| `to-ears` | Before implementation begins: converting, reviewing, or deriving tests from requirements or acceptance criteria — standalone, or called by the planning skills |
 | `issue-refine-loop` | Before implementation begins: you have a GitHub issue to split into session-sized, parallel-ready children |
 | `spec-auditor` | Before implementation begins: you have a draft spec or issue and want findings, not edits |
 | `plan-to-graph` | After the spec is approved: to turn tasks into tracked work items |
@@ -178,6 +180,32 @@ Converts feature requests — either freeform or seeded from a GitHub issue — 
 
 **Requires** GitHub access (`gh` or the agent's GitHub tools) only for issue output or for seeding from / commenting on an issue. Spec-file output does not.
 
+**Works best with** `to-ears`. When it is installed, this skill uses it to draft and review acceptance criteria. Without it, the EARS Contract copied into this skill applies.
+
+---
+
+### `to-ears`
+
+**Install:** `npx skills add lousy-agents/skills --skill to-ears`
+
+Turns requirements into EARS (Easy Approach to Requirements Syntax) without inventing behavior, then reviews them for meaning and derives tests from the agreed ones.
+
+- Every criterion carries an `AC-<story>.<n>` ID and a provenance tag: source-stated, inferred, or an inline `[TBD]` decision. Nothing undecided reads as settled.
+- An omission sweep checks for invalid input, dependency failure, degraded states, boundaries, and concurrency. Each gap it finds gets a disposition, not an invented requirement.
+- It is the canonical home of the **EARS Contract**. `feature-to-plan` and `issue-refine-loop` carry verbatim copies so each still works when installed alone. CI fails when a copy drifts. `spec-auditor`'s lint enforces the same contract.
+
+**Use when you want to:**
+- Convert prose requirements, a PRD paragraph, or issue acceptance criteria into EARS
+- Review existing criteria for pattern misuse, vague terms, bundled obligations, hidden preconditions, and unspecified deny paths
+- Derive requirement-based tests, or task verification items, from agreed criteria, kept separate from coverage and exploratory evidence
+
+**Do NOT use when:**
+- You want a whole spec or a new GitHub issue. Use `feature-to-plan`, which calls this skill.
+- You want a whole spec audited. Use `spec-auditor`.
+- You want an existing issue rewritten in place. Use `issue-refine-loop`.
+
+**Outputs** criteria, open questions with severity, review findings, an optional test mapping, and a statement of the evidence limits. When another skill calls it, it returns only the criterion lines, the open questions, and the omission-sweep lines.
+
 ---
 
 ### `issue-refine-loop`
@@ -191,7 +219,7 @@ Rewrites an existing GitHub issue — title-only, one-sentence, or an epic missi
 - Break a large issue into session-sized children that can proceed in parallel except where one truly blocks another
 - Keep the plan on an issue that already exists, instead of authoring a new spec file or a new issue
 
-Uses the same EARS, persona, and task format as `feature-to-plan`. When both are installed, this skill loads that format instead of its fallback. It does not read or write a spec file.
+Uses the same persona and task format as `feature-to-plan`, and the same EARS Contract as `to-ears`. When those skills are installed, this skill uses them instead of its fallback copies. It does not read or write a spec file.
 
 **Do NOT use when:**
 - You want a new spec file, or one new GitHub issue from a freeform idea. Use `feature-to-plan` instead.
@@ -473,6 +501,7 @@ Install any skill by name:
 
 ```
 /plugin install feature-to-plan@lousy-agents
+/plugin install to-ears@lousy-agents
 /plugin install issue-refine-loop@lousy-agents
 /plugin install plan-to-graph@lousy-agents
 /plugin install designing-for-intent@lousy-agents

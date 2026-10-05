@@ -17,7 +17,7 @@ skill, or the `gh` CLI via `Bash`.
 Three on-demand references back this skill:
 
 - [`references/epic-structure.md`](./references/epic-structure.md) — the canonical section set and
-  ordering, the full completeness rubric, EARS patterns, persona/value/task anatomy, diagram
+  ordering, the full completeness rubric, the EARS Contract (mirrored from `to-ears`), persona/value/task anatomy, diagram
   requirements, and Issue Graph Manifest anatomy. **Load before Phase 2 (Assess) and keep loaded
   through Phase 4; reload Manifest Anatomy in Phase 5–6 as needed.**
 - [`references/github-surface.md`](./references/github-surface.md) — surface probe details, abstract
@@ -125,7 +125,8 @@ by a named agent/skill or by the primary agent running a role-scoped reasoning p
 | Product value, personas, problem framing | `product-sme` | Role-scoped reasoning pass as product owner |
 | Architecture fit, components, data model | `system-design-expert` | Role-scoped pass against the repo's architecture docs |
 | Adversarial acceptance-criteria review | `epic-reviewer`, `spec-review-agent`, `spec-auditor` | Role-scoped pass using the rubric in the reference |
-| Spec structure and EARS formatting | `feature-to-plan` and its `references/spec-format.md` | The section and EARS rules in this skill's reference |
+| Spec structure and task anatomy | `feature-to-plan` and its `references/spec-format.md` | The section and anatomy rules in this skill's reference |
+| EARS criteria drafting, review, and verification mapping | `to-ears` (Embedded mode) | The EARS Contract block mirrored in this skill's reference |
 | Task → sub-issue orchestration | `plan-to-graph` | `create_child_issue` directly, per Phase 5 |
 
 Also read whatever product and engineering context the repo actually provides — for example

@@ -2,16 +2,17 @@
 
 > The `issue-refine-loop` skill loads this before Phase 2 (Assess) and keeps it loaded through
 > Phase 4 (Refine). It defines the canonical section set and ordering, the completeness rubric in
-> full, EARS syntax, persona/value/task anatomy, diagram requirements, and the severity scale.
+> full, the EARS Contract, persona/value/task anatomy, diagram requirements, and the severity scale.
 
 ## Where the Quality Bar Comes From — and Which Source Wins
 
-Two sources define "refined". They govern different things.
+Three sources define "refined". They govern different things.
 
 | Source | Governs | Status |
 | --- | --- | --- |
 | The repository's gold-standard refined epic | **Structure**: which sections exist and in what order | Authoritative for structure |
-| `feature-to-plan/references/spec-format.md` | **Format**: EARS syntax, persona template, value assessment, task anatomy, Mermaid diagram requirements | Authoritative for format |
+| `feature-to-plan/references/spec-format.md` | **Format**: persona template, value assessment, task anatomy, Mermaid diagram requirements | Authoritative for format |
+| `to-ears/references/ears-contract.md` (mirrored verbatim below) | **Acceptance criteria**: EARS patterns, criterion IDs and provenance, Open Question entries, verification tagging | Authoritative for criteria; the gold-standard epic does not override it |
 
 **Precedence rule:** where the two disagree on presentation — for example whether personas are a
 table or a per-persona template block — the gold-standard epic wins, and the run states in its
@@ -69,6 +70,7 @@ allowed only when the target repository has an established convention; never dro
 ### Dependencies
 ### Data Model Changes
 ### Diagrams
+### Terms and States                                <- include when criteria use defined states or thresholds
 ### Decisions                                       <- include when the epic settles a trade-off
 ### Open Questions
 
@@ -154,22 +156,107 @@ check mandatory.
 
 ## EARS Acceptance Criteria
 
-Every acceptance criterion uses one of these six patterns.
+The block below is a verbatim copy of the EARS Contract owned by the `to-ears` skill. When `to-ears`
+is installed, use it (Embedded mode) to draft and review criteria during Phase 4. Otherwise apply
+this block directly. In an unattended run nobody can confirm an inference, so an inferred criterion
+keeps its `[inferred: OQ-n]` tag and its Open Question. Never upgrade one to `[src: …]` on your own
+authority. A User Stories section whose only error criterion is `[TBD …]` still shows the gap
+honestly, and row 4 scores it as `missing` until a human resolves it. Do not invent an error
+criterion to pass the row.
+
+<!-- ears-contract:begin -->
+**EARS Contract v1.** The `to-ears` skill (`references/ears-contract.md`) holds the canonical copy of this block. Each consuming skill keeps a verbatim copy, so it still works when installed alone. `tests/test_ears_contract_sync.py` fails CI when a copy drifts, so change every copy in the same PR.
+
+When `to-ears` is installed, use it to draft and review criteria and to derive tests from them. Either way, this block is the minimum every consumer enforces.
+
+**Patterns.** Each criterion uses one of five patterns, or one of the combinations listed below the table.
 
 | Pattern | Template | Use when |
 | --- | --- | --- |
-| Ubiquitous | The `<system>` shall `<response>` | Always true, no trigger |
-| Event-driven | When `<trigger>`, the `<system>` shall `<response>` | Responding to an event |
-| State-driven | While `<state>`, the `<system>` shall `<response>` | Active during a condition |
-| Optional | Where `<feature>` is enabled, the `<system>` shall `<response>` | Configurable capability |
-| Unwanted | If `<condition>`, then the `<system>` shall `<response>` | Error handling, edge cases |
-| Complex | While `<state>`, when `<trigger>`, the `<system>` shall `<response>` | Combined conditions |
+| Ubiquitous | The `<system>` shall `<response>`. | The response is required at all times within the system's scope. Do not use it just because the source named no trigger. |
+| Event-driven | When `<optional precondition>` `<trigger>`, the `<system>` shall `<response>`. | A wanted event at the system boundary activates the response. |
+| Unwanted behavior | If `<optional precondition>` `<unwanted condition>`, then the `<system>` shall `<response>`. | A fault, invalid or unexpected input, misuse, or dependency failure needs a response. A boundary value of wanted behavior is not unwanted behavior. |
+| State-driven | While `<state>`, the `<system>` shall `<response>`. `During` may replace `While`. | The response is required for as long as a defined runtime state holds. |
+| Optional feature | Where `<feature>` is included, the `<system>` shall `<response>`. | The response applies only to product variants or deployments that include the feature. A runtime mode or flag state is a state, so use `While` for it. |
 
-A criterion is testable only if it names an actor or system, a trigger or condition, and an
-observable response. Reject criteria built on subjective verbs — improve, optimize, support,
-handle, robust, seamless, intuitive, appropriate, fast, efficient, better — and rewrite them into a
-pattern above with a measurable response. Split any criterion that bundles two independent
-behaviors.
+Combinations keep the clause order Where → While → When/If:
+
+- `While <state>, when <trigger>, the <system> shall …`
+- `While <state>, if <unwanted condition>, then the <system> shall …`
+- `Where <feature> is included, when <trigger>, the <system> shall …`
+
+Split a combination into linked criteria when it stops being easy to parse.
+
+Choose the pattern from the behavior. Identify the response first, then what activates it. Never choose a pattern because a word such as "if" or "when" appears in the source text.
+
+**Criterion line.** Write each criterion as `- AC-<story>.<n>: <EARS sentence> [<provenance>]`.
+
+- IDs are unique within the artifact.
+- Once anything cites an ID, never renumber it.
+- When the source has its own identifiers, keep them and record the mapping.
+
+Provenance tags:
+
+- `[src: <issue #, doc path, or "user">]`: the source states it, or the user confirmed it.
+- `[inferred: OQ-<n>]`: the agent's interpretation. It is not settled until OQ-<n> is answered.
+- `[TBD: <decision needed> — OQ-<n>]`: written inline in place of an undecided value or clause.
+- `[non-EARS: <reason>]`: a rare exception for content that no pattern fits, such as a data format. Never use it for a vague criterion.
+
+Examples:
+
+- `- AC-2.1: If a reset link is presented more than 60 minutes after it was issued, then the reset service shall reject it with HTTP 410. [src: #47]`
+- `- AC-2.2: When a reset completes, the reset service shall send a confirmation email to the account holder. [inferred: OQ-2]`
+- `- AC-2.3: While the mail provider is unavailable, the reset service shall retry delivery for [TBD: retry window — OQ-3]. [src: #47]`
+
+**Binding rules.**
+
+1. **Never invent.** Add no value, threshold, trigger, precondition, exclusion, or behavior that the source or the user did not establish.
+   - To make a criterion testable, mark the gap with `[TBD …]` and escalate it. Never fill in a plausible number.
+   - Current code behavior is evidence of what exists, not of what is intended.
+2. **One obligation per criterion.** Name the responding system or component the same way every time. Do not write "it", and do not switch subjects between lines.
+3. **The response is observable.** State units, inclusive or exclusive boundaries, time windows, and the recipient or surface whenever they change the expected result. A vague term (see the list below) needs a measurable definition or a `[TBD …]`.
+4. **A positive rule does not imply its negation.** "When an authorized device connects, … allow" says nothing about unauthorized devices.
+   - Write the complement only when a source or the user establishes it. Otherwise open an OQ.
+   - A `shall not` criterion needs a decidable pass/fail check.
+5. **State behavior, not design,** unless the design is an approved constraint. An internal flag or log line is not the user-visible outcome unless it is the agreed proxy for it.
+6. **Keep applicability in the criterion.** A condition that changes when a criterion applies belongs in the criterion, not in surrounding notes or prose.
+7. **Sweep for omissions before drafting is finished.** Check each of these:
+   - invalid, unauthorized, or malformed input
+   - missing, stale, or corrupt data
+   - dependency failure
+   - startup, degraded, recovery, and shutdown states
+   - boundaries
+   - repeated or concurrent events
+   - logging, alerting, and fallback
+
+   Give each relevant prompt a disposition: covered (`AC-…`), out of scope (with a reason), or unresolved (`OQ-…`). The sweep prompts investigation. It does not license writing criteria.
+8. **EARS shape is not quality.** A well-formed sentence can still be vague, wrong, compound, or untestable. Review meaning, not form.
+
+**Open questions.** Write each as `- [ ] OQ-<n> (<severity>; question | assumption): <text> — affects: AC-…, Task …; decision needed from: <role>`.
+
+Severity levels:
+
+- **Blocker:** an agent could build the wrong thing, or cannot verify completion.
+- **High:** likely failure, such as serious ambiguity, a contradiction, or an untestable criterion.
+- **Medium:** may cause rework.
+- **Low:** affects clarity only.
+
+**Verification.** Each criterion has an oracle: a setup, a stimulus, and an observable expected result.
+
+Cover these cases for each pattern:
+
+- **Event-driven:** the response occurs when the trigger fires with preconditions held, and does not occur without the trigger.
+- **Unwanted behavior:** induce the condition and check the mitigation.
+- **State-driven:** the response holds during the state. Also cover entering and leaving the state.
+- **Optional feature:** the response in a configuration that includes the feature.
+- **Combinations:** the response is withheld when an applicability condition is false, where the spec states that behavior.
+
+Tag each verification item with the criterion IDs it exercises. Otherwise label it `(exploratory)`, `(structural)`, or `(gate)`; use `(gate)` for repo-wide lint and test commands.
+
+A passing suite or a coverage number does not show that a criterion is met.
+
+**Vague terms.** appropriate, as needed, better, easy, efficient, fast, handle, improve, intuitive, normally, optimize, quickly, robust, safe, seamless, secure, simple, sufficient, support, unacceptable, user-friendly
+<!-- ears-contract:end -->
 
 ## Story, Persona, and Value Anatomy
 
@@ -182,12 +269,13 @@ so that I can **<outcome>**.
 
 #### Acceptance Criteria
 
-- When <trigger>, the <system> shall <response>
-- If <error condition>, then the <system> shall <response>
+- AC-1.1: When <trigger>, the <named component> shall <response>. [src: <issue or doc>]
+- AC-1.2: If <unwanted condition>, then the <named component> shall <response>. [inferred: OQ-1]
 
 #### Notes
 
-<Context, constraints, or deferred decisions>
+Omission sweep: <prompt> → AC-1.2; <prompt> → OQ-2; <prompt> → out of scope (<reason>)
+<Context, deferred decisions, or a pattern-choice rationale. Never a condition that changes when a criterion applies.>
 ```
 
 ```markdown
@@ -221,17 +309,17 @@ Each Task becomes one child issue body:
 
 **Requirements**:
 
-- <the specific acceptance criterion this task satisfies>
+- AC-1.1: <criterion text copied verbatim from the epic, so the child stands alone>
 
 **Verification**:
 
-- [ ] <command the implementer runs, using the repo's own commands>
-- [ ] <observable condition that must hold>
+- [ ] (AC-1.1) <observable condition that must hold, with its oracle>
+- [ ] (gate) <command the implementer runs, using the repo's own commands>
 
 **Done when**:
 
 - [ ] All verification steps pass
-- [ ] Acceptance criteria <references> satisfied
+- [ ] AC-1.1 satisfied
 - [ ] Code follows the repo's engineering guidance
 
 ---

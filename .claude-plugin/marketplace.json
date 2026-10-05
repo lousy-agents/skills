@@ -121,6 +121,14 @@
       "source": "./code-tidy",
       "category": "development",
       "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise", "quality", "lifecycle", "coach-first", "Stage-B", "solid-only"]
+    },
+    {
+      "name": "to-ears",
+      "displayName": "To EARS",
+      "description": "Draft, review, and derive tests from EARS requirements without inventing behavior — the canonical EARS contract other planning skills share",
+      "source": "./to-ears",
+      "category": "planning",
+      "keywords": ["EARS", "requirements", "acceptance-criteria", "testing", "traceability", "planning"]
     }
   ]
 }
