@@ -206,6 +206,18 @@ Turns requirements into EARS (Easy Approach to Requirements Syntax) without inve
 
 **Outputs** criteria, open questions with severity, review findings, an optional test mapping, and a statement of the evidence limits. When another skill calls it, it returns only the criterion lines, the open questions, and the omission-sweep lines.
 
+**Evaluated** by a `claude plugin eval` suite in `skills/to-ears/evals/`. The suite has 4 cases, each run with and without the skill:
+- an embedded draft with traps
+- a review with planted defects and well-formed controls
+- a test map with mixed provenance
+- a natural-language trigger
+
+To run it, keep the results directory outside the plugin folder:
+
+```bash
+claude plugin eval skills/to-ears --judge-model sonnet --output-dir /tmp/to-ears-evals
+```
+
 ---
 
 ### `issue-refine-loop`
