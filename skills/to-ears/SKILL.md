@@ -67,8 +67,12 @@ Pick the mode from the request. If the request is unclear, Draft is the default 
 **Embedded mode** means another skill calls this one.
 - Never ask the user anything. Step 6 runs in its unattended form.
 - Never write files.
-- Return only what the sub-mode produces:
-  - **draft:** criterion lines, OQ entries, and one omission-sweep line per story
+- Return only what the sub-mode produces, with no preamble or summary prose:
+  - **draft:** for each story:
+    - its criterion lines
+    - then a `Notes:` block of plain lines (not nested under a criterion) holding the omission-sweep line, any one-line pattern rationale, and any source-ID mapping
+
+    After the stories, the OQ entries. Nested bullets under a criterion read as extra criteria to the caller's lint.
   - **review:** findings with contract severities, and no rewritten criteria
   - **test map:** verification items in the contract's tagged form
 - The caller owns the artifact, the gates, the section layout, and the numbering of stories.
@@ -106,7 +110,16 @@ When no pattern fits honestly, use `[non-EARS: <reason>]`, and do not distort th
 
 ### 5. Review meaning
 
-Apply the Form, Meaning, and Intent checklists in [`authoring.md`](./references/authoring.md#review-checklists) to every criterion. Fix form problems directly. For meaning and intent problems: mark the problem, open an OQ, and change the provenance tag. **Do not resolve them by inventing.**
+Apply the Form, Meaning, and Intent checklists in [`authoring.md`](./references/authoring.md#review-checklists) to every criterion.
+
+- **Form problems:** fix them directly.
+- **Meaning and intent problems:** mark the undecided part inline with `[TBD …]` and open an OQ. **Do not resolve them by inventing.**
+- **Tags:** change a provenance tag only when the tag itself is wrong. A source-stated criterion you doubt, or would design differently, keeps its `[src]` tag and gets a finding and an OQ.
+- **Severity floors:** check every OQ against the contract's minimum severities before finishing.
+
+Two rules for Review mode:
+- **Report, don't redesign.** A corrected draft changes a criterion only to fix a defect found *in that criterion*. Never reassign the responding component, add or drop obligations, or narrow scope because you would design it differently. Raise a finding instead.
+- **Omissions belong to the set.** A behavior missing from the whole set is a finding about the set, and its severity comes from the gap. Do not rate a well-formed criterion High because a neighboring behavior is unspecified.
 
 ### 6. Validate and trace
 
@@ -135,6 +148,10 @@ For Embedded runs, return only what the sub-mode produces (see Modes). The calli
 If the source does not support a complete requirement, give the best faithful draft, mark the unresolved clause with `[TBD …]`, and name the exact decision required. Never silently convert uncertainty into a requirement.
 
 ## Gotchas
+
+- **"Should" is not "shall".** A source "should" or "may" leaves open whether the requirement binds. Write the criterion with `shall`, tag it `[inferred: OQ-n]`, and ask in OQ-n whether it is mandatory.
+- **Do not TBD what the wording already decides.** "Older than 60 minutes" already excludes 60. Raise a boundary only when the source leaves it open.
+- **Recount before reporting.** Totals in a summary (findings, OQs by severity) must match the final lists.
 
 - **A source word is not a pattern.** A source "if" is often an event-driven trigger, and a source "when" can describe a state. Classify the behavior, not the word.
 - **A flag is a state, not a feature.** A feature flag that can flip at runtime is a `While` state. `Where` is for what ships in a variant.

@@ -21,6 +21,8 @@ Derive conformance tests **only** from agreed requirements. The criterion's prov
 
 Do not treat current code behavior as proof of intended behavior.
 
+The table above sets the starting point, not the whole rule. A test on a `[src]` criterion is still a **draft** when any part of its expected result depends on an open OQ. Label it with that OQ. An expected value computed from source numbers is fine; show the arithmetic, for example "151st request, since the limit is 150".
+
 ## Procedure, for each agreed criterion
 
 1. **Identify the oracle.** Name the observable result that proves the criterion is met, or that it is not. A criterion with no decidable expected result is not ready for a conformance test. Report it; do not invent an oracle.

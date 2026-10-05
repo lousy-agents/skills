@@ -77,6 +77,8 @@ Do not hide applicability in surrounding prose. Do not add conditions that narro
 
 Check pronouns, "and/or", lists, ranges, negation, modifiers, and references such as "the previous value". Confirm which noun each condition describes. A shorter sentence does not mean the same thing as the longer one. Optimize for precise, reviewable meaning.
 
+Modal verbs carry meaning too. "Must" and "shall" bind. "Should" and "may" leave bindingness open, so converting them to `shall` is an interpretation: tag it `[inferred]` and ask. Quantifiers such as "only" can settle a complement: "Only maintainers can change settings" does establish that others cannot.
+
 ### Negative behavior
 
 Do not infer that an undesired outcome is prohibited just because the desired outcome is required:
@@ -131,6 +133,7 @@ Put a one-line summary in the story notes, for example: `Omission sweep: invalid
 - [ ] No unsupported behavior was added to make the sentence look complete.
 - [ ] Compound criteria were split where that helps understanding and verification.
 - [ ] Conflicts, dependencies, and open decisions are visible.
+- [ ] Every OQ meets the contract's minimum severity. A `[TBD …]` that leaves a criterion untestable is at least High.
 
 ### Intent: did the rewrite change the requirement?
 
