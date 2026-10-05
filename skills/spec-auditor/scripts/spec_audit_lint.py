@@ -502,6 +502,54 @@ def criterion_bullets(doc: Doc) -> List[Tuple[int, str]]:
     ]
 
 
+OQ_ENTRY_RE = re.compile(
+    r"^\s*[-*]\s+\[ \]\s+(?:\*\*)?(OQ-\d+)(?:\*\*)?\s*\((Blocker|High|Medium|Low);\s*(question|assumption)\)",
+    re.IGNORECASE,
+)
+TBD_OQ_RE = re.compile(r"\[TBD:[^\]]*?\b(OQ-\d+)\b[^\]]*\]")
+SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "blocker": 3}
+
+
+def lint_open_question_floors(doc: Doc) -> List[Finding]:
+    """The EARS Contract's minimum severities for open questions.
+
+    An `assumption` is at least Medium. An open question that an inline
+    `[TBD …]` marker points at is reported when it sits below High: the marker
+    usually means the criterion has no decidable expected result, which the
+    contract rates at least High. That second check is a heuristic, so it is Low.
+    """
+    tbd_targets = {m.group(1) for _, line in doc.prose() for m in TBD_OQ_RE.finditer(line)}
+    found: List[Finding] = []
+    for idx, line in doc.prose():
+        match = OQ_ENTRY_RE.match(line)
+        if not match:
+            continue
+        ident, severity, kind = match.group(1), match.group(2).lower(), match.group(3).lower()
+        if kind == "assumption" and SEVERITY_RANK[severity] < SEVERITY_RANK["medium"]:
+            found.append(
+                finding(
+                    Severity.MEDIUM,
+                    "Open Questions",
+                    idx,
+                    f"Assumption below the Medium floor: {ident}",
+                    line.strip(),
+                    "Rate every assumption at least Medium; an unconfirmed inference can send implementation the wrong way.",
+                )
+            )
+        if ident in tbd_targets and SEVERITY_RANK[severity] < SEVERITY_RANK["high"]:
+            found.append(
+                finding(
+                    Severity.LOW,
+                    "Open Questions",
+                    idx,
+                    f"TBD-linked question may be below the High floor: {ident}",
+                    line.strip(),
+                    "A TBD that leaves a criterion with no decidable expected result makes its question at least High.",
+                )
+            )
+    return found
+
+
 def lint_criterion_trace(doc: Doc) -> List[Finding]:
     """Two-way trace between `AC-<story>.<n>` criteria and the tasks that cite them.
 
@@ -835,6 +883,7 @@ def run_lint(path: Path) -> List[Finding]:
         *lint_criteria_sections(doc),
         *lint_story_coverage(doc),
         *lint_criterion_trace(doc),
+        *lint_open_question_floors(doc),
         *lint_checkboxes(doc),
         *lint_tasks(doc),
         *lint_mermaid(doc),

@@ -1181,6 +1181,57 @@ class EarsContractEdgeTests(unittest.TestCase):
         self.assertFalse(has_title(findings, "Criterion not cited by any task"))
 
 
+class OpenQuestionFloorTests(unittest.TestCase):
+    """The EARS Contract's minimum severities for open questions."""
+
+    @staticmethod
+    def with_oq(entry: str, criterion_suffix: str = "") -> str:
+        spec = variant("## Tasks", f"### Open Questions\n\n{entry}\n\n## Tasks")
+        if criterion_suffix:
+            spec = variant(
+                "- When a reset completes, the system shall write an audit record.",
+                f"- When a reset completes, the system shall write an audit record {criterion_suffix}.",
+                spec,
+            )
+        return spec
+
+    def test_low_assumption_is_reported(self):
+        spec = self.with_oq("- [ ] OQ-1 (Low; assumption): Links are single-use. — affects: AC-1.1; decision needed from: PM")
+        findings = matching(lint(spec), "Assumption below the Medium floor")
+        self.assertEqual([f.severity for f in findings], [lint_module.Severity.MEDIUM])
+
+    def test_medium_assumption_is_not_reported(self):
+        spec = self.with_oq("- [ ] OQ-1 (Medium; assumption): Links are single-use. — affects: AC-1.1; decision needed from: PM")
+        self.assertFalse(has_title(lint(spec), "below the Medium floor"))
+
+    def test_low_question_is_not_held_to_the_assumption_floor(self):
+        spec = self.with_oq("- [ ] OQ-1 (Low; question): Copy for the email? — affects: AC-1.1; decision needed from: PM")
+        self.assertFalse(has_title(lint(spec), "below the Medium floor"))
+
+    def test_tbd_linked_medium_question_is_reported_as_low(self):
+        spec = self.with_oq(
+            "- [ ] OQ-3 (Medium; question): Write-latency bound? — affects: AC-2.1; decision needed from: PM",
+            "within [TBD: write-latency bound — OQ-3]",
+        )
+        findings = matching(lint(spec), "may be below the High floor: OQ-3")
+        self.assertEqual([f.severity for f in findings], [lint_module.Severity.LOW])
+
+    def test_tbd_linked_high_question_is_not_reported(self):
+        spec = self.with_oq(
+            "- [ ] OQ-3 (High; question): Write-latency bound? — affects: AC-2.1; decision needed from: PM",
+            "within [TBD: write-latency bound — OQ-3]",
+        )
+        self.assertFalse(has_title(lint(spec), "below the High floor"))
+
+    def test_an_answered_question_is_not_held_to_a_floor(self):
+        spec = self.with_oq("- [x] OQ-1 (Low; assumption): Links are single-use. Confirmed. — affects: AC-1.1; decision needed from: PM")
+        self.assertFalse(has_title(lint(spec), "floor"))
+
+    def test_a_fenced_example_is_not_checked(self):
+        spec = self.with_oq("```text\n- [ ] OQ-1 (Low; assumption): example\n```")
+        self.assertFalse(has_title(lint(spec), "floor"))
+
+
 class CriterionTraceTests(unittest.TestCase):
     """Two-way trace between `AC-<story>.<n>` criteria and the tasks citing them."""
 

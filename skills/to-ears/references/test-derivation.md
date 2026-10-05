@@ -37,7 +37,7 @@ The table above sets the starting point, not the whole rule. A test on a `[src]`
 4. **Check condition combinations.** For combined conditions, test two things:
    - the response occurs when all required conditions hold
    - the response is withheld when an applicability condition does not hold, where that behavior is specified
-5. **Define setup, action, and expected result.** Cover the initial state, inputs, event order, timing expectations, output checks, and cleanup.
+5. **Define setup, action, and expected result.** Cover the initial state, inputs, event order, timing expectations, output checks, and cleanup. A setup step may establish state through an interface. It must not assert behavior that no criterion specifies; that check belongs in a separate `(exploratory)` item.
 6. **Trace both ways.** Link every test to the criterion IDs it verifies, and every testable criterion to its tests. Explain any criterion without a test, and any test without a criterion.
 7. **Review adequacy.** Ask whether the tests can tell the required behavior apart from plausible wrong behavior. Passing tests show conformance only for the cases and oracle that were tested.
 

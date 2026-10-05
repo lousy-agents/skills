@@ -115,7 +115,11 @@ Apply the Form, Meaning, and Intent checklists in [`authoring.md`](./references/
 - **Form problems:** fix them directly.
 - **Meaning and intent problems:** mark the undecided part inline with `[TBD …]` and open an OQ. **Do not resolve them by inventing.**
 - **Tags:** change a provenance tag only when the tag itself is wrong. A source-stated criterion you doubt, or would design differently, keeps its `[src]` tag and gets a finding and an OQ.
-- **Severity floors:** check every OQ against the contract's minimum severities before finishing.
+- **Severity floors and format:** before finishing, walk the OQ list and apply two mechanical rules:
+  - Any `assumption` is at least Medium.
+  - Any OQ that a `[TBD …]` marker points at, or whose open answer leaves an affected criterion with no decidable expected result, is at least High.
+
+  Each OQ entry is a single line in the contract format, with no nested bullets.
 
 Two rules for Review mode:
 - **Report, don't redesign.** A corrected draft changes a criterion only to fix a defect found *in that criterion*. Never reassign the responding component, add or drop obligations, or narrow scope because you would design it differently. Raise a finding instead.
