@@ -414,8 +414,16 @@ def criterion_text(bullet: str) -> str:
     return CRITERION_ID_PREFIX_RE.sub("", text, count=1)
 
 
+# A Ubiquitous criterion often names its component directly ("notify-worker shall …")
+# instead of "The <system> shall …". The subject must be one token, so prose such as
+# "Audit records get written" still fails.
+NAMED_SUBJECT_RE = re.compile(r"^`?[a-z][\w.-]*`?\s+shall\b")
+
+
 def is_ears_like(bullet: str) -> bool:
     text = criterion_text(bullet).lower()
+    if NAMED_SUBJECT_RE.match(text):
+        return True
     return text.startswith(EARS_STARTS) and re.search(r"\bshall\b", text) is not None
 
 

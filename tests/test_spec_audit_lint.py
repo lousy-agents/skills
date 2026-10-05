@@ -1140,6 +1140,18 @@ class EarsContractEdgeTests(unittest.TestCase):
             with self.subTest(prefix=prefix):
                 self.assertTrue(lint_module.is_ears_like(f"- {prefix} When a reset completes, the system shall log it."))
 
+    def test_a_ubiquitous_criterion_may_name_its_component_without_the(self):
+        for line in (
+            "- AC-3.7: notify-worker shall deliver notifications over TLS. [src: #2]",
+            "- AC-3.7: `notify-worker` shall deliver notifications over TLS. [src: #2]",
+        ):
+            with self.subTest(line=line):
+                self.assertTrue(lint_module.is_ears_like(line))
+
+    def test_a_multi_word_subject_without_an_opener_is_still_not_ears(self):
+        self.assertFalse(lint_module.is_ears_like("- Audit records shall be written nightly."))
+        self.assertFalse(lint_module.is_ears_like("- notify-worker sends notifications."))
+
     def test_a_prose_label_is_not_mistaken_for_an_id(self):
         self.assertFalse(lint_module.is_ears_like("- Note: When a reset completes, the system shall log it."))
 
