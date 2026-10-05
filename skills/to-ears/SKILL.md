@@ -119,6 +119,8 @@ Apply the Form, Meaning, and Intent checklists in [`authoring.md`](./references/
 
 Two rules for Review mode:
 - **Report, don't redesign.** A corrected draft changes a criterion only to fix a defect found *in that criterion*. Never reassign the responding component, add or drop obligations, or narrow scope because you would design it differently. Raise a finding instead.
+- **A fix that rests on an open question is an inference.** If a correction (a new pattern, a split, a rewording) is right only under one answer to an OQ, tag the corrected criterion `[inferred: OQ-n]`, not `[src]`.
+- **When either pattern is defensible, keep the source's.**
 - **Omissions belong to the set.** A behavior missing from the whole set is a finding about the set, and its severity comes from the gap. Do not rate a well-formed criterion High because a neighboring behavior is unspecified.
 
 ### 6. Validate and trace
@@ -149,6 +151,10 @@ For standalone runs, return these sections:
 - Each entry is a single line in the contract format: no nested bullets, no wrapped continuation lines.
 - Any `assumption` is at least Medium.
 - Any OQ that a `[TBD …]` marker points at, or whose open answer leaves an affected criterion with no decidable expected result, is at least High.
+- Every OQ must change a criterion or a test when it is answered.
+  - Merge questions that a single decision answers.
+  - Drop trivia, such as wording, UI copy, or details no criterion depends on, or move it to the Notes.
+  - A long list buries the High questions a reader must act on. Order each list by severity.
 
 For Embedded runs, return only what the sub-mode produces (see Modes). The calling skill places it.
 
