@@ -115,11 +115,7 @@ Apply the Form, Meaning, and Intent checklists in [`authoring.md`](./references/
 - **Form problems:** fix them directly.
 - **Meaning and intent problems:** mark the undecided part inline with `[TBD …]` and open an OQ. **Do not resolve them by inventing.**
 - **Tags:** change a provenance tag only when the tag itself is wrong. A source-stated criterion you doubt, or would design differently, keeps its `[src]` tag and gets a finding and an OQ.
-- **Severity floors and format:** before finishing, walk the OQ list and apply two mechanical rules:
-  - Any `assumption` is at least Medium.
-  - Any OQ that a `[TBD …]` marker points at, or whose open answer leaves an affected criterion with no decidable expected result, is at least High.
-
-  Each OQ entry is a single line in the contract format, with no nested bullets.
+- **Severity floors:** apply the OQ rules in Output Format before finishing.
 
 Two rules for Review mode:
 - **Report, don't redesign.** A corrected draft changes a criterion only to fix a defect found *in that criterion*. Never reassign the responding component, add or drop obligations, or narrow scope because you would design it differently. Raise a finding instead.
@@ -144,8 +140,15 @@ For standalone runs, return these sections:
 2. **Criteria** — contract-format lines grouped by story or requirement group, with a one-line rationale wherever the pattern choice is debatable.
 3. **Open questions, assumptions, and exclusions** — contract-format OQ entries, with severity, the affected criteria, and who must decide. Also list the omission-sweep items judged out of scope, each with its reason.
 4. **Review findings** — each with a Blocker/High/Medium/Low severity from the contract. Cover ambiguity, vagueness, compound behavior, omissions to investigate, conflicts, implementation prescriptions, and verification concerns.
+   - File each finding under the criterion whose own text is defective.
+   - File a gap in the set, meaning a behavior no criterion covers, under **Set** (or the story), never under a well-formed neighbor.
 5. **Test mapping** (Test map mode) — criterion ID, abstract conditions and response, the interface mapping, test cases, expected results, and coverage gaps.
 6. **Provenance summary** — which items the source establishes, which you inferred, and which you propose.
+
+**Open-question rules, every mode** (Draft, Review, Test map, Embedded). Before finishing, walk the OQ list:
+- Each entry is a single line in the contract format: no nested bullets, no wrapped continuation lines.
+- Any `assumption` is at least Medium.
+- Any OQ that a `[TBD …]` marker points at, or whose open answer leaves an affected criterion with no decidable expected result, is at least High.
 
 For Embedded runs, return only what the sub-mode produces (see Modes). The calling skill places it.
 

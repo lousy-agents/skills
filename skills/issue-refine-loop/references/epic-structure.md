@@ -220,6 +220,8 @@ Each criterion ends with exactly one provenance tag:
 - `[src: <issue #, doc path, or "user">]`: the source states it, or the user confirmed it.
 - `[inferred: OQ-<n>]`: the agent's interpretation, grounded in evidence it can cite, such as the source's wording or an existing repo convention. It is not settled until OQ-<n> is answered.
 
+`[src]` covers the whole sentence as written. If you chose a part the source does not state, such as the responding component or the scope, tag the criterion `[inferred]` or mark that part `[TBD …]`. An open OQ that questions a part you left looking settled is a contradiction. When two criteria conflict, mark the conflicting part of each inline with `[TBD: conflicts with AC-… — OQ-<n>]`.
+
 Two markers can appear in addition to that tag. Neither one replaces it.
 
 - `[TBD: <decision needed> — OQ-<n>]`: written inline, in place of a value or clause that no evidence supports.
@@ -279,11 +281,11 @@ Two rules set minimum severities:
 
 Cover these cases for each pattern:
 
-- **Event-driven:** the response occurs when the trigger fires with preconditions held, and does not occur without the trigger.
+- **Event-driven:** the response occurs when the trigger fires with preconditions held. A criterion does not say the response must be absent without its trigger (rule 4). Assert that as conformance only where another criterion states it; otherwise label it `(exploratory)`.
 - **Unwanted behavior:** induce the condition and check the mitigation.
 - **State-driven:** the response holds during the state. Also cover entering and leaving the state.
 - **Optional feature:** the response in a configuration that includes the feature.
-- **Combinations:** the response is withheld when an applicability condition is false, where the spec states that behavior.
+- **Combinations:** the response is withheld when an applicability condition is false, only where a criterion states that. Otherwise the check is `(exploratory)`.
 
 Tag each verification item with the criterion IDs it exercises. Otherwise label it `(exploratory)`, `(structural)`, or `(gate)`; use `(gate)` for repo-wide lint and test commands.
 

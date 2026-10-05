@@ -46,7 +46,7 @@ The table above sets the starting point, not the whole rule. A test on a `[src]`
 | Pattern | Test-design prompts |
 | --- | --- |
 | Ubiquitous | Which representative conditions demonstrate the always-required behavior? Do operating modes or boundaries change it? |
-| Event-driven | Does the trigger, fired with preconditions satisfied, produce the response? What happens if the trigger does not fire? Are ordering, repeated events, and boundaries specified? |
+| Event-driven | Does the trigger, fired with preconditions satisfied, produce the response? What happens if the trigger does not fire? That case is exploratory unless a criterion states it. Are ordering, repeated events, and boundaries specified? |
 | Unwanted behavior | Can the unwanted condition be induced safely? Does the required mitigation occur? Is the normal case separately specified and tested where needed? |
 | State-driven | Does the response hold while the state persists? Are state entry, exit, and transitions relevant? What happens outside the state, if that is specified? |
 | Optional feature | Is the feature included in the tested configuration? Does the requirement apply only to that variant? Is the variant without the feature explicitly out of scope, rather than silently assumed? |
