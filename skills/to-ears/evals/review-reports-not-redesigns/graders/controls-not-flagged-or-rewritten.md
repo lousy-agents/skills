@@ -2,10 +2,27 @@
 type: llm
 weight: 3
 ---
-AC-1.1 and AC-1.7 are well-formed criteria that a good review leaves essentially alone.
+You cannot see the task, so here are the two well-formed control criteria exactly as the user supplied them:
+- AC-1.1: When an account holder requests a password reset, the auth-api shall send a reset link to the account's verified email address.
+- AC-1.7: When a reset link older than 60 minutes is presented, the auth-api shall reject it with HTTP 410.
+
+A good review leaves both essentially alone.
 
 PASS only if both hold:
-1. No finding rated Blocker or High is filed against AC-1.1 or AC-1.7 themselves. A Medium or Low note, or a finding that only mentions AC-1.7 as the other side of AC-1.12's conflict, is acceptable. A gap about missing behavior filed under AC-1.1 or AC-1.7 as High or Blocker counts as a FAIL.
-2. In the corrected draft, AC-1.1 still has the auth-api sending the reset link to the verified email address, and AC-1.7 still rejects links older than 60 minutes with HTTP 410. Minor wording changes are fine, and so is an inline "[TBD: conflicts with AC-… — OQ-…]" marker or a Medium/Low open question about which component sends. Moving the sending to another component, adding new obligations, or changing 60 or 410 is a FAIL.
+1. No finding rated Blocker or High is aimed at AC-1.1 or AC-1.7 themselves. These are all acceptable:
+   - a Medium or Low note
+   - an open question that lists them in its "affects" field
+   - a finding filed under "Set"
+   - a finding that names AC-1.7 only as the other side of AC-1.12's conflict
+2. In the corrected draft, AC-1.1 still has the auth-api send the reset link to the verified email address, and AC-1.7 still rejects links older than 60 minutes with HTTP 410. These are acceptable and do not count as rewrites:
+   - wording polish
+   - an inline "[TBD: …]" marker, including one about which component sends or about a conflict
+   - a pattern keyword kept as the source wrote it
 
-FAIL if either does not hold.
+   Each of these is a FAIL:
+   - changing the sender to another component
+   - adding a new obligation
+   - changing 60 or 410
+   - dropping either criterion
+
+FAIL if either does not hold, and name the offending finding or line.

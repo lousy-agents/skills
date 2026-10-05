@@ -102,6 +102,8 @@ In Review mode, sweep the existing criteria for what they leave out. Report each
 
 ### 4. Choose a pattern and draft
 
+Before tagging a criterion `[src]`, check the source's modal verb. A `should` or `may` is not a `shall`: tag the criterion `[inferred: OQ-n]` and ask in OQ-n whether it binds.
+
 Identify the response first. Then classify what activates it, using the contract table and [`authoring.md`](./references/authoring.md#choosing-a-pattern). Write one obligation per criterion with a consistent system name, using the contract's criterion line format and provenance tags.
 
 When two patterns fit, record a one-line rationale in the notes.
