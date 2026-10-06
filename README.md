@@ -24,6 +24,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`curate-release`](#curate-release) | Code Review / Release | Rewrites a PR's commits into a coherent release story semantic-release can publish |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
 | [`instruction-style`](#instruction-style) | Tooling / Meta | Revises `AGENTS.md`, `CLAUDE.md`, Copilot, OpenCode, and Codex instruction files so priority, rationale, and scope survive the edit |
+| [`optimize-prompt-loop`](#optimize-prompt-loop) | Tooling / Meta | Turns a fuzzy or overly broad request into a concise task prompt fitted to the current model, harness, and effort level |
 
 ---
 
@@ -157,6 +158,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `curate-release` | At merge time: to curate a PR's commits so the release notes tell a coherent story |
 | `skill-reviewer` | When authoring or updating a `SKILL.md`: a contributor/meta tool, not part of the delivery flow |
 | `instruction-style` | When authoring or revising `AGENTS.md`, `CLAUDE.md`, or another harness instruction file: a contributor/meta tool, not part of the delivery flow |
+| `optimize-prompt-loop` | Before handing a fuzzy request to an agent, at any stage: to get a concise, runtime-fitted task prompt, optionally executed once |
 
 ---
 
@@ -466,9 +468,28 @@ Authors or revises durable agent-facing instruction prose — `AGENTS.md`, `CLAU
 - Check whether instruction files have drifted from the code and CI they describe
 
 **Do NOT use when:**
-- You want a one-off task prompt optimized for immediate execution
+- You want a one-off task prompt optimized for immediate execution (use `optimize-prompt-loop`)
 - You want a `SKILL.md` linted against Agent Skills packaging rules (use `skill-reviewer`)
 - You want a feature specification audited for implementation defects (use `spec-auditor`)
+
+---
+
+### `optimize-prompt-loop`
+
+**Install:** `npx skills add lousy-agents/skills --skill optimize-prompt-loop`
+
+Turns a source request into the smallest prompt that reliably produces the intended result in the runtime it will run in. It profiles the model, agent harness, and reasoning/effort level from what the session actually discloses — never guessing a model, tool, or permission — then runs a short internal optimization loop for fidelity, a concrete outcome, an executable plan, proportional verification, and a stopping condition. Missing low-impact details become stated assumptions; at most one question is asked when the answer would change scope or safety. When the target model has a rubric (currently Claude Opus 5.5, in `references/`), a final rubric pass removes scaffolding written for older models and reports the verdict. Returns a paste-ready prompt plus short notes, and executes it once only when you ask.
+
+**Use when you want to:**
+- Turn a vague, sprawling, or inherited prompt into one an agent can execute and verify
+- Fit a prompt to a specific model, harness (Claude Code, Codex, Copilot, direct chat), or effort level
+- Strip legacy scaffolding — personas, "think step by step", shouting modifiers, re-check rituals — that no longer helps
+- Get an optimized prompt and run it in one step
+
+**Do NOT use when:**
+- You want ordinary task execution with no prompt rewrite
+- You want durable instruction files (`AGENTS.md`, `CLAUDE.md`) revised (use `instruction-style`)
+- You want a `SKILL.md` linted (use `skill-reviewer`) or a spec audited (use `spec-auditor`)
 
 ## Install
 
@@ -527,6 +548,7 @@ Install any skill by name:
 /plugin install curate-release@lousy-agents
 /plugin install skill-reviewer@lousy-agents
 /plugin install instruction-style@lousy-agents
+/plugin install optimize-prompt-loop@lousy-agents
 ```
 
 ## Supported Agents
