@@ -6,15 +6,12 @@
     "name": "lousy-agents",
     "email": "pratt.zach@gmail.com"
   },
-  "metadata": {
-    "pluginRoot": "skills"
-  },
   "plugins": [
     {
       "name": "feature-to-plan",
       "displayName": "Feature to Plan",
       "description": "Turn feature requests, PRDs, and backlog issues into an EARS-format spec file or one new GitHub issue",
-      "source": "./feature-to-plan",
+      "source": "./skills/feature-to-plan",
       "category": "planning",
       "keywords": ["planning", "spec", "EARS", "requirements", "github-issues"]
     },
@@ -22,7 +19,7 @@
       "name": "go-testable-design",
       "displayName": "Go Testable Design",
       "description": "Guide Go development with tests: smallest test first, start from public behavior, keep IO out of decision packages",
-      "source": "./go-testable-design",
+      "source": "./skills/go-testable-design",
       "category": "testing",
       "keywords": ["Go", "TDD", "testing", "refactoring", "test-first", "outside-in", "acceptance", "package-purity"]
     },
@@ -30,7 +27,7 @@
       "name": "issue-refine-loop",
       "displayName": "Issue Refine Loop",
       "description": "Rewrite a GitHub issue into session-sized child issues, with dependencies only where work actually blocks",
-      "source": "./issue-refine-loop",
+      "source": "./skills/issue-refine-loop",
       "category": "planning",
       "keywords": ["planning", "github-issues", "epic", "EARS", "backlog", "refinement"]
     },
@@ -38,7 +35,7 @@
       "name": "mutation-hunter",
       "displayName": "Mutation Hunter",
       "description": "Uncover test coverage gaps by applying semantic mutations to production TypeScript, Go, or Python code",
-      "source": "./mutation-hunter",
+      "source": "./skills/mutation-hunter",
       "category": "testing",
       "keywords": ["testing", "mutation", "coverage", "TypeScript", "Go", "Python"]
     },
@@ -46,7 +43,7 @@
       "name": "plan-to-graph",
       "displayName": "Plan to Graph",
       "description": "Convert approved specs, master plans, or GitHub epics into native GitHub Issue dependency graphs with sub-issues and blocking relationships",
-      "source": "./plan-to-graph",
+      "source": "./skills/plan-to-graph",
       "category": "planning",
       "keywords": ["planning", "graph", "github-issues", "sub-issues", "blocking-dependencies", "epics", "tasks"]
     },
@@ -54,7 +51,7 @@
       "name": "rugged-evil-tester",
       "displayName": "Rugged Evil Tester",
       "description": "Generate adversarial, negative, and chaos tests for TypeScript code — boundary conditions, fuzzing, injection scenarios",
-      "source": "./rugged-evil-tester",
+      "source": "./skills/rugged-evil-tester",
       "category": "testing",
       "keywords": ["testing", "adversarial", "security", "chaos", "fuzzing", "TypeScript"]
     },
@@ -62,7 +59,7 @@
       "name": "skill-reviewer",
       "displayName": "Skill Reviewer",
       "description": "Rigorously review, validate, and lint Agent Skills SKILL.md files for any agent platform",
-      "source": "./skill-reviewer",
+      "source": "./skills/skill-reviewer",
       "category": "tooling",
       "keywords": ["skill", "review", "lint", "validation", "agent"]
     },
@@ -70,7 +67,7 @@
       "name": "spec-auditor",
       "displayName": "Spec Auditor",
       "description": "Adversarially review feature specifications and implementation plans — expose gaps, contradictions, ambiguity before coding",
-      "source": "./spec-auditor",
+      "source": "./skills/spec-auditor",
       "category": "planning",
       "keywords": ["spec", "audit", "review", "requirements", "planning"]
     },
@@ -78,7 +75,7 @@
       "name": "triaging-pr-reviews",
       "displayName": "Triaging PR Reviews",
       "description": "Triage and analyze PR review comments — classify concerns, verify claims against actual code, evaluate trade-offs",
-      "source": "./triaging-pr-reviews",
+      "source": "./skills/triaging-pr-reviews",
       "category": "code-review",
       "keywords": ["PR", "review", "triage", "code-review", "Copilot"]
     },
@@ -86,7 +83,7 @@
       "name": "curate-release",
       "displayName": "Curate Release",
       "description": "Rewrite a pull request's commits into a coherent release story that semantic-release can publish, without changing file contents",
-      "source": "./curate-release",
+      "source": "./skills/curate-release",
       "category": "code-review",
       "keywords": ["git", "commit-history", "conventional-commits", "semantic-release", "changelog", "release-notes", "pull-request"]
     },
@@ -110,15 +107,23 @@
       "name": "instruction-style",
       "displayName": "Instruction Style",
       "description": "Author or revise durable agent-facing instruction prose so priority, rationale, and scope survive the edit",
-      "source": "./instruction-style",
+      "source": "./skills/instruction-style",
       "category": "tooling",
       "keywords": ["instructions", "agents-md", "prose", "modality", "harness"]
+    },
+    {
+      "name": "optimize-prompt-loop",
+      "displayName": "Optimize Prompt Loop",
+      "description": "Turn a fuzzy or overly broad request into a concise task prompt fitted to the current model, agent harness, and effort level",
+      "source": "./skills/optimize-prompt-loop",
+      "category": "tooling",
+      "keywords": ["prompts", "prompt-engineering", "optimization", "model-aware", "harness", "rubric"]
     },
     {
       "name": "code-tidy",
       "displayName": "Code Tidy",
       "description": "Tidy the files a PR or branch changed against its base, or all tracked source on the default branch or with whole-repo: autonomous coach-first Stage-B refactor by default (may change behavior), then SOLID tidy with no further behavior change. Opt out with solid-only / no-behavior-change / prune-comments-only. Tests document behavior, comments earn their place",
-      "source": "./code-tidy",
+      "source": "./skills/code-tidy",
       "category": "development",
       "keywords": ["tidy", "cleanup", "comments", "SOLID", "refactor", "PR", "coach", "mise", "quality", "lifecycle", "coach-first", "Stage-B", "solid-only"]
     }
