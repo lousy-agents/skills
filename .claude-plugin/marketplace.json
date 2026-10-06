@@ -126,7 +126,7 @@
       "name": "to-ears",
       "displayName": "To EARS",
       "description": "Draft, review, and derive tests from EARS requirements without inventing behavior — the canonical EARS contract other planning skills share",
-      "source": "./to-ears",
+      "source": "./skills/to-ears",
       "category": "planning",
       "keywords": ["EARS", "requirements", "acceptance-criteria", "testing", "traceability", "planning"]
     }
