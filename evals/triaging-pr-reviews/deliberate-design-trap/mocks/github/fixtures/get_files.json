@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "src/token.js",
+    "status": "added",
+    "additions": 15,
+    "deletions": 0
+  },
+  {
+    "filename": "test/token.test.js",
+    "status": "added",
+    "additions": 28,
+    "deletions": 0
+  }
+]

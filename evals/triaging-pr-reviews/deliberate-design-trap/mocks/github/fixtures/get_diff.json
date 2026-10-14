@@ -1,0 +1,73 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+new file mode 100644
+index 0000000..e2252f1
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@ -0,0 +1,3 @@
++# Contributing
++
++Run the test suite with `node --test` before you push. Keep each change small and focused.
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..a80562a
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,5 @@
++{
++  "name": "authgate",
++  "private": true,
++  "type": "module"
++}
+diff --git a/src/token.js b/src/token.js
+new file mode 100644
+index 0000000..facef7d
+--- /dev/null
++++ b/src/token.js
+@@ -0,0 +1,14 @@
++export function safeEqual(a, b) {
++  if (a.length !== b.length) return false;
++  let diff = 0;
++  for (let i = 0; i < a.length; i++) {
++    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
++  }
++  return diff === 0;
++}
++
++export function parseBearer(header) {
++  if (typeof header !== "string") return null;
++  const [, token] = header.split(" ");
++  return token || null;
++}
+diff --git a/test/token.test.js b/test/token.test.js
+new file mode 100644
+index 0000000..ddcf469
+--- /dev/null
++++ b/test/token.test.js
+@@ -0,0 +1,27 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { safeEqual, parseBearer } from "../src/token.js";
++
++test("safeEqual matches equal keys", () => {
++  assert.equal(safeEqual("k3y-abc", "k3y-abc"), true);
++  assert.equal(safeEqual("k3y-abc", "k3y-abd"), false);
++  assert.equal(safeEqual("short", "longer"), false);
++});
++
++test("safeEqual reads every character even after the first mismatch", () => {
++  let reads = 0;
++  const probe = (text) => ({
++    length: text.length,
++    charCodeAt(i) {
++      reads++;
++      return text.charCodeAt(i);
++    },
++  });
++  assert.equal(safeEqual(probe("aaaa"), probe("baaa")), false);
++  assert.equal(reads, 8);
++});
++
++test("parseBearer extracts the token", () => {
++  assert.equal(parseBearer("Bearer abc.def"), "abc.def");
++  assert.equal(parseBearer(undefined), null);
++});

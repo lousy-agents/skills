@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "src/csv.js",
+    "status": "added",
+    "additions": 7,
+    "deletions": 0
+  },
+  {
+    "filename": "test/csv.test.js",
+    "status": "added",
+    "additions": 8,
+    "deletions": 0
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "state": "success",
+  "sha": "5c048fe650720d5813b08b782b0bf2d21d2b913c",
+  "total_count": 1,
+  "statuses": [
+    {
+      "context": "ci/test",
+      "state": "success"
+    }
+  ]
+}

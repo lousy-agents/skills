@@ -1,0 +1,51 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+new file mode 100644
+index 0000000..e2252f1
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@ -0,0 +1,3 @@
++# Contributing
++
++Run the test suite with `node --test` before you push. Keep each change small and focused.
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..04227a1
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,5 @@
++{
++  "name": "notifier",
++  "private": true,
++  "type": "module"
++}
+diff --git a/src/retry.js b/src/retry.js
+new file mode 100644
+index 0000000..11f16bf
+--- /dev/null
++++ b/src/retry.js
+@@ -0,0 +1,7 @@
++export function backoffDelay(attempt, { baseMs = 100, maxDelayMs = 30000 } = {}) {
++  return baseMs * 2 ** attempt;
++}
++
++export function hookUrl(baseUrl, id) {
++  return `${baseUrl}/hooks/${encodeURIComponent(id)}`;
++}
+diff --git a/test/retry.test.js b/test/retry.test.js
+new file mode 100644
+index 0000000..eb903d7
+--- /dev/null
++++ b/test/retry.test.js
+@@ -0,0 +1,12 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { backoffDelay, hookUrl } from "../src/retry.js";
++
++test("backoffDelay doubles per attempt", () => {
++  assert.equal(backoffDelay(0), 100);
++  assert.equal(backoffDelay(3), 800);
++});
++
++test("hookUrl encodes the hook id", () => {
++  assert.equal(hookUrl("https://hooks.example.test", "a b"), "https://hooks.example.test/hooks/a%20b");
++});

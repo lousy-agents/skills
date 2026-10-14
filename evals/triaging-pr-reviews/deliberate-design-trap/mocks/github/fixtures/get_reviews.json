@@ -1,0 +1,13 @@
+[
+  {
+    "id": 4102000001,
+    "state": "COMMENTED",
+    "body": "## Pull request overview\n\nCopilot reviewed 3 out of 3 changed files in this pull request and generated 2 comments.",
+    "user": {
+      "login": "copilot-pull-request-reviewer[bot]"
+    },
+    "html_url": "https://github.com/acme-fixture-nonexistent/authgate/pull/31#pullrequestreview-4102000001",
+    "author_association": "NONE",
+    "submitted_at": "2026-09-03T11:05:40Z"
+  }
+]
