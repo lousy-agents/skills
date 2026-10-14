@@ -196,7 +196,7 @@ Determine the project's development workflow before implementing. Search for TDD
 **Per fix:**
 1. Write a failing test demonstrating the edge case the reviewer identified
 2. Verify it fails for the right reason (confirms the bug exists)
-3. Implement the minimal fix
+3. Implement the minimal fix, with no code comment explaining it — the test pins the case and the thread reply carries the why
 4. Verify all tests pass (new and existing)
 5. After all fixes: run the project's full validation suite
 
