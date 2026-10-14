@@ -187,6 +187,8 @@ On an open PR, continue.
 
 Determine the project's development workflow before implementing. Search for TDD or test-first requirements in `copilot-instructions.md`, `AGENTS.md`, or `CONTRIBUTING.md`. If any of these files mandate TDD, write a failing test before each fix. Otherwise, write tests after the fix.
 
+Shell permission is granted per command, so a probe command that was denied says nothing about the test command. Do not skip the fix or its tests on that basis: run the tests, and call a fix untested only when the test command itself is denied.
+
 **Priority order:**
 1. Security (active vulnerabilities, injection, traversal)
 2. Correctness (bugs triggerable by current callers)
