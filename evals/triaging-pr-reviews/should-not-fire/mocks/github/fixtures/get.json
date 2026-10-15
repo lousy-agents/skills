@@ -1,0 +1,33 @@
+{
+  "number": 42,
+  "title": "feat(export): add CSV export for the catalog",
+  "body": "Adds `toCsv` so the catalog can be exported as CSV.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/42",
+  "user": {
+    "login": "dana-dev"
+  },
+  "head": {
+    "ref": "feat/csv-export",
+    "sha": "15524e90da2b0f38d9d9edc18cfef6f517a3e424",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/stockroom"
+    }
+  },
+  "base": {
+    "ref": "main",
+    "sha": "0000000000000000000000000000000000000000",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/stockroom"
+    }
+  },
+  "additions": 15,
+  "deletions": 0,
+  "changed_files": 2,
+  "commits": 1,
+  "created_at": "2026-09-01T12:05:00Z",
+  "updated_at": "2026-09-06T10:00:00Z"
+}

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: natural-trigger
+context:
+  scaffold_script: scaffold.sh

@@ -1,0 +1,12 @@
+[
+  {
+    "sha": "44450369ebaa8f6dc14d60d60ba75414f7caab2b",
+    "commit": {
+      "message": "feat(money): add cent rounding and USD formatting",
+      "author": {
+        "name": "Fixture Dev",
+        "date": "2026-09-01T12:00:00+00:00"
+      }
+    }
+  }
+]

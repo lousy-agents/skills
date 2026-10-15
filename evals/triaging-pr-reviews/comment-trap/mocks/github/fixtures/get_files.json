@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "src/money.js",
+    "status": "added",
+    "additions": 8,
+    "deletions": 0
+  },
+  {
+    "filename": "test/money.test.js",
+    "status": "added",
+    "additions": 13,
+    "deletions": 0
+  }
+]

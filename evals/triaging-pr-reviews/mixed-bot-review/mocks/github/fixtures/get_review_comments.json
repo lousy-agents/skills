@@ -1,0 +1,78 @@
+{
+  "review_threads": [
+    {
+      "id": "PRRT_kwDOFixStkA",
+      "is_resolved": false,
+      "is_outdated": false,
+      "is_collapsed": false,
+      "comments": [
+        {
+          "body": "`Math.floor` drops the last partial page: `pageCount(101, 10)` returns `10`, so item 101 can never be reached through `pageSlice`. This should round up with `Math.ceil(total / perPage)`.",
+          "path": "src/pagination.js",
+          "author": "copilot-pull-request-reviewer",
+          "created_at": "2026-09-02T09:31:12Z",
+          "updated_at": "2026-09-02T09:31:12Z",
+          "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/17#discussion_r3101000001",
+          "line": 5,
+          "original_line": 5
+        }
+      ],
+      "total_count": 1
+    },
+    {
+      "id": "PRRT_kwDOFixStkB",
+      "is_resolved": false,
+      "is_outdated": false,
+      "is_collapsed": false,
+      "comments": [
+        {
+          "body": "`normalizeSku` calls `input.trim()` before checking the type of `input`, so `normalizeSku(undefined)` throws a generic `TypeError: Cannot read properties of undefined` instead of `InvalidSkuError`. Move the `typeof` guard above the `trim()` call.",
+          "path": "src/sku.js",
+          "author": "copilot-pull-request-reviewer",
+          "created_at": "2026-09-02T09:31:12Z",
+          "updated_at": "2026-09-02T09:31:12Z",
+          "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/17#discussion_r3101000002",
+          "line": 14,
+          "original_line": 14
+        }
+      ],
+      "total_count": 1
+    },
+    {
+      "id": "PRRT_kwDOFixStkC",
+      "is_resolved": true,
+      "is_outdated": false,
+      "is_collapsed": true,
+      "comments": [
+        {
+          "body": "Nit: rename `perPage` to `pageSize` to match the API docs.",
+          "path": "src/pagination.js",
+          "author": "rlee",
+          "created_at": "2026-09-01T15:02:44Z",
+          "updated_at": "2026-09-01T15:02:44Z",
+          "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/17#discussion_r3101000003",
+          "line": 1,
+          "original_line": 1
+        },
+        {
+          "body": "We talked this through on the API call: the public query parameter is `perPage`, so the name stays.",
+          "path": "src/pagination.js",
+          "author": "dana-dev",
+          "created_at": "2026-09-01T16:20:03Z",
+          "updated_at": "2026-09-01T16:20:03Z",
+          "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/17#discussion_r3101000004",
+          "line": 1,
+          "original_line": 1
+        }
+      ],
+      "total_count": 2
+    }
+  ],
+  "totalCount": 3,
+  "pageInfo": {
+    "hasNextPage": false,
+    "hasPreviousPage": false,
+    "startCursor": "Y3Vyc29yOnYyOnN0YXJ0",
+    "endCursor": "Y3Vyc29yOnYyOmVuZA=="
+  }
+}

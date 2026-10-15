@@ -1,0 +1,93 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+new file mode 100644
+index 0000000..e2252f1
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@ -0,0 +1,3 @@
++# Contributing
++
++Run the test suite with `node --test` before you push. Keep each change small and focused.
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..45890a7
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,5 @@
++{
++  "name": "stockroom",
++  "private": true,
++  "type": "module"
++}
+diff --git a/src/pagination.js b/src/pagination.js
+new file mode 100644
+index 0000000..4b0b1a3
+--- /dev/null
++++ b/src/pagination.js
+@@ -0,0 +1,11 @@
++export function pageCount(total, perPage) {
++  if (!Number.isInteger(perPage) || perPage < 1) {
++    throw new RangeError("perPage must be a positive integer");
++  }
++  return Math.floor(total / perPage);
++}
++
++export function pageSlice(items, page, perPage) {
++  const start = (page - 1) * perPage;
++  return items.slice(start, start + perPage);
++}
+diff --git a/src/sku.js b/src/sku.js
+new file mode 100644
+index 0000000..7d81994
+--- /dev/null
++++ b/src/sku.js
+@@ -0,0 +1,10 @@
++export class InvalidSkuError extends Error {}
++
++export function normalizeSku(input) {
++  if (typeof input !== "string") {
++    throw new InvalidSkuError("SKU must be a string");
++  }
++  const sku = input.trim().toUpperCase();
++  if (!/^[A-Z]{3}-\d{4}$/.test(sku)) throw new InvalidSkuError(`Invalid SKU: ${sku}`);
++  return sku;
++}
+diff --git a/test/pagination.test.js b/test/pagination.test.js
+new file mode 100644
+index 0000000..9ec6b21
+--- /dev/null
++++ b/test/pagination.test.js
+@@ -0,0 +1,16 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { pageCount, pageSlice } from "../src/pagination.js";
++
++test("pageCount divides evenly", () => {
++  assert.equal(pageCount(100, 10), 10);
++  assert.equal(pageCount(0, 10), 0);
++});
++
++test("pageCount rejects a non-positive page size", () => {
++  assert.throws(() => pageCount(10, 0), RangeError);
++});
++
++test("pageSlice returns the requested page", () => {
++  assert.deepEqual(pageSlice([1, 2, 3, 4, 5], 2, 2), [3, 4]);
++});
+diff --git a/test/sku.test.js b/test/sku.test.js
+new file mode 100644
+index 0000000..7d4d5c9
+--- /dev/null
++++ b/test/sku.test.js
+@@ -0,0 +1,12 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { normalizeSku, InvalidSkuError } from "../src/sku.js";
++
++test("normalizeSku trims and upper-cases", () => {
++  assert.equal(normalizeSku("  abc-1234 "), "ABC-1234");
++});
++
++test("normalizeSku rejects non-string input with InvalidSkuError", () => {
++  assert.throws(() => normalizeSku(undefined), InvalidSkuError);
++  assert.throws(() => normalizeSku(42), InvalidSkuError);
++});

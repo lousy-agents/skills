@@ -1,0 +1,13 @@
+[
+  {
+    "id": 4103000001,
+    "state": "COMMENTED",
+    "body": "## Pull request overview\n\nCopilot reviewed 2 out of 2 changed files in this pull request and generated 1 comment.",
+    "user": {
+      "login": "copilot-pull-request-reviewer[bot]"
+    },
+    "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/8#pullrequestreview-4103000001",
+    "author_association": "NONE",
+    "submitted_at": "2026-09-04T08:22:10Z"
+  }
+]

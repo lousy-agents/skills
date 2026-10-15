@@ -1,0 +1,24 @@
+[
+  {
+    "id": 4101000001,
+    "state": "COMMENTED",
+    "body": "",
+    "user": {
+      "login": "rlee"
+    },
+    "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/17#pullrequestreview-4101000001",
+    "author_association": "MEMBER",
+    "submitted_at": "2026-09-01T15:02:44Z"
+  },
+  {
+    "id": 4101000002,
+    "state": "COMMENTED",
+    "body": "## Pull request overview\n\nCopilot reviewed 4 out of 4 changed files in this pull request and generated 2 comments.",
+    "user": {
+      "login": "copilot-pull-request-reviewer[bot]"
+    },
+    "html_url": "https://github.com/acme-fixture-nonexistent/stockroom/pull/17#pullrequestreview-4101000002",
+    "author_association": "NONE",
+    "submitted_at": "2026-09-02T09:31:12Z"
+  }
+]

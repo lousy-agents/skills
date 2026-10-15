@@ -1,0 +1,12 @@
+[
+  {
+    "sha": "fb1f1fa21a7b63cd28858ff56b1c97e5dd2d46f5",
+    "commit": {
+      "message": "feat(catalog): paginate product listing and normalize SKUs",
+      "author": {
+        "name": "Fixture Dev",
+        "date": "2026-09-01T12:00:00+00:00"
+      }
+    }
+  }
+]

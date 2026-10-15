@@ -1,0 +1,45 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+new file mode 100644
+index 0000000..e2252f1
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@ -0,0 +1,3 @@
++# Contributing
++
++Run the test suite with `node --test` before you push. Keep each change small and focused.
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..45890a7
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,5 @@
++{
++  "name": "stockroom",
++  "private": true,
++  "type": "module"
++}
+diff --git a/src/csv.js b/src/csv.js
+new file mode 100644
+index 0000000..a46ffcd
+--- /dev/null
++++ b/src/csv.js
+@@ -0,0 +1,6 @@
++export function toCsv(rows) {
++  if (rows.length === 0) return "";
++  const header = Object.keys(rows[0]);
++  const lines = rows.map((row) => header.map((key) => String(row[key])).join(","));
++  return [header.join(","), ...lines].join("\n");
++}
+diff --git a/test/csv.test.js b/test/csv.test.js
+new file mode 100644
+index 0000000..005a882
+--- /dev/null
++++ b/test/csv.test.js
+@@ -0,0 +1,7 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { toCsv } from "../src/csv.js";
++
++test("toCsv writes a header and one line per row", () => {
++  assert.equal(toCsv([{ sku: "ABC-1234", qty: 3 }]), "sku,qty\nABC-1234,3");
++});

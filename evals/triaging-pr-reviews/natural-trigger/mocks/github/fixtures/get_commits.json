@@ -1,0 +1,12 @@
+[
+  {
+    "sha": "5c048fe650720d5813b08b782b0bf2d21d2b913c",
+    "commit": {
+      "message": "feat(webhooks): add retry backoff and hook URL builder",
+      "author": {
+        "name": "Fixture Dev",
+        "date": "2026-09-01T12:00:00+00:00"
+      }
+    }
+  }
+]

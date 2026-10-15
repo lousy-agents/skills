@@ -1,0 +1,33 @@
+{
+  "number": 31,
+  "title": "feat(auth): add token comparison and bearer parsing helpers",
+  "body": "Adds `safeEqual` for API-key comparison and `parseBearer` for the Authorization header.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/authgate/pull/31",
+  "user": {
+    "login": "mo-dev"
+  },
+  "head": {
+    "ref": "feat/token-helpers",
+    "sha": "0477771c0abc70f3b0a74c043d2742ab852d3f25",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/authgate"
+    }
+  },
+  "base": {
+    "ref": "main",
+    "sha": "0000000000000000000000000000000000000000",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/authgate"
+    }
+  },
+  "additions": 43,
+  "deletions": 0,
+  "changed_files": 2,
+  "commits": 1,
+  "created_at": "2026-09-01T12:05:00Z",
+  "updated_at": "2026-09-03T11:12:00Z"
+}
