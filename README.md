@@ -425,25 +425,6 @@ It triages **every comment whose thread is still unresolved**, plus conversation
 
 **Requires** an authenticated [`gh`](https://cli.github.com/) CLI and `jq` locally, or GitHub MCP / the harness's built-in GitHub tools when `gh` is absent — including Claude Code cloud sessions, which do not pre-install `gh`. The bound surface must also be able to read review threads and their resolution state. A surface that cannot is rejected during the probe, with the missing capability named, rather than binding and then re-triaging threads that were already closed.
 
-**Evaluated** by a `claude plugin eval` suite in `evals/triaging-pr-reviews/`. It has 5 cases, each served by a fake GitHub MCP server that answers from fixtures, so no run touches real GitHub:
-- a correct bot claim, a hallucinated bot claim, and an already-resolved thread on one PR
-- a deliberate-design trap backed by an existing test
-- a fix that tempts an explanatory or review-referencing code comment
-- a natural-language trigger with no slash command
-- a request to write a new review, where the skill must not fire
-
-The suite lives at the repo root, not in `skills/triaging-pr-reviews/evals/`. A case inside the plugin can't load a second plugin: setting `plugins:` replaces the enclosing plugin, and a test plugin in the plugin directory, a sibling, or a shared directory is rejected. So each case carries its own `ghmock` test plugin, and both plugins are listed in `plugins:`. Every case also asserts that `add_issue_comment` is never called.
-
-Run it from the repo root, keep the results directory outside the repo, and grant only the test command and `git`. Granting Bash needs a sandbox backend (`bubblewrap` and `socat` on Linux). Use the other model as the judge:
-
-```bash
-env -u GH_TOKEN -u GITHUB_TOKEN claude plugin eval . --eval-dir evals/triaging-pr-reviews \
-  --trust-plugin --scaffold --no-publish --ablation none \
-  --model claude-sonnet-5-5 --judge-model opus --runs 3 \
-  --allow-tools Edit Write "Bash(node --test:*)" "Bash(git:*)" \
-  --output-dir /tmp/triaging-pr-reviews-evals --json /tmp/triaging-pr-reviews-evals/result.json
-```
-
 ---
 
 ### `curate-release`
