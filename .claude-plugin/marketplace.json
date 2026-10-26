@@ -64,6 +64,14 @@
       "keywords": ["skill", "review", "lint", "validation", "agent"]
     },
     {
+      "name": "agent-skill-engineering",
+      "displayName": "Agent Skill Engineering",
+      "description": "Create, refine, and review coding-agent skills from real workflows, with pinned grounding sources, an evidence ledger, and evaluation guidance",
+      "source": "./skills/agent-skill-engineering",
+      "category": "tooling",
+      "keywords": ["skill", "authoring", "evaluation", "agent", "evidence", "provenance"]
+    },
+    {
       "name": "spec-auditor",
       "displayName": "Spec Auditor",
       "description": "Adversarially review feature specifications and implementation plans — expose gaps, contradictions, ambiguity before coding",

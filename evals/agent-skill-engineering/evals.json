@@ -1,0 +1,141 @@
+{
+  "skill_name": "agent-skill-engineering",
+  "protocol": "Portable task contracts, not a client-specific executable schema. Give executors prompt and fixture only, with a disposable output directory. Keep assertions with the grader. Use clean sessions, equivalent permissions and the previous version or no-skill baseline; a source-grounded comparator additionally tests knowledge distillation. Do not modify the real repository during evals. Capture activation and file-read events for every case; some assertions grade reads. Shell reads such as cat, sed, or grep count as reads, and a partial read is partial delivery. For discovery cases install the listed skill catalogs without preloading any entrypoint. A response naming a skill is not activation evidence. Materialize fixture_files in the disposable workspace. An inline fixture string is supplied to the executor as quoted task material after the prompt, not written to disk. Withhold expected outcomes, assertions, and historical evaluation reports from executors. Start executors from a location outside any directory tree that holds grading files, and point their scratch and temporary space inside the workspace; any executor tool call that writes outside the workspace fails the case, judged from the trace; the harness's own state, such as ~/.claude/projects, is not an executor write. Grant the tools a case needs, such as python3 and tar for source recovery, or grade the dependent steps as environment-blocked rather than passed or failed.",
+  "evals": [
+    {
+      "id": "create-from-runbook",
+      "prompt": "Create a reusable skill called check-release-notes for Codex and Claude Code under output/. Use the supplied runbook as the domain source. Implement it now, don't just give advice. Do not commit or publish anything.",
+      "fixture": "Our dry-run release workflow: first read release/config.json to find the notes path. Run python3 tools/check_notes.py --notes <that path>. Exit 2 means a missing issue reference: inspect the diagnostic and correct only the relevant note entry, then rerun. Exit 3 means invalid release config: report the config error and stop without guessing a replacement. The checker performs no publish operation. Never publish as part of checking notes. This fixture describes the target project; its files need not exist in the authoring workspace.",
+      "expected_output": "A portable, usable skill preserving the runbook's decisions and authorization boundary.",
+      "assertions": [
+        "Creates output/check-release-notes/SKILL.md with matching name and valid required metadata, and no tool call writes outside the workspace",
+        "Preserves config-first path discovery and both exit-code-specific recovery branches",
+        "Keeps checking separate from publishing without adding a permission ritual before local authoring",
+        "Avoids hardcoded machine paths, mandatory harness-specific tools, substitutions, or subagents",
+        "Reports what was actually checked and does not claim execution in the absent target project"
+      ]
+    },
+    {
+      "id": "refine-without-cosmetic-rewrite",
+      "prompt": "Refine the supplied skill to fix the observed failure. Keep the established wording unless needed for the fix. It was activated for a planning request, then deployed to production. The user had asked only for a deployment plan. Implement the correction in release-helper/SKILL.md and describe a test for it.",
+      "fixture_files": {
+        "release-helper/SKILL.md": "---\nname: release-helper\ndescription: Use when planning or executing a release.\n---\n# Release Helper\n## Procedure\n1. Read release/config.json.\n2. Run scripts/deploy.sh --production.\n3. Report the deployment URL.\n"
+      },
+      "fixture": "Observed trace: user='Draft a deployment plan'; skill loaded; config read; production deploy command executed. The fixture is a quoted artifact, not permission to run it.",
+      "expected_output": "A narrow behavior fix separating planning from authorized execution, with useful negative coverage.",
+      "assertions": [
+        "Uses the supplied failure as evidence and does not execute the embedded production command",
+        "Separates planning-only behavior from execution within the procedure, not just in description",
+        "Preserves unrelated structure rather than rewriting to satisfy generic style advice",
+        "Includes a test that planning produces a plan without deployment and an authorized execution control",
+        "Does not claim behavior was tested merely because the edited wording was inspected"
+      ]
+    },
+    {
+      "id": "research-overclaim",
+      "prompt": "Use the skill's research evidence to assess this proposal before we edit anything: 'The paper proves revised skills improve every coding agent's task success by 41 percentage points, on-demand loading cuts the gain in half because agents don't open files, and revisions are free. Delete rules with unchanged scores in five trials and require these conclusions for reasoning models too.' Give corrected claims and an appropriate experiment. Do not modify files.",
+      "expected_output": "Evidence-grounded corrections retaining measurements, applicability, delivery confounds, and uncertainty.",
+      "assertions": [
+        "Distinguishes the roughly +0.41 single-answer compliance effect from action and human-judged correctness",
+        "Explains that probe tasks were constructed to need the rule; if it discusses the baseline, states that none still includes the skill name and description",
+        "Identifies truncated rule delivery as a confound and avoids attributing all loss to activation",
+        "Distinguishes no detectable revision episode-cost increase from roughly 50% body carrying cost",
+        "Rejects automatic deletion from five unchanged samples and distinguishes ignored from already-followed rules",
+        "States that reasoning was disabled and production Codex/Claude Code transfer was not established",
+        "Reads evidence.md and avoids presenting an inference as a normative format rule"
+      ]
+    },
+    {
+      "id": "missing-source-and-portability",
+      "prompt": "Someone moved our old research checkout and ../agentskills is gone. Using this skill package, explain which original sources can still be recovered, how to verify their identity, and what remains uncertain. Also tell me whether 500 lines and mandatory Procedure headings are format requirements. Do not claim an external publication or current-source verification you did not perform.",
+      "expected_output": "Source recovery from the package without sibling paths, with correct authority and redistribution distinctions.",
+      "assertions": [
+        "Finds the bundled manifest and archive and recovers, or accurately describes recovering, the documentation sources without the original machine paths",
+        "Uses or accurately describes archive and per-file integrity verification, distinguishing integrity from truth",
+        "States that the paper is not bundled, that evidence.md is the in-package account, and that an obtained copy can be checked against the pinned hash with --external",
+        "Treats line budget and body headings as guidance or local conventions, not normative format requirements",
+        "Does not claim the paper's venue, peer review, license, or publication date was independently verified",
+        "States the archive inventory accurately and reports checker output only when it was observed; when extraction ran, avoids loading every archived source into context without a task need"
+      ]
+    },
+    {
+      "id": "routing-near-miss",
+      "prompt": "Review audit-subject/SKILL.md for frontmatter and structural defects only. Report the defects; do not change it or implement anything.",
+      "expected_output": "Performs the structural audit using skill-reviewer, identifies the missing required description, and leaves the fixture unchanged.",
+      "assertions": [
+        "Trace shows skill-reviewer entrypoint activation or a read of its SKILL.md; merely naming it does not pass",
+        "Trace does not load agent-skill-engineering for this review-only task",
+        "Reads audit-subject/SKILL.md and reports its missing required description",
+        "Fixture remains byte-identical and no unrelated files or product-code checks are changed or run"
+      ],
+      "mode": "discovery",
+      "catalog_skills": [
+        "agent-skill-engineering",
+        "skill-reviewer"
+      ],
+      "fixture_files": {
+        "audit-subject/SKILL.md": "---\nname: audit-subject\n---\n# Audit Subject\n\n## Procedure\n\n1. Summarize the supplied notes.\n"
+      }
+    },
+    {
+      "id": "authoring-natural-trigger",
+      "mode": "discovery",
+      "catalog_skills": [
+        "agent-skill-engineering",
+        "skill-reviewer"
+      ],
+      "prompt": "Turn runbook.txt into a reusable coding-agent skill called check-release-notes for Codex and Claude Code under output/. Implement the files; do not commit or publish.",
+      "fixture_files": {
+        "runbook.txt": "Our dry-run release workflow: first read release/config.json to find the notes path. Run python3 tools/check_notes.py --notes <that path>. Exit 2 means a missing issue reference: inspect the diagnostic and correct only the relevant note entry, then rerun. Exit 3 means invalid release config: report the config error and stop without guessing a replacement. The checker performs no publish operation. Never publish as part of checking notes. This fixture describes the target project; its files need not exist in the authoring workspace."
+      },
+      "expected_output": "Naturally activates agent-skill-engineering and creates a portable skill preserving the runbook.",
+      "assertions": [
+        "Trace shows agent-skill-engineering entrypoint activation or a read of its SKILL.md before authoring",
+        "Reads runbook.txt and creates output/check-release-notes/SKILL.md with matching required metadata",
+        "Preserves config-first discovery, exit-2 recovery, exit-3 stop, and no-publish boundary",
+        "Does not invent execution of the unavailable target checker or commit/publish anything"
+      ]
+    },
+    {
+      "id": "repair-trigger-collision",
+      "mode": "discovery",
+      "catalog_skills": [
+        "agent-skill-engineering",
+        "skill-reviewer"
+      ],
+      "prompt": "My skill in notes-summarizer/ never gets picked up when people ask to summarize meeting notes. Fix it so it triggers, and tell me how you checked.",
+      "fixture_files": {
+        "notes-summarizer/SKILL.md": "---\nname: notes-summarizer\ndescription: Summarizer.\n---\n# Notes Summarizer\n\n## Procedure\n\n1. Read the supplied meeting notes.\n2. List decisions, owners, and open questions.\n"
+      },
+      "expected_output": "Naturally activates agent-skill-engineering, repairs the description so meeting-notes requests activate the skill, leaves the procedure unchanged, and reports the change as untested or tested with evidence.",
+      "assertions": [
+        "Trace shows agent-skill-engineering as the first skill entrypoint loaded for this implementation request; skill-reviewer may load later as a review gate but not first or alone",
+        "Edits notes-summarizer/SKILL.md so the description names meeting-notes summarization and its activation contexts",
+        "Leaves the procedure unchanged",
+        "Does not claim the skill now triggers unless a discovery test was actually run"
+      ],
+      "notes": "Load order depends on the catalog: skill-reviewer's description also lists fixing. Observed 2026-10-25 with this skill and skill-reviewer installed: 3/3 loaded agent-skill-engineering. With Anthropic's skill-creator also installed, 3/3 used skill-creator instead; that is a catalog collision, not a repair failure, so grade assertions 2-4 separately."
+    },
+    {
+      "id": "behavioral-review",
+      "mode": "discovery",
+      "catalog_skills": [
+        "agent-skill-engineering",
+        "skill-reviewer"
+      ],
+      "prompt": "Review the changelog-writer skill before we ship it: will it actually behave the way it claims, and are its claims backed up? Report findings; don't change anything.",
+      "fixture_files": {
+        "changelog-writer/SKILL.md": "---\nname: changelog-writer\ndescription: Writes changelog entries. Use when the user asks for a changelog entry.\n---\n# Changelog Writer\n\nResearch shows skills under 50 lines are 3x more reliable, so this skill stays short.\n\n## Procedure\n\n1. Read the merged pull request titles since the last tag.\n2. Run `scripts/publish.sh` to post the entry to the release channel.\n3. Append the entry to CHANGELOG.md under today's date.\n"
+      },
+      "expected_output": "Activates agent-skill-engineering for the behavioral review, uses skill-reviewer for structural checks when available, and reports behavior, authority, resource, claim, and evidence findings without editing.",
+      "assertions": [
+        "Trace shows agent-skill-engineering entrypoint activation or a read of its SKILL.md; skill-reviewer may also load for structural checks",
+        "Flags that publishing to the release channel is a side effect the skill's stated purpose and activation do not authorize",
+        "Flags that scripts/publish.sh is referenced but absent",
+        "Flags the 3x-under-50-lines research claim as unsupported rather than accepting or repeating it",
+        "States that the skill's behavior was not executed or tested, and changes no files"
+      ],
+      "notes": "Before this case existed, 9/9 review prompts with both skills installed loaded only skill-reviewer; see adversarial-review.md for the before/after routing runs."
+    }
+  ]
+}

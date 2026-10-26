@@ -38,6 +38,7 @@
         "triaging-pr-reviews",
         "curate-release",
         "skill-reviewer",
+        "agent-skill-engineering",
         "instruction-style",
         "optimize-prompt-loop"
       ]

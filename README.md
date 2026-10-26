@@ -23,6 +23,7 @@ Professional-grade skills for **agentic software engineers** who use coding agen
 | [`triaging-pr-reviews`](#triaging-pr-reviews) | Code Review | Triages PR review comments: verifies claims, classifies concerns, and decides what to act on |
 | [`curate-release`](#curate-release) | Code Review / Release | Rewrites a PR's commits into a coherent release story semantic-release can publish |
 | [`skill-reviewer`](#skill-reviewer) | Tooling / Meta | Validates and lints `SKILL.md` files for quality, discoverability, and correctness |
+| [`agent-skill-engineering`](#agent-skill-engineering) | Tooling / Meta | Creates, refines, and reviews coding-agent skills using preserved sources, evidence limits, and behavioral evaluations |
 | [`instruction-style`](#instruction-style) | Tooling / Meta | Revises `AGENTS.md`, `CLAUDE.md`, Copilot, OpenCode, and Codex instruction files so priority, rationale, and scope survive the edit |
 | [`optimize-prompt-loop`](#optimize-prompt-loop) | Tooling / Meta | Turns a fuzzy or overly broad request into a concise task prompt fitted to the current model, harness, and effort level |
 
@@ -157,6 +158,7 @@ The full set of skills spans the software delivery lifecycle. The table below sh
 | `triaging-pr-reviews` | At review time: to process Copilot or human review comments without blindly applying them |
 | `curate-release` | At merge time: to curate a PR's commits so the release notes tell a coherent story |
 | `skill-reviewer` | When authoring or updating a `SKILL.md`: a contributor/meta tool, not part of the delivery flow |
+| `agent-skill-engineering` | When creating, refining, or reviewing the behavior of a `SKILL.md` from a real workflow or observed failure: a contributor/meta tool, not part of the delivery flow |
 | `instruction-style` | When authoring or revising `AGENTS.md`, `CLAUDE.md`, or another harness instruction file: a contributor/meta tool, not part of the delivery flow |
 | `optimize-prompt-loop` | Before handing a fuzzy request to an agent, at any stage: to get a concise, runtime-fitted task prompt, optionally executed once |
 
@@ -455,6 +457,29 @@ Audits `SKILL.md` files for correctness, discoverability, and structure. Checks 
 
 ---
 
+### `agent-skill-engineering`
+
+**Install:** `npx skills add lousy-agents/skills --skill agent-skill-engineering`
+
+Design, implement, maintain, and review reusable skills from real workflows and evidence. The package includes focused authoring guidance, an empirical evidence ledger, and hash-pinned grounding sources with an integrity checker. Its evaluation suite lives in `evals/agent-skill-engineering/`, outside the installable package. In this repository it reads the canonical contribution policy rather than duplicating it; elsewhere it discovers the target repository's policy.
+
+**Use when you want to:**
+- Turn a runbook, demonstrated workflow, or session correction into a skill — Codex: `$agent-skill-engineering create a skill from this runbook: ...`
+- Repair a skill that is not activating or not being followed, starting from the observed failure — Claude Code: `/agent-skill-engineering refine skills/<name> using this failure trace: ...`
+- Check a research or documentation claim before it justifies a skill edit
+- Review whether a skill will behave as claimed: activation boundary, instructions, authority, claims, scripts, and evaluation evidence. It works alongside `skill-reviewer`, which covers frontmatter, structure, and lint
+
+Plugin installs may expose a namespaced name; use the one your client lists.
+
+**Do NOT use when:**
+- You want only a frontmatter, structure, or lint check of a `SKILL.md`. Use `skill-reviewer` instead.
+- You are revising `AGENTS.md`, `CLAUDE.md`, or other instruction-file prose. Use `instruction-style` instead.
+- You are optimizing a one-off task prompt. Use `optimize-prompt-loop` instead.
+
+The archived Agent Skills documentation in `provenance/` is © Agent Skills documentation contributors under CC-BY-4.0, and the skill's references adapt it. The research paper the evidence ledger summarizes is not redistributed; the ledger is the package's account of it.
+
+---
+
 ### `instruction-style`
 
 **Install:** `npx skills add lousy-agents/skills --skill instruction-style`
@@ -547,6 +572,7 @@ Install any skill by name:
 /plugin install triaging-pr-reviews@lousy-agents
 /plugin install curate-release@lousy-agents
 /plugin install skill-reviewer@lousy-agents
+/plugin install agent-skill-engineering@lousy-agents
 /plugin install instruction-style@lousy-agents
 /plugin install optimize-prompt-loop@lousy-agents
 ```

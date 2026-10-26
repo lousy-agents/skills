@@ -1,0 +1,10 @@
+{
+  "name": "agent-skill-engineering",
+  "displayName": "Agent Skill Engineering",
+  "description": "Create, refine, and review coding-agent skills from real workflows, with pinned grounding sources, an evidence ledger, and evaluation guidance",
+  "license": "BSD-2-Clause AND CC-BY-4.0",
+  "repository": "https://github.com/lousy-agents/skills",
+  "homepage": "https://github.com/lousy-agents/skills#readme",
+  "skills": "./",
+  "keywords": ["skill", "authoring", "evaluation", "agent", "evidence", "provenance"]
+}

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "grounded_on": "2026-10-25",
+  "archive": {
+    "path": "provenance/grounding-sources.tar.gz",
+    "sha256": "1f083d593c0b02a4b843cfc3e059e15e16325a9a16eea34721ae83466dc975d4",
+    "purpose": "Exact, unchanged bytes of the CC-BY-4.0 documentation sources, loaded only for recovery or disputed details."
+  },
+  "documentation": {
+    "repository": "https://github.com/agentskills/agentskills",
+    "commit": "69ef37e9424c0a7ea9dd2293b559e43ec8176379",
+    "working_tree_clean": true,
+    "site": "https://agentskills.io",
+    "attribution": "Agent Skills documentation contributors",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "license_archive_path": "docs/LICENSE",
+    "modifications": "None in archived originals; references are a selective, adapted synthesis."
+  },
+  "research": {
+    "title": "Agent Skill Evolution: How Revisions Affect Coding Agents",
+    "authors": [
+      "Jiajie Wang",
+      "Yutong Zhao",
+      "Tianlin Li",
+      "Huashan Chen",
+      "Jinfu Chen",
+      "Kebin Peng",
+      "Sen He"
+    ],
+    "origin": "Local Markdown copy supplied by the skill's original author. Not bundled: no redistribution license is established. Its identity is pinned by the hash in files[].",
+    "publication_date": null,
+    "venue": null,
+    "peer_review_status": "not independently established",
+    "license": "not stated in supplied copy; no redistribution permission inferred",
+    "replication_package": "https://figshare.com/s/1fd1668be2b3b5081ad6",
+    "replication_package_reviewed": false,
+    "bundled": false,
+    "canonical_locator": null
+  },
+  "source_ids": {
+    "D-SPEC": "docs/specification.mdx",
+    "D-HOME": "docs/home.mdx",
+    "D-QUICKSTART": "docs/skill-creation/quickstart.mdx",
+    "D-BEST": "docs/skill-creation/best-practices.mdx",
+    "D-DESCRIPTION": "docs/skill-creation/optimizing-descriptions.mdx",
+    "D-EVAL": "docs/skill-creation/evaluating-skills.mdx",
+    "D-SCRIPTS": "docs/skill-creation/using-scripts.mdx",
+    "D-CLIENT": "docs/client-implementation/adding-skills-support.mdx",
+    "R1": "research/agent-skill-evolution-how-revisions-affect-coding-agents.md"
+  },
+  "files": [
+    {
+      "path": "docs/LICENSE",
+      "bytes": 18656,
+      "sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 482,
+      "sha256": "a54c9f51550b48091a9c9838e7d0caa0bcd09284dd4d375e75fc7ec1745e0ec4"
+    },
+    {
+      "path": "docs/client-implementation/adding-skills-support.mdx",
+      "bytes": 20254,
+      "sha256": "e1a788f858766f4b54e0542e235ad3b1a965147e2c759926eb1c2b0a0129eef9"
+    },
+    {
+      "path": "docs/clients.mdx",
+      "bytes": 252,
+      "sha256": "b715ea5f63a25d4b8e89b02793bb88391a62d38e0e7b0c509ce3916a2f9c5437"
+    },
+    {
+      "path": "docs/docs.json",
+      "bytes": 1512,
+      "sha256": "f8743b43498e79fe4ca6b2ed809180b7bc6e4abf1e9f3f155f1ddf4326ea5174"
+    },
+    {
+      "path": "docs/home.mdx",
+      "bytes": 3314,
+      "sha256": "5ef4ef73f111f473e6062f3cf99d9df2cc08bdf3372acf85196bd26400a7bfe6"
+    },
+    {
+      "path": "docs/skill-creation/best-practices.mdx",
+      "bytes": 14608,
+      "sha256": "a729bc1d746366ecb8c5056b100439fbf760007a0f836e089c0f3aff9ce5c2f8"
+    },
+    {
+      "path": "docs/skill-creation/evaluating-skills.mdx",
+      "bytes": 16755,
+      "sha256": "20e53ee9085966bb25345fc4c431bcf24f1f1b410b687605dc870c76f8579a49"
+    },
+    {
+      "path": "docs/skill-creation/optimizing-descriptions.mdx",
+      "bytes": 13151,
+      "sha256": "5d6f72364f819399d07887843519d3ac037131778a5776584e5e6118d479a492"
+    },
+    {
+      "path": "docs/skill-creation/quickstart.mdx",
+      "bytes": 3844,
+      "sha256": "a6614e814e19fb505b2e45a39a61643d62ac4ebee0515ceb913d09512d8489db"
+    },
+    {
+      "path": "docs/skill-creation/using-scripts.mdx",
+      "bytes": 12405,
+      "sha256": "064185783e0f848a9cad2cf5866902d5c46cbddc71235a124b3abbf3ebd7c02d"
+    },
+    {
+      "path": "docs/specification.mdx",
+      "bytes": 7166,
+      "sha256": "b9079c0c10b7930e8c6a20ff2bc10cda2a3343c55185120e3f1116a1a529b220"
+    },
+    {
+      "path": "research/agent-skill-evolution-how-revisions-affect-coding-agents.md",
+      "bytes": 1219877,
+      "sha256": "a8265507fadf77cd6ad49cfcd839ecc2036fb31ae03e4b0da0a920490ab31baf",
+      "bundled": false
+    }
+  ],
+  "recovery": "Run python3 scripts/check_sources.py from the skill root. After verification, extract to a disposable directory with tar -xzf <archive> -C <scratch-directory>. Read selected sections. All paths in the archive are relative regular files. Files marked bundled: false are not in the archive. python3 scripts/check_sources.py --external <path> recognizes only the exact original copy; other formats or conversions will not match.",
+  "fidelity": "Archive hashes preserve identity of source bytes; summaries are selective and behavioral equivalence requires separate evaluation."
+}
