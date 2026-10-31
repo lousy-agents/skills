@@ -497,6 +497,8 @@ import directly, then greps for IO. The second drops the module's own packages
 and reports the third-party ones that remain. Each is a single `go list` — no
 `xargs` second hop — whose output is captured before it is filtered, so each
 check can exit 0 (clean), 1 (found something to report), or 2 (did not run).
+For the third-party check, 1 means the list needs review, not that the package
+violates anything.
 
 ```bash
 # stdlib IO reached through your own packages
@@ -567,7 +569,7 @@ $ echo $?
 1
 ```
 
-A typo'd path (`./pricng`) or a module whose dependencies are not downloaded:
+A typo'd path (`./pricng`):
 
 ```
 $ <io-check>
@@ -576,6 +578,10 @@ IO check did not run
 $ echo $?
 2
 ```
+
+When the module's dependencies are not downloaded, the `go list` error differs
+(`missing go.sum entry …` or `module lookup disabled …`), but the check still
+prints "did not run" and exits 2.
 
 That second list is a review list, not a verdict. It is transitive like the
 IO check, so a package whose own imports are entirely stdlib can still list a
