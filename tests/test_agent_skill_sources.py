@@ -405,6 +405,13 @@ class ShippedPackageConsistencyTests(unittest.TestCase):
         self.assertIn(self.manifest["documentation"]["commit"], notice)
         self.assertIn(self.manifest["documentation"]["license_archive_path"], notice)
 
+    def test_paper_locator_is_recorded_and_named_where_agents_read_it(self):
+        locator = self.manifest["research"]["canonical_locator"]
+        self.assertEqual(locator, "https://arxiv.org/abs/2610.04832")
+        for path in (SKILL / "SKILL.md", SKILL / "references/evidence.md"):
+            with self.subTest(path=path.name):
+                self.assertIn("arXiv:2610.04832", path.read_text())
+
     def test_every_cited_source_id_is_in_the_manifest(self):
         texts = [SKILL / "SKILL.md", *sorted((SKILL / "references").glob("*.md"))]
         cited = {token for path in texts

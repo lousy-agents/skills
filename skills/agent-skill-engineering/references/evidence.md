@@ -1,6 +1,6 @@
 # Evidence ledger
 
-This ledger separates source claims from engineering inferences. Source IDs resolve through `provenance/sources.json`. Documentation originals are bundled; the paper is not, because its redistribution license is unknown, so this ledger is the package's only account of it. The manifest pins the hash of the original Markdown copy, which `scripts/check_sources.py --external` can recognize; no canonical locator was available, and other copies or formats will not match. The paper is a Markdown copy the skill's original author supplied, not an independently verified publication record. Its supplement and replication package were not examined during grounding.
+This ledger separates source claims from engineering inferences. Source IDs resolve through `provenance/sources.json`. Documentation originals are bundled; the paper is not, because its redistribution license is unknown, so this ledger is the package's only account of it. The manifest pins the hash of the original Markdown copy, which `scripts/check_sources.py --external` can recognize; other copies or formats will not match. The paper is a Markdown copy the skill's original author supplied. Its public record is arXiv:2610.04832, recorded as the manifest's canonical locator: matched on title, authors, and abstract figures, not byte-compared, so label details taken from it as from the arXiv edition and version you read. Its supplement and replication package were not examined during grounding.
 
 ## Authority map
 
@@ -19,7 +19,7 @@ D-CLIENT recommends preserving skill context through compaction and deduplicatin
 
 ## R1: Agent Skill Evolution: How Revisions Affect Coding Agents
 
-Authors: Jiajie Wang, Yutong Zhao, Tianlin Li, Huashan Chen, Jinfu Chen, Kebin Peng, and Sen He. The skill's original author supplied a local Markdown copy as recent research; it is not the user of an installed copy. Venue, publication date, peer-review status, and redistribution license are not established by the supplied file.
+Authors: Jiajie Wang, Yutong Zhao, Tianlin Li, Huashan Chen, Jinfu Chen, Kebin Peng, and Sen He. The skill's original author supplied a local Markdown copy as recent research; it is not the user of an installed copy. Venue, publication date, peer-review status, and redistribution license are not established by the supplied file. arXiv:2610.04832 v1, submitted 2026-10-04, carries the same title and authors and reports the same 3,159-skill, +0.41 compliance, and +0.23 action-rate figures; arXiv's distribution license grants this package no redistribution right, so the paper stays unbundled.
 
 ### Design and population
 

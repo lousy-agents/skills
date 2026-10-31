@@ -36,7 +36,8 @@
     "replication_package": "https://figshare.com/s/1fd1668be2b3b5081ad6",
     "replication_package_reviewed": false,
     "bundled": false,
-    "canonical_locator": null
+    "canonical_locator": "https://arxiv.org/abs/2610.04832",
+    "canonical_locator_match": "arXiv v1 (submitted 2026-10-04) matched on title, authors, and abstract figures on 2026-10-31; not byte-compared with the pinned Markdown copy, and the arXiv distribution license grants no redistribution right."
   },
   "source_ids": {
     "D-SPEC": "docs/specification.mdx",
