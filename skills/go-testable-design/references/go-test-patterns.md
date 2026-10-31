@@ -495,15 +495,29 @@ Check this rather than trusting it, with two commands. The first walks the
 module's own packages the target reaches and prints the packages *they*
 import directly, then greps for IO. The second drops the module's own packages
 and reports the third-party ones that remain. Each is a single `go list` — no
-`xargs` second hop.
+`xargs` second hop — whose output is captured before it is filtered, so each
+check can exit 0 (clean), 1 (found something to report), or 2 (did not run).
 
 ```bash
 # stdlib IO reached through your own packages
-go list -deps -f '{{if and .Module .Module.Main}}{{range .Imports}}{{.}}{{"\n"}}{{end}}{{end}}' ./pricing |
-  sort -u | grep -E '^(os|net|log|database/sql)(/|$)'
+( imports=$(go list -deps -f '{{if and .Module .Module.Main}}{{range .Imports}}{{.}}{{"\n"}}{{end}}{{end}}' ./pricing) ||
+    { echo "IO check did not run" >&2; exit 2; }
+  printf '%s\n' "$imports" | sort -u | grep -E '^(os|net|log|database/sql)(/|$)' | grep -vxE 'net/(url|netip)' && exit 1
+  echo "no IO imports" )
 # third-party dependencies
-go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./pricing
+( deps=$(go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./pricing) ||
+    { echo "third-party check did not run" >&2; exit 2; }
+  [ -z "$deps" ] && { echo "no third-party dependencies"; exit 0; }
+  printf '%s\n' "$deps"; exit 1 )
 ```
+
+Capture-then-check is load-bearing. Piped straight into `grep`, a `go list`
+that failed on a typo'd path produces empty input, and `grep` exits 1 — the
+same status a pure package gets — so the failure reads as a pass. `set -o
+pipefail` does not help: it reports `grep`'s 1 in both cases. Checking
+`go list`'s own status before filtering is what turns "did not run" into its
+own exit code. The trailing `grep -vxE` keeps `net/url` and `net/netip`, which
+parse values and do no IO, from counting as network access.
 
 Keep the two separate. A single `go list -deps` piped into one IO grep also
 matches the stdlib's own internals: `fmt` and `encoding/json` both depend on
@@ -521,16 +535,17 @@ invocation — it never shells out to a second `go list` via `xargs`. A two-step
 used to print a confident, entirely fabricated impurity report (bare `xargs`
 falls back to the package in the current directory).
 
-A package that is still pure prints nothing from either command (grep exits 1
-on no match):
+A package that is still pure passes both checks with exit 0:
 
 ```
 $ <io-check>
+no IO imports
 $ echo $?
-1
+0
 $ <third-party-check>
+no third-party dependencies
 $ echo $?
-1
+0
 ```
 
 The same package after someone reaches for `os` and `net/http` inside it:
@@ -539,6 +554,8 @@ The same package after someone reaches for `os` and `net/http` inside it:
 $ <io-check>
 net/http
 os
+$ echo $?
+1
 ```
 
 A package that has picked up a third-party dependency:
@@ -546,6 +563,18 @@ A package that has picked up a third-party dependency:
 ```
 $ <third-party-check>
 github.com/acme/rates/rates
+$ echo $?
+1
+```
+
+A typo'd path (`./pricng`) or a module whose dependencies are not downloaded:
+
+```
+$ <io-check>
+stat /path/to/module/pricng: directory not found
+IO check did not run
+$ echo $?
+2
 ```
 
 That second list is a review list, not a verdict. It is transitive like the
@@ -571,7 +600,7 @@ Notes on running them:
   own).
 - `go list` needs the module graph to resolve. If dependencies are not
   downloaded it errors instead of printing packages — that is a check that
-  did not run, not a package that passed.
+  did not run (exit 2), not a package that passed.
 - The symptom that precedes a failing check: a unit test that needs three
   fakes to reach one calculation. Moving that calculation into a package
   with no IO imports usually deletes the fakes outright.
