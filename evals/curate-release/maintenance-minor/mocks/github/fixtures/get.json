@@ -1,0 +1,33 @@
+{
+  "number": 17,
+  "title": "Add CSV export to the 1.x line",
+  "body": "Backports CSV export (`toCsv`) to 1.x for customers who cannot take the 2.0 integer-cents change yet.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/17",
+  "user": {
+    "login": "kai-dev"
+  },
+  "head": {
+    "ref": "feat/csv-export-1x",
+    "sha": "560c44c7bb36407a40c24af142c5c853864bf203",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "base": {
+    "ref": "1.x",
+    "sha": "b71f5c534a7aaed930af976246032aa768d5b367",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "additions": 16,
+  "deletions": 0,
+  "changed_files": 3,
+  "commits": 3,
+  "created_at": "2026-10-20T12:05:00Z",
+  "updated_at": "2026-10-24T08:30:00Z"
+}

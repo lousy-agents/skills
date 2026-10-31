@@ -1,0 +1,1 @@
+"diff --git a/data/legacy-rates.csv b/data/legacy-rates.csv\ndeleted file mode 100644\nindex 8031811..0000000\n--- a/data/legacy-rates.csv\n+++ /dev/null\n@@ -1,2 +0,0 @@\n-currency,rate\n-EUR,1.08\n"

@@ -1,0 +1,33 @@
+{
+  "number": 21,
+  "title": "perf(totals): compute invoice totals in one pass",
+  "body": "`invoiceTotal` re-summed every prefix of the invoice, so it was quadratic in the number of lines. Customers with 10k-line invoices saw multi-second page loads. It now sums once.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/21",
+  "user": {
+    "login": "kai-dev"
+  },
+  "head": {
+    "ref": "perf/invoice-totals",
+    "sha": "634c6cb8a99dc18973c65f0b796de0d1e6b6a0cb",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "base": {
+    "ref": "main",
+    "sha": "547c925cb4a464a6c81d7e30f40ec79aaf64b669",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "additions": 15,
+  "deletions": 5,
+  "changed_files": 3,
+  "commits": 3,
+  "created_at": "2026-10-20T12:05:00Z",
+  "updated_at": "2026-10-24T08:30:00Z"
+}

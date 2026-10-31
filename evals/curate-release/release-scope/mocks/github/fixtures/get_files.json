@@ -1,0 +1,20 @@
+[
+  {
+    "filename": "README.md",
+    "status": "modified",
+    "additions": 2,
+    "deletions": 0
+  },
+  {
+    "filename": "src/totals.js",
+    "status": "modified",
+    "additions": 1,
+    "deletions": 5
+  },
+  {
+    "filename": "test/totals.test.js",
+    "status": "modified",
+    "additions": 12,
+    "deletions": 0
+  }
+]

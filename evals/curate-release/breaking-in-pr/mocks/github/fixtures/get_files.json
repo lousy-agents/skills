@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "src/money.js",
+    "status": "modified",
+    "additions": 2,
+    "deletions": 2
+  },
+  {
+    "filename": "test/money.test.js",
+    "status": "modified",
+    "additions": 3,
+    "deletions": 3
+  }
+]
