@@ -159,7 +159,7 @@ A dimension score captures three layers of evaluation, applied in order:
 
 ## Advisory
 
-These checks report eval coverage and fix status. They never change PASS / NEEDS WORK / FAIL or any ✅ / ⚠️ / ❌ score. They add findings in the report's "Advisory: eval coverage and fix status" section; they never move, soften, or replace a numbered ❌ or ⚠️ finding from the sections above.
+These checks report eval coverage and fix status. They never change PASS / NEEDS WORK / FAIL or any ✅ / ⚠️ / ❌ score. V2 adds a finding to the report's "Advisory: eval coverage and fix status" section; V1 labels every proposed fix where it appears, in Issues and in that section. They never move, soften, or replace a numbered ❌ or ⚠️ finding from the sections above.
 
 Advisory adds; it never relocates. If you would report a concern as an Issue without these checks, whether a numbered check or your own judgment flagged it, keep it in Issues at that severity.
 
