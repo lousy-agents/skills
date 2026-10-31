@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "src/format.js",
+    "status": "modified",
+    "additions": 5,
+    "deletions": 0
+  },
+  {
+    "filename": "test/format.test.js",
+    "status": "modified",
+    "additions": 7,
+    "deletions": 0
+  }
+]

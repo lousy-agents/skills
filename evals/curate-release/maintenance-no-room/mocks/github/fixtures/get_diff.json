@@ -1,0 +1,1 @@
+"diff --git a/src/csv.js b/src/csv.js\nnew file mode 100644\nindex 0000000..9c1b9dc\n--- /dev/null\n+++ b/src/csv.js\n@@ -0,0 +1,5 @@\n+import { roundCents } from \"./money.js\";\n+\n+export function toCsv(lines) {\n+  return lines.map((line) => `${line.sku},${roundCents(line.amount)}`).join(\"\\n\");\n+}\n"
