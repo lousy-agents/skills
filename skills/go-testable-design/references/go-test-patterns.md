@@ -46,7 +46,7 @@ it as its acceptance harness.
 ```bash
 # 1. Existing acceptance suites, by filename or directory
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -print |
-  grep -Ei '(_acceptance_test\.go|/(acceptance|e2e|features|specs?)/)'
+  grep -Ei '(_acceptance_test\.go|/(acceptance|e2e)/)'
 
 # 2. Suite-harness or spec-runner packages this repository's tests import.
 #    Match runner packages, not assertion helpers: `testify/assert`,
@@ -55,9 +55,11 @@ find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -print |
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
   '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"' {} +
 
-# 3. A suite entrypoint — the call that hands control to a runner.
+# 3. A suite entrypoint — the call that hands control to a runner — or the
+#    Gherkin `.feature` files a godog suite runs.
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
   '(RunSpecs|suite\.Run|godog\.TestSuite|godog\.RunWithOptions)' {} +
+find . \( -name vendor -o -name testdata \) -prune -o -name '*.feature' -print
 
 # 4. Declared acceptance targets
 find . \( -name vendor -o -name testdata \) -prune -o \( -name Makefile -o -name '*.toml' \
@@ -92,6 +94,15 @@ bootstrap a suite calls the runner (`godog.TestSuite{...}.Run()`, the older
 matches. Check 2 likewise matches only import lines — a bare `import "…"`,
 an import-block entry, or an aliased or dot import — so a string literal
 that happens to mention a runner does not count.
+
+Check 1 does not match `features/` or `spec/` directories by name. Go
+packages are routinely named `features` (feature flags) or `spec` (API or
+config specs), so a directory name alone reads an ordinary package as an
+acceptance suite. A godog suite is recognized instead by its `.feature` files
+in check 3, which, like every check-3 hit, count only alongside a runner
+import from check 2 — so a `features/` directory of another language's
+Cucumber files is not a Go convention on its own — and a Ginkgo suite under
+`specs/` is recognized by its import and `RunSpecs` call.
 
 Reading the result:
 
