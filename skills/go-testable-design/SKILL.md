@@ -67,14 +67,19 @@ A package's import list decides how testable it is before any test exists: a pac
 
 - Keep the packages that hold calculations and decisions free of framework, network, database, and filesystem imports. Put those adapters in packages at the edge and wire them together in the composition root.
 - Declare interfaces at the use site: the consuming package defines the small interface it needs, and the producing package returns concrete types.
-- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages; the second lists third-party dependencies for review. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. Both filter on `go list`'s own module metadata rather than string-matching the module path, so neither misreports under `go.work`. Each command is a single `go list` (no `xargs`): a bad path or undownloaded deps makes `go list` exit non-zero with an error on stderr and empty stdout — that means the check did not run, not that it passed:
+- Verify purity instead of asserting it. The first command reports IO reached through your module's own packages; the second lists third-party dependencies for review. Keep them separate — a single `go list -deps` grep inherits stdlib-internal imports and reports `os` for any package that merely calls `fmt.Errorf`. Both filter on `go list`'s own module metadata rather than string-matching the module path, so neither misreports under `go.work`. Each command is a single `go list` (no `xargs`) whose output is captured before it is filtered: a bad path or undownloaded deps makes `go list` exit non-zero with empty stdout, and piping that straight into `grep` exits 1 exactly as a pure package does (`set -o pipefail` does not separate them either). Each check exits 0 when the package is clean, 1 when it found something to report, and 2 when the check did not run — never read 2 as a pass. For the third-party check, 1 means the list needs review, not that the package violates anything. The IO check excludes `net/url` and `net/netip`, which parse values and do no IO:
 
   ```bash
   # stdlib IO reached through your own packages
-  go list -deps -f '{{if and .Module .Module.Main}}{{range .Imports}}{{.}}{{"\n"}}{{end}}{{end}}' ./internal/pricing |
-    sort -u | grep -E '^(os|net|log|database/sql)(/|$)'
+  ( imports=$(go list -deps -f '{{if and .Module .Module.Main}}{{range .Imports}}{{.}}{{"\n"}}{{end}}{{end}}' ./internal/pricing) ||
+      { echo "IO check did not run" >&2; exit 2; }
+    printf '%s\n' "$imports" | sort -u | grep -E '^(os|net|log|database/sql)(/|$)' | grep -vxE 'net/(url|netip)' && exit 1
+    echo "no IO imports" )
   # third-party dependencies
-  go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./internal/pricing
+  ( deps=$(go list -deps -f '{{if and .Module (not .Module.Main)}}{{.ImportPath}}{{end}}' ./internal/pricing) ||
+      { echo "third-party check did not run" >&2; exit 2; }
+    [ -z "$deps" ] && { echo "no third-party dependencies"; exit 0; }
+    printf '%s\n' "$deps"; exit 1 )
   ```
 
 - Read the third-party list, do not just count it. Both checks are transitive, so a dependency reached only through an internal sub-package that exists to own it is the intended shape, not a violation — what you are looking for is framework and IO creep into the packages that hold decisions.
