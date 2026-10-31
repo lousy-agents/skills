@@ -413,10 +413,14 @@ class ShippedPackageConsistencyTests(unittest.TestCase):
         self.assertEqual(sorted(cited - self.manifest["source_ids"].keys()), [])
 
 
+WITHOUT_IS_RELATIVE_TO = ("-c", "import pathlib, runpy, sys; del pathlib.PurePath.is_relative_to; "
+                                 "runpy.run_path(sys.argv.pop(1), run_name='__main__')")
+
+
 class ArchiveBuildCliTests(unittest.TestCase):
-    def run_build(self, skill, source, output):
+    def run_build(self, skill, source, output, launcher=()):
         return subprocess.run(
-            [sys.executable, "-I", str(skill / "scripts/build_archive.py"), str(source), str(output)],
+            [sys.executable, "-I", *launcher, str(skill / "scripts/build_archive.py"), str(source), str(output)],
             capture_output=True, text=True, check=False)
 
     def test_archive_rebuilds_from_its_members(self):
@@ -437,7 +441,8 @@ class ArchiveBuildCliTests(unittest.TestCase):
                 self.assertEqual(json.loads(result.stdout)["archive_sha256"], manifest["archive"]["sha256"])
                 self.assertEqual(output.read_bytes(), shipped.read_bytes())
 
-    def run_build_with_manifest(self, files, prepare=lambda source: None, output_name="out.tar.gz"):
+    def run_build_with_manifest(self, files, prepare=lambda source: None, output_name="out.tar.gz",
+                                launcher=()):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             skill = root / "skill"
@@ -452,7 +457,7 @@ class ArchiveBuildCliTests(unittest.TestCase):
             (root / "outside.txt").write_text("host secret")
             prepare(source)
             output = root / output_name
-            result = self.run_build(skill, source, output)
+            result = self.run_build(skill, source, output, launcher)
             return result, output.exists(), (source / "docs/a.md").read_bytes()
 
     def assert_refused(self, result, written):
@@ -503,6 +508,17 @@ class ArchiveBuildCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(written)
         self.assertEqual(json.loads(result.stdout)["files"][0]["bytes"], 1)
+
+    def test_build_does_not_need_python_3_9_path_api(self):
+        result, written, _ = self.run_build_with_manifest(
+            [{"path": "docs/a.md"}], launcher=WITHOUT_IS_RELATIVE_TO)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(written)
+        result, _, source_bytes = self.run_build_with_manifest(
+            [{"path": "docs/a.md"}], output_name="src/docs/a.md", launcher=WITHOUT_IS_RELATIVE_TO)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("output must be outside source_dir", result.stderr)
+        self.assertEqual(source_bytes, b"a")
 
     def test_build_reports_missing_source_file(self):
         with tempfile.TemporaryDirectory() as source, tempfile.TemporaryDirectory() as out:

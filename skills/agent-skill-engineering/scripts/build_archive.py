@@ -31,7 +31,8 @@ def build(manifest, source_dir, output):
         raise ValueError("manifest lists no bundled source files")
     if len({str(name).casefold() for name in members}) != len(members):
         raise ValueError("duplicate or case-colliding source paths in manifest")
-    if Path(output).resolve().is_relative_to(source_dir.resolve()):
+    resolved_output, resolved_source = Path(output).resolve(), source_dir.resolve()
+    if resolved_output == resolved_source or resolved_source in resolved_output.parents:
         raise ValueError("output must be outside source_dir")
     payload = io.BytesIO()
     report = []
