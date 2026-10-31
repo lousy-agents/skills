@@ -116,7 +116,7 @@ Output a structured review with:
 1. <issue + fix recommendation> — Fix: tested (<evidence>) | untested
 
 ### Advisory: eval coverage and fix status (ℹ️ — does not affect the verdict)
-1. <V1–V2 finding> — Fix: tested (<evidence>) | untested
+1. <V2 finding> — Fix: tested (<evidence>) | untested
 
 ### Strengths
 1. <what's done well>
