@@ -1,0 +1,33 @@
+{
+  "number": 36,
+  "title": "Add CSV export to the 1.x line",
+  "body": "Adds CSV export (`toCsv`) to the new 1.x maintenance line.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/36",
+  "user": {
+    "login": "kai-dev"
+  },
+  "head": {
+    "ref": "feat/csv-export-1x",
+    "sha": "2a6e506a5082d0383453d7a5bc0d1e0087c2eff6",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "base": {
+    "ref": "1.x",
+    "sha": "b71f5c534a7aaed930af976246032aa768d5b367",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "additions": 5,
+  "deletions": 0,
+  "changed_files": 1,
+  "commits": 1,
+  "created_at": "2026-10-20T12:05:00Z",
+  "updated_at": "2026-10-24T08:30:00Z"
+}

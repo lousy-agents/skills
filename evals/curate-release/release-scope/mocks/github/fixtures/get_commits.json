@@ -1,0 +1,32 @@
+[
+  {
+    "sha": "7d739e249689e9a1d17992d94311c8bb74665178",
+    "commit": {
+      "message": "wip",
+      "author": {
+        "name": "Fixture Dev",
+        "date": "2026-10-04T12:00:00+00:00"
+      }
+    }
+  },
+  {
+    "sha": "3a03ee4663c07ded8fafa8c965b9b2921421166c",
+    "commit": {
+      "message": "tests",
+      "author": {
+        "name": "Fixture Dev",
+        "date": "2026-10-05T12:00:00+00:00"
+      }
+    }
+  },
+  {
+    "sha": "634c6cb8a99dc18973c65f0b796de0d1e6b6a0cb",
+    "commit": {
+      "message": "fix typo",
+      "author": {
+        "name": "Fixture Dev",
+        "date": "2026-10-06T12:00:00+00:00"
+      }
+    }
+  }
+]

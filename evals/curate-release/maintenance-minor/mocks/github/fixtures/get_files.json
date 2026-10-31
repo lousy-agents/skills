@@ -1,0 +1,20 @@
+[
+  {
+    "filename": "README.md",
+    "status": "modified",
+    "additions": 4,
+    "deletions": 0
+  },
+  {
+    "filename": "src/csv.js",
+    "status": "modified",
+    "additions": 5,
+    "deletions": 0
+  },
+  {
+    "filename": "test/csv.test.js",
+    "status": "modified",
+    "additions": 7,
+    "deletions": 0
+  }
+]

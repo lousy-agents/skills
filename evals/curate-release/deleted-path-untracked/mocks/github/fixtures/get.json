@@ -1,0 +1,33 @@
+{
+  "number": 37,
+  "title": "Drop the legacy rates table",
+  "body": "Removes `data/legacy-rates.csv`, which nothing reads any more.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/37",
+  "user": {
+    "login": "kai-dev"
+  },
+  "head": {
+    "ref": "chore/drop-legacy-rates",
+    "sha": "13ac71d607963fbf653185890ef15e1b62f298e8",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "base": {
+    "ref": "main",
+    "sha": "79f7378651f909c6a62fe957ca83e5ac9def3a0c",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "additions": 0,
+  "deletions": 2,
+  "changed_files": 1,
+  "commits": 1,
+  "created_at": "2026-10-20T12:05:00Z",
+  "updated_at": "2026-10-24T08:30:00Z"
+}

@@ -1,0 +1,33 @@
+{
+  "number": 35,
+  "title": "feat(money): add USD formatting",
+  "body": "Adds `formatUsd` for invoice display.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/35",
+  "user": {
+    "login": "kai-dev"
+  },
+  "head": {
+    "ref": "feat/money-format",
+    "sha": "fef83a46216cd9feec2df4ced8f5d9be4cf61c81",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "base": {
+    "ref": "main",
+    "sha": "9d7cf02472e76dabb6376a11ce8ece587268006c",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "additions": 12,
+  "deletions": 0,
+  "changed_files": 2,
+  "commits": 2,
+  "created_at": "2026-10-20T12:05:00Z",
+  "updated_at": "2026-10-24T08:30:00Z"
+}

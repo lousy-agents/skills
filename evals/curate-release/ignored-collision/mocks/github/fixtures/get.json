@@ -1,0 +1,33 @@
+{
+  "number": 33,
+  "title": "Ship default env settings",
+  "body": "Adds a default `config/local.env` so new checkouts work out of the box.",
+  "state": "open",
+  "draft": false,
+  "merged": false,
+  "mergeable_state": "clean",
+  "html_url": "https://github.com/acme-fixture-nonexistent/ledger/pull/33",
+  "user": {
+    "login": "kai-dev"
+  },
+  "head": {
+    "ref": "feat/env-defaults",
+    "sha": "6786d5303c2fe51f0c824677acfab2df3158de63",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "base": {
+    "ref": "main",
+    "sha": "6fd6f7155f8385617deb2e54133ce4485fe7de25",
+    "repo": {
+      "full_name": "acme-fixture-nonexistent/ledger"
+    }
+  },
+  "additions": 2,
+  "deletions": 0,
+  "changed_files": 2,
+  "commits": 1,
+  "created_at": "2026-10-20T12:05:00Z",
+  "updated_at": "2026-10-24T08:30:00Z"
+}
