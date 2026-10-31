@@ -126,6 +126,7 @@ Before finalizing any Go test, check it against these requirements:
    - Put expected values in the test, not hidden inside helpers.
    - Write assertion messages that include the protected behavior, relevant inputs, and `got`/`want`.
    - Introduce helpers only after the test starts repeating setup or assertion detail.
+   - Run the new test and watch it fail before changing production code. A test that passes before the change does not yet exercise the new behavior.
 
 4. **Implement Simply**
    - Hard-code when that is the honest smallest step.
@@ -160,12 +161,12 @@ Use idiomatic Go test structure:
 
 ```go
 func TestPrice(t *testing.T) {
-    t.Run("applies the member discount before tax", func(t *testing.T) {
+    t.Run("takes 4% off the subtotal for members", func(t *testing.T) {
         got := Price(Order{Subtotal: 100, Member: true})
         want := Money(96)
 
         if got != want {
-            t.Errorf("member discount should be applied before tax for subtotal 100: got %v, want %v", got, want)
+            t.Errorf("4%% member discount on subtotal 100: got %v, want %v", got, want)
         }
     })
 }
@@ -174,11 +175,11 @@ func TestPrice(t *testing.T) {
 Use helpers when they make intent clearer:
 
 ```go
-func assertEqual[T comparable](t testing.TB, got, want T) {
+func assertEqual[T comparable](t testing.TB, what string, got, want T) {
     t.Helper()
 
     if got != want {
-        t.Errorf("got %v, want %v", got, want)
+        t.Errorf("%s: got %v, want %v", what, got, want)
     }
 }
 ```

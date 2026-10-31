@@ -282,8 +282,9 @@ line-by-line to reconstruct the rule:
 // AC-1.8: FetchFile must re-check ctx.Err() after decoding and before
 // returning, so a context canceled mid-decode is still honored.
 func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
-    ctx := &cancelAfterNCallsContext{Context: context.Background(), n: 1}
-    client := newTestClient(t, canned200Response)
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+    client := newTestClient(t, cancelOnBodyRead(cancel, canned200Response))
 
     _, _, err := client.FetchFile(ctx, someRef)
 
@@ -300,18 +301,19 @@ explanation:
 ```go
 // AC-1.8
 func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
-    ctx := givenContextCanceledAfter(1, "the decode step")
-    client := givenClientReturning(t, canned200Response)
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+    client := givenClientReturning(t, givenResponseCanceledWhileDecoding(cancel, canned200Response))
 
     _, _, err := whenFetchFile(ctx, client, someRef)
 
     thenErrorIs(t, err, context.Canceled, "FetchFile must honor cancellation observed after decoding")
 }
 
-// givenContextCanceledAfter returns a context that reports nil from Err()
-// for the first n calls, then context.Canceled, isolating exactly the check
-// under test (labeled by where) from any earlier cancellation checks.
-func givenContextCanceledAfter(n int, where string) context.Context { /* ... */ }
+// givenResponseCanceledWhileDecoding wraps respond so that reading the
+// response body cancels the context: cancellation arrives during decoding,
+// however many times FetchFile checked the context before that.
+func givenResponseCanceledWhileDecoding(cancel context.CancelFunc, respond responseFunc) responseFunc { /* ... */ }
 
 func givenClientReturning(t *testing.T, respond responseFunc) *FileClient {
     t.Helper()
@@ -460,8 +462,9 @@ dependencies.
   touching real stdout/files.
 - Inject interfaces or function fields (e.g. a `Sleeper`) instead of
   calling concrete implementations directly, so tests can substitute fakes.
-- Use spies to assert ordering and interaction between collaborators, not
-  just final state.
+- Use spies when the interaction itself is the contract — a call to a
+  boundary, or an order the protocol requires (a countdown that must sleep
+  between writes) — not just final state.
 - Prefer constructors such as `NewService(store Store, clock Clock)` or
   `NewHandler(service Service)` for code with external dependencies.
 - Keep concrete dependencies in composition roots; accept interfaces or
@@ -582,10 +585,13 @@ Concurrent code needs its own deliberate test strategy — non-deterministic
 scheduling means a naive test can pass most of the time and still hide a
 data race.
 
-1. **Benchmark first.** Before introducing goroutines, write a benchmark
+1. **Benchmark first when concurrency is an optimization.** Before
+   introducing goroutines to speed up sequential work, write a benchmark
    (`func BenchmarkX(b *testing.B)`, run with `go test -bench=.`) against
    the sequential implementation to justify the change and to measure the
-   improvement afterward.
+   improvement afterward. Concurrency that is the behavior itself — a
+   server, a background worker, a cancelable pipeline — needs no benchmark
+   to justify it.
 2. **Expect the naive concurrent version to fail or race.** Turning a loop
    body into `go func() { ... }()` without coordination typically returns
    before goroutines finish (an empty/partial result), or — if multiple
