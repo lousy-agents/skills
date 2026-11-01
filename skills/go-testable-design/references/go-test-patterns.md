@@ -52,24 +52,24 @@ find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -print |
 #    Match runner packages, not assertion helpers: `testify/assert`,
 #    `testify/require`, and `gomega` (which runs under stdlib `testing` via
 #    `NewWithT`) are not signals.
-find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
-  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"' {} +
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -HEn \
+  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"[[:space:]]*(//.*)?$' {} +
 
 # 3. A suite entrypoint — the call that hands control to a runner — or, when
 #    the tests import godog, the Gherkin `.feature` files a godog suite runs.
-find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -HEn \
   '(RunSpecs|suite\.Run|godog\.TestSuite|godog\.RunWithOptions)' {} +
-find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -lE \
-  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*godog[^"]*"' {} + | grep -q . &&
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -lHE \
+  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*godog[^"]*"[[:space:]]*(//.*)?$' {} + | grep -q . &&
   find . \( -name vendor -o -name testdata \) -prune -o -name '*.feature' -print
 
 # 4. Declared acceptance targets
 find . \( -name vendor -o -name testdata \) -prune -o \( -name Makefile -o -name '*.toml' \
-  -o -name 'Taskfile.y*ml' -o -path '*/.github/workflows/*' \) -exec grep -Ein 'acceptance|e2e' {} +
+  -o -name 'Taskfile.y*ml' -o -path '*/.github/workflows/*' \) -exec grep -HEin 'acceptance|e2e' {} +
 
 # 5. Stated project policy
 find . \( -name vendor -o -name testdata \) -prune -o \( -name AGENTS.md -o -name CLAUDE.md \
-  -o -name CONTRIBUTING.md \) -exec grep -Ein 'acceptance|e2e|spec runner|test (harness|framework|suite)' {} +
+  -o -name CONTRIBUTING.md \) -exec grep -HEin 'acceptance|e2e|spec runner|test (harness|framework|suite)' {} +
 ```
 
 Every check searches the tree instead of naming files that may not exist, so a
@@ -94,8 +94,10 @@ plumbing for flag parsing, fixture setup, or container teardown; one that does
 bootstrap a suite calls the runner (`godog.TestSuite{...}.Run()`, the older
 `godog.RunWithOptions(...)`, `RunSpecs`), and that call is what check 3
 matches. Check 2 likewise matches only import lines — a bare `import "…"`,
-an import-block entry, or an aliased or dot import — so a string literal
-that happens to mention a runner does not count.
+an import-block entry, or an aliased or dot import, each ending at the closing
+quote or a `//` comment — so a string literal that happens to mention a runner
+does not count, whether inline or as an element of a multi-line table (`"…",`).
+A raw string whose own lines are Go import lines still matches.
 
 Check 1 does not match `features/`, `spec/`, or `specs/` directories by name. Go
 packages are routinely named `features` (feature flags) or `spec` (API or
