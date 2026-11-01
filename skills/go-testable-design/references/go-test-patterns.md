@@ -114,7 +114,8 @@ Reading the result:
 
 The criterion does not change; only the vehicle does. Both versions below make
 the rule legible from structure alone. Both treat `Withdraw` as a library's
-exported API, so calling it is the public boundary. In a program whose users
+exported API and the test as its consumer's scenario, so calling it is the
+boundary for this criterion. In a program whose users
 reach `Withdraw` through a command or handler, the acceptance test drives that
 command or handler, and tests like these are its unit tests.
 
@@ -170,7 +171,10 @@ For a new feature or a bug fix, the first failing test belongs at the public
 boundary — the CLI invocation, the HTTP request, or the exported call a user
 actually makes. Write it in whichever acceptance form the detection above
 identified; the walkthrough uses standard-library `testing` because that is
-the form for a repository with no runner.
+the form for a repository with no runner. It treats `Quoter` as a library's
+exported API whose consumer supplies the rate source; in a command or service,
+the boundary test drives the command or endpoint instead, and a test like this
+one is a unit test of `Quoter`.
 
 1. **Write the boundary test first, calling the API you wish existed.** The
    test is that API's first consumer, so let it invent the seam instead of

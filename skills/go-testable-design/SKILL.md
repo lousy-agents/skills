@@ -47,7 +47,7 @@ These are two different products and they do not share a default form.
 
 - **Unit tests** cover a function, method, type, or package-internal seam. Standard-library `testing` is the default here, unless the repository already uses a focused dependency.
 - **Acceptance tests** (also called public-boundary, feature, or spec suites) prove a feature or bug fix works through the program's public boundary. Their form is dictated by the repository, not by this skill: it may be stdlib `testing`, a BDD spec runner, a testify-style suite, a `godog` feature suite, or an in-tree custom harness.
-- Whether a test is unit or acceptance depends on where users reach the behavior, not on its name. A program's public boundary is its command, HTTP endpoint, or other entry point; a library's is the exported API of a package outside `internal/`. A test that calls a type users reach only through that boundary — including any type in an `internal/` package, unless the test drives the command or endpoint itself (a `Run(args…)` entry point, a router through `httptest`) — is a unit test.
+- Classify a test by what it proves, not by its name or by whether its target is exported. A unit test proves one function, method, type, or handler in isolation, with its collaborators faked — a table test of an exported function and an `httptest` test of one handler are both unit tests. An acceptance test proves a feature or fix the way that criterion's user reaches it: through the command or endpoint with production wiring (a `Run(args…)` entry point, the assembled server), or, when the user is a library's consumer, through that consumer's scenario on the exported API. Find the boundary per criterion, since one repository can ship both a command and an importable package. A test of a type the criterion's user never calls directly, such as one in an `internal/` package, is a unit test.
 - Determine the acceptance form during **Orient**, before choosing a test shape. If no acceptance convention and no project policy exist, stdlib `testing` is the acceptance form too — write it the way the rest of the repository writes tests.
 - NEVER invent a stdlib acceptance test when the repository mandates a different acceptance form. Conversely, NEVER import a spec runner into a repository that does not already use one: adding a runner is a dependency decision owned by the module's maintainers, not a test decision.
 - See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for the detection commands and a worked example of the same criterion in two acceptance forms.
@@ -108,7 +108,7 @@ Before finalizing any Go test, check it against these requirements:
      ```
 
 2. **Choose the Test Shape**
-   - **New feature or bug fix that changes externally visible behavior: start outside-in.** The first failing test exercises the public boundary — CLI invocation, HTTP endpoint, exported package API — rather than an internal helper.
+   - **New feature or bug fix that changes externally visible behavior: start outside-in.** The first failing test exercises the boundary where that criterion's user reaches it — a CLI invocation or HTTP endpoint, or the exported package API when the user is a library's consumer — rather than an internal helper.
    - If this is acceptance coverage for a feature or bug fix, use the repository's acceptance form identified in Orient; the shapes below are for unit and other non-acceptance tests.
    - Inside-out is legitimate for a pure internal helper, an algorithmic core, or a well-understood domain whose public API is already settled: start at the unit and skip the boundary test.
    - Pure functions: use direct assertions, then table tests once cases multiply.
@@ -228,6 +228,6 @@ Read [`references/go-test-patterns.md`](./references/go-test-patterns.md) when t
 When reporting work:
 
 - State which package/files changed.
-- State which tests were added or changed, which of them are acceptance coverage and which are unit tests, and the acceptance form used with the signal that decided it (or that the repository has none).
+- State which tests were added or changed, which of them are acceptance coverage and which are unit tests, and either the acceptance form used with the signal that decided it (or that the repository has none) or, if no acceptance test was written, why.
 - State the verification command and result.
 - If tests could not run, state why without implying they passed.
