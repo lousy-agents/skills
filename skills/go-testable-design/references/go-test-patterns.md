@@ -310,9 +310,9 @@ func TestFetchFile_ChecksCancellationAfterDecode(t *testing.T) {
     thenErrorIs(t, err, context.Canceled, "FetchFile must honor cancellation observed after decoding")
 }
 
-// givenResponseCanceledWhileDecoding wraps respond so that reading the
-// response body cancels the context: cancellation arrives during decoding,
-// however many times FetchFile checked the context before that.
+// givenResponseCanceledWhileDecoding wraps respond so that the first Read of
+// the response body cancels the context: cancellation arrives during
+// decoding, however many times FetchFile checked the context before that.
 func givenResponseCanceledWhileDecoding(cancel context.CancelFunc, respond responseFunc) responseFunc { /* ... */ }
 
 func givenClientReturning(t *testing.T, respond responseFunc) *FileClient {
