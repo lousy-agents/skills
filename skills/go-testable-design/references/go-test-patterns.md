@@ -53,14 +53,14 @@ find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -print |
 #    `testify/require`, and `gomega` (which runs under stdlib `testing` via
 #    `NewWithT`) are not signals.
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -HEn \
-  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"[[:space:]]*(//.*)?$' {} +
+  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"[[:space:]]*(//.*|/\*.*)?$' {} +
 
 # 3. A suite entrypoint — the call that hands control to a runner — or, when
 #    the tests import godog, the Gherkin `.feature` files a godog suite runs.
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -HEn \
   '(RunSpecs|suite\.Run|godog\.TestSuite|godog\.RunWithOptions)' {} +
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -lHE \
-  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*godog[^"]*"[[:space:]]*(//.*)?$' {} + | grep -q . &&
+  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*godog[^"]*"[[:space:]]*(//.*|/\*.*)?$' {} + | grep -q . &&
   find . \( -name vendor -o -name testdata \) -prune -o -name '*.feature' -print
 
 # 4. Declared acceptance targets
@@ -95,9 +95,10 @@ bootstrap a suite calls the runner (`godog.TestSuite{...}.Run()`, the older
 `godog.RunWithOptions(...)`, `RunSpecs`), and that call is what check 3
 matches. Check 2 likewise matches only import lines — a bare `import "…"`,
 an import-block entry, or an aliased or dot import, each ending at the closing
-quote or a `//` comment — so a string literal that happens to mention a runner
+quote or a comment — so a string literal that happens to mention a runner
 does not count, whether inline or as an element of a multi-line table (`"…",`).
-A raw string whose own lines are Go import lines still matches.
+A raw string whose own lines are Go import lines, or a `return` of a runner
+path on its own line, still matches.
 
 Check 1 does not match `features/`, `spec/`, or `specs/` directories by name. Go
 packages are routinely named `features` (feature flags) or `spec` (API or
