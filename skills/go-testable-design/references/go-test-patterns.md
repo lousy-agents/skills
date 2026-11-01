@@ -55,11 +55,13 @@ find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -print |
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
   '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"' {} +
 
-# 3. A suite entrypoint — the call that hands control to a runner — or the
-#    Gherkin `.feature` files a godog suite runs.
+# 3. A suite entrypoint — the call that hands control to a runner — or, when
+#    the tests import godog, the Gherkin `.feature` files a godog suite runs.
 find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
   '(RunSpecs|suite\.Run|godog\.TestSuite|godog\.RunWithOptions)' {} +
-find . \( -name vendor -o -name testdata \) -prune -o -name '*.feature' -print
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -lE \
+  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*godog[^"]*"' {} + | grep -q . &&
+  find . \( -name vendor -o -name testdata \) -prune -o -name '*.feature' -print
 
 # 4. Declared acceptance targets
 find . \( -name vendor -o -name testdata \) -prune -o \( -name Makefile -o -name '*.toml' \
@@ -95,14 +97,14 @@ matches. Check 2 likewise matches only import lines — a bare `import "…"`,
 an import-block entry, or an aliased or dot import — so a string literal
 that happens to mention a runner does not count.
 
-Check 1 does not match `features/` or `spec/` directories by name. Go
+Check 1 does not match `features/`, `spec/`, or `specs/` directories by name. Go
 packages are routinely named `features` (feature flags) or `spec` (API or
 config specs), so a directory name alone reads an ordinary package as an
 acceptance suite. A godog suite is recognized instead by its `.feature` files
-in check 3, which, like every check-3 hit, count only alongside a runner
-import from check 2 — so a `features/` directory of another language's
-Cucumber files is not a Go convention on its own — and a Ginkgo suite under
-`specs/` is recognized by its import and `RunSpecs` call.
+in check 3, which that check lists only when a test file imports godog — so
+another language's Cucumber files, or `.feature` files next to a different
+runner, are not a Go convention — and a Ginkgo suite under `specs/` is
+recognized by its import and `RunSpecs` call.
 
 Reading the result:
 
