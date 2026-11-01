@@ -113,7 +113,10 @@ Reading the result:
 ### The Same Criterion in Two Acceptance Forms
 
 The criterion does not change; only the vehicle does. Both versions below make
-the rule legible from structure alone.
+the rule legible from structure alone. Both treat `Withdraw` as a library's
+exported API, so calling it is the public boundary. In a program whose users
+reach `Withdraw` through a command or handler, the acceptance test drives that
+command or handler, and tests like these are its unit tests.
 
 Standard library `testing` — the form to use when the repository has no
 runner:

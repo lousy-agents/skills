@@ -47,6 +47,7 @@ These are two different products and they do not share a default form.
 
 - **Unit tests** cover a function, method, type, or package-internal seam. Standard-library `testing` is the default here, unless the repository already uses a focused dependency.
 - **Acceptance tests** (also called public-boundary, feature, or spec suites) prove a feature or bug fix works through the program's public boundary. Their form is dictated by the repository, not by this skill: it may be stdlib `testing`, a BDD spec runner, a testify-style suite, a `godog` feature suite, or an in-tree custom harness.
+- Whether a test is unit or acceptance depends on where users reach the behavior, not on its name. A program's public boundary is its command, HTTP endpoint, or other entry point; a library's is the exported API of a package outside `internal/`. A test that calls a type users reach only through that boundary — including any type in an `internal/` package — is a unit test.
 - Determine the acceptance form during **Orient**, before choosing a test shape. If no acceptance convention and no project policy exist, stdlib `testing` is the acceptance form too — write it the way the rest of the repository writes tests.
 - NEVER invent a stdlib acceptance test when the repository mandates a different acceptance form. Conversely, NEVER import a spec runner into a repository that does not already use one: adding a runner is a dependency decision owned by the module's maintainers, not a test decision.
 - See [`references/go-test-patterns.md`](./references/go-test-patterns.md) for the detection commands and a worked example of the same criterion in two acceptance forms.
@@ -227,6 +228,6 @@ Read [`references/go-test-patterns.md`](./references/go-test-patterns.md) when t
 When reporting work:
 
 - State which package/files changed.
-- State which tests were added or changed.
+- State which tests were added or changed, which of them are acceptance coverage and which are unit tests, and the acceptance form used with the signal that decided it (or that the repository has none).
 - State the verification command and result.
 - If tests could not run, state why without implying they passed.
