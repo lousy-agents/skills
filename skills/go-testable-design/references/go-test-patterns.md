@@ -40,42 +40,62 @@ writing the test; do not infer it from this document.
 
 Run these checks and combine the results. Check 1 alone is enough to stop when
 it finds an existing acceptance suite. Check 2 is never enough on its own:
-many modules pull in assertion helpers (especially `testify/assert` or
-`testify/require`) for unit tests without adopting that library as an
-acceptance harness.
+a test file can import a runner package without the repository having adopted
+it as its acceptance harness.
 
 ```bash
 # 1. Existing acceptance suites, by filename or directory
-find . -name '*_test.go' | grep -Ei '(_acceptance_test\.go|/(acceptance|e2e|features|specs?)/)'
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -print |
+  grep -Ei '(_acceptance_test\.go|/(acceptance|e2e|features|specs?)/)'
 
-# 2. Suite-harness or spec-runner modules already in the dependency graph.
-#    Match suite/spec packages, not bare assertion helpers: `testify` alone is
-#    not a signal — only `testify/suite` (or another runner below) counts.
-find . -name go.mod -exec grep -Ein \
-  '(ginkgo|gomega|testify/suite|godog|goconvey|check\.v1)' {} +
+# 2. Suite-harness or spec-runner packages this repository's tests import.
+#    Match runner packages, not assertion helpers: `testify/assert`,
+#    `testify/require`, and `gomega` (which runs under stdlib `testing` via
+#    `NewWithT`) are not signals.
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
+  '^[[:space:]]*(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"[^"]*(onsi/ginkgo|testify/suite|godog|goconvey|check\.v1)[^"]*"' {} +
 
-# 3. A suite entrypoint — the bootstrap that hands control to a runner.
-#    `func TestMain` on its own does NOT count: it is routine stdlib plumbing
-#    for flag parsing, fixture setup, or container teardown. Treat it as an
-#    entrypoint signal only when check 1 or check 2 also matched.
-find . -name '*_test.go' -exec grep -En '(RunSpecs|suite\.Run|godog\.TestSuite|func TestMain)' {} +
+# 3. A suite entrypoint — the call that hands control to a runner.
+find . \( -name vendor -o -name testdata \) -prune -o -name '*_test.go' -exec grep -En \
+  '(RunSpecs|suite\.Run|godog\.TestSuite|godog\.RunWithOptions)' {} +
 
 # 4. Declared acceptance targets
-find . \( -name Makefile -o -name '*.toml' -o -name 'Taskfile.y*ml' \
-  -o -path '*/.github/workflows/*' \) -exec grep -Ein 'acceptance|e2e' {} +
+find . \( -name vendor -o -name testdata \) -prune -o \( -name Makefile -o -name '*.toml' \
+  -o -name 'Taskfile.y*ml' -o -path '*/.github/workflows/*' \) -exec grep -Ein 'acceptance|e2e' {} +
 
 # 5. Stated project policy
-find . \( -name AGENTS.md -o -name CLAUDE.md -o -name CONTRIBUTING.md \) \
-  -exec grep -Ein 'acceptance|e2e|spec runner|test (harness|framework|suite)' {} +
+find . \( -name vendor -o -name testdata \) -prune -o \( -name AGENTS.md -o -name CLAUDE.md \
+  -o -name CONTRIBUTING.md \) -exec grep -Ein 'acceptance|e2e|spec runner|test (harness|framework|suite)' {} +
 ```
 
 Every check searches the tree instead of naming files that may not exist, so a
 repository without a `go.mod` at the root, a task runner, or agent docs simply
 returns nothing. Empty output is a clean "no signal", not a tooling failure.
+Each check prunes `vendor/` and `testdata/`: a vendored dependency's own suite,
+Makefile, or docs, and fixture files kept as test data, are not this
+repository's conventions.
+
+Check 2 reads imports, not `go.mod`, for two reasons. `go.mod` lists modules,
+not packages, so `testify/suite` never appears in it — only
+`github.com/stretchr/testify`, which unit-test-only repositories require too.
+And a runner line marked `// indirect` arrived through some other dependency:
+in a tidy Go 1.17+ `go.mod`, any module that a package or test in the main
+module imports is listed as a direct requirement, so an indirect runner is
+never this repository's choice. (That assumes `go mod tidy` has been run; an
+untidy `go.mod` can list a module nobody imports, which is why imports, not
+the require block, are the signal.)
+
+Check 3 does not match `func TestMain`. A `TestMain` is routine stdlib
+plumbing for flag parsing, fixture setup, or container teardown; one that does
+bootstrap a suite calls the runner (`godog.TestSuite{...}.Run()`, the older
+`godog.RunWithOptions(...)`, `RunSpecs`), and that call is what check 3
+matches. Check 2 likewise matches only import lines — a bare `import "…"`,
+an import-block entry, or an aliased or dot import — so a string literal
+that happens to mention a runner does not count.
 
 Reading the result:
 
-- **A convention exists** (an acceptance suite file; a runner module from
+- **A convention exists** (an acceptance suite file; a runner import from
   check 2 *plus* a matching entrypoint from check 1 or 3; or a written
   policy): write the acceptance test in that form, matching the existing
   suite's file layout, naming, and bootstrap. Do not introduce a second
@@ -84,9 +104,9 @@ Reading the result:
   written the way the rest of the repository writes tests. Do NOT add a spec
   runner, BDD framework, or assertion library to a repository that does not
   already depend on one — that is a dependency decision owned by the module's
-  maintainers, not something to settle inside a test. A `go.mod` that only
-  lists unit-test assertion helpers is still "no convention".
-- **Signals conflict** (e.g. a runner sits in `go.mod` but the package under
+  maintainers, not something to settle inside a test. Tests that only import
+  unit-test assertion helpers are still "no convention".
+- **Signals conflict** (e.g. a runner is imported elsewhere but the package under
   test uses stdlib tables): follow the nearest existing acceptance suite, and
   state in your report which signal you followed and which you set aside.
 
