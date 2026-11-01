@@ -116,8 +116,9 @@ The criterion does not change; only the vehicle does. Both versions below make
 the rule legible from structure alone. Both treat `Withdraw` as a library's
 exported API and the test as its consumer's scenario, so calling it is the
 boundary for this criterion. In a program whose users
-reach `Withdraw` through a command or handler, the acceptance test drives that
-command or handler, and tests like these are its unit tests.
+reach `Withdraw` through a command or endpoint, the acceptance test drives that
+command or endpoint (the assembled server), and tests like these are its unit
+tests.
 
 Standard library `testing` — the form to use when the repository has no
 runner:
