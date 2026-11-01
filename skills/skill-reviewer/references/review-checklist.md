@@ -171,7 +171,7 @@ Advisory adds; it never relocates. If you would report a concern as an Issue wit
 ### What you're actually looking for
 
 - **V1 Fix status:** Mark each fix the reviewer proposes, in Issues and in Advisory, as tested (with the evidence, e.g. "confirmed `./references/x.md` exists with Glob") or untested. Never present an untested fix as the remedy; present it as a proposal to try. This is a labeling rule: it does not require running anything.
-- **V2 Eval gap:** Look for evals inside the skill directory (e.g. evals/evals.json) and in any repository-level eval directory for the skill (e.g. evals/<skill-name>/). Report a gap only when you find neither, and say where you looked. If you are reviewing an installed copy with no repository around it, say the check was limited to the skill directory.
+- **V2 Eval gap:** Look for evals inside the skill directory (e.g. an evals/ directory) and in any repository-level eval directory for the skill (e.g. evals/<skill-name>/). Report a gap only when you find neither, and say where you looked. If the skill is an installed copy (for example under `.claude/skills/`, `.agents/skills/` or `.github/skills/` in a project that did not author it, or outside any repository), say the check was limited to what is installed and that upstream evals were not checked.
 
 ---
 
